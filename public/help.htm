@@ -1,0 +1,62 @@
+    
+<h2> Sub-pagina de HELP servida per el server </h2>
+
+<hr>
+
+<p>
+Per fer reserves cal estar registrat.
+De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
+</p>
+
+<hr>
+	 
+<h3> Versions </h3>
+
+<ul>
+ <li> v 1.0 - 20141101 - disseny inicial
+ <li> v 2.0 - jQuery &amp; Ajax
+ <li> v 2.1 - sub-pagines (a) Logon, (b) Consulta, (c) Reserva. (d) Populate ddbb, (e) dump all reserves
+ <li> v 2.2 - (a) funciona consulta, (b) engeguem reserva
+</ul>
+
+<hr>
+
+<h3> Pendent </h3>
+
+<ul>
+ <li> posar un rellotge JS en alguna part fixe
+ <li> posar un calendari del mes i omplir "data request ocupacio" amb un click
+ <li> logon / registrarse (alta) / re-send password to given e-mail
+</ul>
+
+<hr>
+
+<p>
+<a href="#" id="clkConsultaAllReserves">Dump all reserves</a>
+
+<hr>
+
+<script>
+$(function () {
+
+    $("#clkConsultaAllReserves").click(function () {
+        $.get('/dump_all_reserves', function ( page ) {
+            console.log( "**** Demanem la llista de totes les reserves. Server response {%s}", page ) ;
+            var lng = 0 ;
+            lng = page.length ;
+            console.log( '+++ Llargada (%s).', lng ) ;
+			
+            var texte = "";
+            if (lng > 0) {
+                texte = "Hi ha (" + lng + ") reserves a la BBDD <p>";
+                var i = 0;
+                while (i < lng) {
+                    texte += "("+i+") en ("+page[i].rnom+") te la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores <br>";
+                    i++;
+                } // while
+            } // lng > 0
+            $('#content').html(texte);  // or "text"
+        }); // get()  
+    }); // consulta
+}); // DOM ready
+</script>

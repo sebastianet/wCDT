@@ -1,0 +1,13 @@
+{
+  "name": "application-name",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node my_server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.2.0",
+    "express": "4.2.0",
+    "morgan": "^1.1.0"
+  }
+}

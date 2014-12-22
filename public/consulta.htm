@@ -1,0 +1,86 @@
+    
+ <h2>Com fer una consulta</h2>
+
+ <hr>
+
+ <p>
+ Entra la data amb format <b>AAAA/MM/DD</b> i prem el boto".
+ Exemple : (3) "2014/11/10", (1) "2014/11/09",
+
+<hr>
+
+<form id="myFormReqDades1Dia">
+	<label for="dataReserva">Dia per consultar: </label>
+	<input type="text" autofocus value="2014/11/10" name="data_Reserva" /> 
+	<p> &nbsp; <p> Pica aqu&iacute; :
+	<input type="submit" value=" Consulta les reserves d'aquest dia ">
+</form>
+
+<hr>
+
+<script> 
+$(document).ready( function() {
+	
+	$( "#myFormReqDades1Dia" ).submit( function(event) {
+	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
+
+		console.log( '[+] boto polsat - get ocupacio de un dia.' ) ;
+		
+// 1 - get table HTML
+
+		var myDate = $( this ).serialize() ;  // save user entry
+		var szJustDate = myDate.substring(13) ; // just after the "="
+		szJustDate = unescape ( szJustDate ) ;  // change %2F into "/"
+
+		$.get( '/tbl1day.htm', function( page ) {
+			console.log( '**** Demanem al server la taula on posar la ocupacio de un dia.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+
+// 2 - get "dades" for the table
+
+			console.log( '**** Demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
+
+// debugger;
+			$.get( "/qui_te_reserves/" + myDate, function( dades ) {
+
+				console.log( ">>> Server response : ", dades ); // show whole JSON object
+				
+				var lng = 0 ;
+				lng = dades.length ;
+				console.log( '+++ Llargada (%s).', lng ) ;
+				if ( lng > 0 ) {
+				  var i = 0 ;
+				  while ( i < lng ) {
+                    var szNom   = dades[i].rnom ;
+					var szPista = dades[i].rpista ;
+					var szData  = dades[i].rdata ;
+					var szHora  = dades[i].rhora ;
+					var sz1User = "En {" + szNom + "} te la pista [" + szPista + "] el dia {" + szData + "} a les {" + szHora + "} " ;
+					console.log( ">>> Ocupant [%i] : (%s).", i, sz1User ); // 
+					
+					var szCella = "#tdh"+szHora+"p"+szPista ;  // calculem a quina cella va el texte - veure els noms a sebas.css !
+					console.log( ">>> Cella (%s).", szCella ); // debug
+					$( szCella ).html( szNom ) ; // posar el texte a la cella
+					i++ ;  // per totes les reserves
+				  } ; // while  
+				} ; // lng > 0
+
+// mostrar el contingut de les dades
+//				$( '#content' ).text( texte ) ; // display (n) nom+deit a la pagina HTML -> esborra la taula ;
+
+// posar la data de la reserva al primer quadre dalt a l'esquerra
+
+				$( '#ocupacio_1_dia>thead>tr>th:nth-child(1)' )
+//				    .css( 'color', '#000000')
+				    .css( {'color': 'blue', 'vertical-align': 'top'} )
+					.append( szJustDate + " &nbsp;" ) ;
+
+			}); // get(dades)
+		
+		}) ; // get(table HTML)
+		return false ; // stop processing !!!
+		
+	}); // click "myFormReqDades1Dia" submit
+	
+} ) ; // DOM ready
+</script>

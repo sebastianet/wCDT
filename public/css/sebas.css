@@ -1,0 +1,77 @@
+/*
+   CSS sebas per CDT
+*/
+
+ 
+#myFormReqDades1Dia  {
+	background: orange ;
+	padding: 10px ;
+} 
+
+#myFormFerReserva {
+	background: orange ;
+	padding: 10px ;
+} 
+
+#myFormFerReserva label {
+	padding-left: 30px ;
+	width: 125px ;
+	text-transform: uppercase ;
+	display: block ;
+	float: left
+}
+
+/* augmentem el tamany per defecte dels butons */
+
+#myFormReqDades1Dia  input[type=submit], #myFormFerReserva  input[type=submit] {
+  font-size: 18px;
+  line-height: 18px;
+  ffloat: left;
+  border: 0;
+  ddisplay: block;
+  margin: 0;
+  height: 36px; 
+  background: yellow ;
+}
+
+#myFormReqDades1Dia  input[type=text] {
+    background: chartreuse ;
+	padding: 5px ;
+	font-size: 18px;
+ }
+
+#cssMyLinks {
+	background: #FFFF00 ;
+} 
+
+/* format de la taula de ocupacio de un dia */
+
+#ocupacio_1_dia  {
+    border: 1px solid yellow ;
+	padding-left: 10px ;
+	padding-right: 10px ;
+ }
+
+#ocupacio_1_dia  TH {
+    color: blue ;
+	border-bottom: 1px solid white ;
+	vertical-align: middle ;
+ }
+ 
+#ocupacio_1_dia  TD {
+    color: green ;
+	padding-left: 5px ;
+	padding-right: 5px ;
+	width: 200px ;
+	text-align: center ;
+ }
+ 
+#ocupacio_1_dia  #thora {
+    font-size: 12px ;
+	color: red ;
+	width: 50px ;
+ }
+ 
+#tdh10p3, #tdh12p3, #tdh14p3, #tdh16p3, #tdh18p3, #tdh10p4, #tdh12p4, #tdh14p4, #tdh16p4, #tdh18p4, #tdh10p5, #tdh12p5, #tdh14p5, #tdh16p5, #tdh18p5 {
+    border-bottom: 1px solid gray ;
+ }

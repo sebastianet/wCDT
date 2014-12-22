@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta name="MSSmartTagsPreventParsing" content="TRUE" /> 
+<meta http-equiv="expires" content="-1" /> 
+<meta http-equiv= "pragma" content="no-cache" /> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="author" content="Tom Cryns" /> 
+<meta name="description" content="webtom grey website template" />
+
+<link rel="shortcut icon" href="./favicon.ico" />
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+
+<title>Reserva de pistes al CDT</title>
+</head>
+
+<body id="home">
+
+<div id="container">
+
+    <div id="watermark">
+         <p> Actual user : &lt;none> </p>
+    </div>
+    
+    <div id="header">
+        <h1>Consulta de reserves de les pistes del CDT (20141120, 12:03)</h1>
+    </div>
+    
+    <ul id="nav">
+        <li><a id="homenav"     href="index.htm">Inici</a></li>
+        <li><a id="linksnav"    href="logon.html">Logon/Registrar-se</a></li>
+        <li><a id="contactnav"  href="consulta.html">Consultes</a></li>
+		<li><a id="reservesnav" href="reserva.html">Reserves</a></li>
+    </ul>
+    
+    <div id="sidebar">
+      <h1>Comandes</h1>
+      <ul id="sidebarnav">
+		<li><a href="index.htm">Inici</a></li>
+		<li><a href="logon.html">Logon/Registrar-se</a></li>
+		<li><a href="consulta.html">Consultes</a></li>
+		<li><a href="reserva.html">Fer reserva</a></li>
+		<li>&nbsp;</li>
+		<li><a href="http://www.oswd.org/design/preview/id/3491">Original</a></li>
+		<li><a href="#">Links</a></li>
+		<li><a href="#">Contacte</a></li>
+		<li><a href="#">Map</a></li>
+		<li><a href="ping">Ping</a></li>
+      </ul>
+    </div>
+    
+	<div id="content">
+    
+     <h1>Com fer una consulta</h1>
+     <p>
+        Entra en els camps de baix el mes, la setmana o el dia, i prem el boto "Do Consulta".
+     </p>
+	 
+     <h2>Requeriments</h2>
+     <p>
+        Per fer reserves cal estar registrat.
+        De moment, per consultar l'ocupacio de les pistes, tambe.
+     </p>
+<p> &nbsp; </p>
+
+<hr>
+
+<p> &nbsp; </p>
+
+<div id="askDia">
+Dia per consultar : <input type="text" name="yourDia">
+<button id="SubmitBtnDia" type="submit">Do Consulta</button>
+</div>
+	 
+	</div>
+    
+    <div id="ads">
+        <p>Space reserved for text advertisements - consulta.html</p>
+    </div>
+    
+    <div id="footer">
+        <p>
+        <a href="#">Privacy</a> | <a href="#">Terms</a>.
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+        Valid <a href="http://validator.w3.org/check?uri=referer">XHTML</a> | Valid <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a>
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+        &copy; 2014 Pere &amp; Sebas | template design by <a href="http://www.webtom.be">webtom.be</a>
+		</p>
+    </div>
+
+</div>
+
+<hr>
+
+<script> 
+$(document).ready(function() {
+$('#SubmitBtnDia').click(function (event) {
+    $.ajax({ 
+		type: "POST",
+		url: 'http://localhost',
+		data: { yourDia : $("input[name='score']").val() },
+		dataType: "jsonp", 
+		jsonpCallback: "_testcb", 
+		cache: false, 
+		timeout: 5000, 
+		success: function(data) { 
+			$("#askDia").append(data); 
+		}, 
+		error: function(jqXHR, textStatus, errorThrown) { 
+			alert('Error connecting to the Node.js server... ' + textStatus + " " + errorThrown); 
+		} 
+    }); 
+});
+</script>
+
+<hr>
+
+</body>
+</html>
+    

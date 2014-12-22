@@ -1,0 +1,43 @@
+
+<h2>Com fer una reserva</h2>
+
+<hr>
+
+<p>
+	Entra el teu nom, el dia i l'hora que vulguis reservar i el numero de la pista, i prem el boto "Do Reserva".
+</p>
+ 
+<hr>
+
+ <form id="myFormFerReserva">
+  <label for="NomSoci">      Nom:    </label> <input type="text" autofocus value="anonim"     name="Nom_Soci" />      <br/>
+  <label for="PistaReserva"> Pista:  </label> <input type="text"           value="9"          name="Pista_Reserva" /> <br/>
+  <label for="DiaReserva">   Dia:    </label> <input type="text"           value="2000/01/01" name="Dia_Reserva" />   <br/>
+  <label for="HoraReserva">  Hora:   </label> <input type="text"           value="23"         name="Hora_Reserva" />  <br/>
+  <input type="submit" value=" Do reserva ">
+</form>
+
+<hr>	 
+
+<script>
+$(document).ready( function() {
+	
+	$( "#myFormFerReserva" ).submit( function(event) {
+	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
+
+		console.log( '[+] boto polsat - fer una reserva.' ) ;
+		var myDades = $( this ).serialize() ;  // save user entry
+		$.post( "/fer_una_reserva/" + myDades, function( dades ) {
+			var lng = 0 ;
+            lng = dades.length ;
+			console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
+			
+			$('#content').html( dades );  // or "text"
+
+		}); // get(dades)
+		return false ; // stop processing !!!
+
+	}); // click "myFormFerReserva" submit
+} ) ; // DOM ready
+
+</script> 

@@ -1,0 +1,183 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<title> Client mongo v 1.6 </title>
+
+<STYLE TYPE="text/CSS">
+<!--
+
+.ccontent {
+    background-color: yellow ;
+	padding: 10px ;
+ }
+
+-->
+</STYLE>
+ 
+</head>
+
+<body id="home">
+
+<div id="container">
+
+    <div id="header">
+         <h1>Client Mongo, v 1.6, port 80</h1>
+    </div>
+    
+    
+    <div id="sidebar">
+      <h2>Comandes</h2>
+      <ul id="sidebarnav">
+        <li><a href="#" id="clkMostraQuiTeReserves">(*) Mostra tots els que tenen reserva</a></li>
+        <li><a href="consulta.html">Consultes</a></li>
+      </ul>
+    </div>
+<p>
+Hi ha 2 reserves el dia 2014/12/21 i 1 el dia 2014/12/20
+
+<p>
+	<form id="myFormReqDades1Dia">
+		<label for="dataReserva">Data reserva: </label><input type="text" autofocus name="data_Reserva" /><p/>
+		<input type="submit" value="Ensenyam les reserves d'aquest dia">
+	</form>
+
+<hr>
+<center>
+
+     <form name="time">
+     <input type="text" name="time2" size=15>
+     </form>
+
+     <script>
+          function liveclock() {
+               var curdate = new Date()
+               var hours = curdate.getHours()
+               var minutes = curdate.getMinutes()
+               var seconds = curdate.getSeconds()
+               var suffix = "AM"
+               if ( hours >= 12 ){
+                    suffix = "PM"
+                    if ( hours >= 13 ) hours = hours - 12
+               }
+               if ( minutes < 10 ) minutes = "0"+minutes
+               if ( seconds < 10 ) seconds = "0"+seconds
+               var thetime = hours+":"+minutes+":"+seconds+" "+suffix
+               document.time.time2.value = thetime
+               setTimeout("liveclock()",1000)
+          }
+          liveclock()
+     </script>
+
+</center>
+
+<hr>
+
+<p> +++ Abans de CONTENT
+
+<hr>
+    
+	<div id="content" class="ccontent">
+    
+     <h3>Intro</h3>
+     <p>
+        v1.1 - inici
+		<br> v 1.2 - port 80
+		<br> v 1.3 - llista "nom" del JSON rebut
+		<br> Next : enviar una data i filtrar en el Server
+     </p>
+	 
+	</div>
+
+<hr>
+<p> --- Despres de CONTENT
+
+    <div id="ads">
+        <p>Space reserved for text advertisements - index.htm</p>
+    </div>
+    
+</div>
+
+<script>
+// 20141020, Lluis.
+// Quan es pica el link de "LOGON", demanen al servidor que ens dongui una pagina 
+// i la posem on indica "#content".
+$( function() {
+
+	$( "#clkMostraQuiTeReserves" ).click( function() {
+	    console.log( '*** Demanem al server la llista de gent qui te reserves.' ) ;
+		$.get( 'http://localhost:80/qui_te_reserves', function( page ) {
+			console.log( '+++ Arriba la resposta.' ) ;
+			var lng = 0 ;
+		    lng = page.length ;
+			$("#content").html( page ) ;
+			console.log( '+++ Llargada (%s).', lng ) ;
+			$('#content').text('');
+			$('#content').text('Cindy');
+//			$('#content').text( page[0].rnom );
+            var texte = "" ;
+		    if ( lng > 0 ) {
+              texte = "(" + lng + ") " ;
+			  for ( var i=0; i < lng; i++ ) {
+			      texte += page[i].rnom + " [" + page[i].rdata + "] " ;
+			  } ; // for
+            } ; // if
+			$('#content').text( texte );
+
+console.log ( 'metode #1' ); 
+for ( var prop in page ) {
+//  alert( name.rnom );
+    console.log ( prop + " = " + page[prop] ) ; // aquest no va
+	console.log ( page[prop] ) ; // aquest es bo
+	console.log ( page[prop].rnom ) ;
+} ;
+
+console.log ( 'metode #2' ); 
+Object.getOwnPropertyNames( page ).forEach( function( val, idx, array ) {
+  console.log ( val + ' -> ' + page[val] ); // no ok
+  console.log ( '# -> ' + page[val] ); // aquest no es ok
+  console.log ( page[val] ); // aquest es ok
+});
+
+console.log ( 'metode #3' ); 
+page.forEach( function(v) {
+    console.log(v); // 
+});
+
+		}) ; // get
+	});  // click
+
+
+$( "#myFormReqDades1Dia" ).submit( function() {
+// produces a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
+    console.log( '*** Demanem al server la llista de reserves de un dia.' ) ;
+	console.log( $( this ).serialize() ) ; // output is "data_Reserva=2014/12/06"
+	$.get( "/qui_te_reserves/" + $(this).serialize(), function( dades ) {
+		console.log( ">>> Server response: ", dades );
+        var lng = 0 ;
+        lng = dades.length ;
+        console.log( '+++ Llargada (%s).', lng ) ;
+		var texte = "" ;
+		if ( lng > 0 ) {
+          texte = "(" + lng + ") " ;
+		  var i = 0 ;
+		  while ( i < lng ) {
+		    texte += dades[i].rnom + " [" + dades[i].rdata + "] " ;
+		    i++ ;
+		  } ;
+		} ; // lng > 0
+		$('#content').text( texte );
+	}); // $.get()
+	return false ; // stop processing
+}); // click "myFormReqDades1Dia" submit
+
+
+// more code goes here ...
+
+}); // DOM ready()
+
+</script>
+
+</body>
+</html>

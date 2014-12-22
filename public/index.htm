@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta name="MSSmartTagsPreventParsing" content="TRUE" /> 
+<meta http-equiv="expires" content="-1" /> 
+<meta http-equiv= "pragma" content="no-cache" /> 
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="author" content="Tom Cryns" /> 
+<meta name="description" content="webtom grey website template" />
+
+<link rel="shortcut icon" href="./favicon.ico" />
+
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<link rel="stylesheet" type="text/css" href="css/sebas.css" />
+
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+<title> Intro a CDT v 2.2.b </title>
+</head>
+
+<body id="home">
+
+<div id="container">
+
+    <div id="watermark">
+         <p> Actual user : &lt;none> </p>
+    </div>
+    
+    <div id="header">
+         <h1> Benvingut a la web del CDT v 2.2.b </h1>
+    </div>
+    
+    <ul id="nav">
+        <li><a id="homenav"     href="index.htm">Inici</a></li>
+        <li><a id="linksnav"    href="logon.htm">(-)Logon/Registrar-se</a></li>
+        <li><a id="contactnav"  href="consulta.htm">(-)Consultes</a></li>
+        <li><a id="reservesnav" href="reserva.html">(-)Reserves</a></li>
+    </ul>
+    
+    <div id="sidebar">
+      <h2>Comandes</h2>
+      <ul id="sidebarnav">
+        <li><a href="index.htm">Inici</a></li>
+        <li><a href="#" id="clkLogon">(-)Logon/Registrar-se</a></li>
+        <li><a href="#" id="clkConsulta">Consulta ocupacio</a></li>
+        <li><a href="#" id="clkReserva">Fer reserva</a></li>
+		<li><a href="#" id="clkDeleteReserva">(-)Esborrar reserva</a></li>
+        <li>&nbsp;</li>
+		<li><a href="ping">Ping</a></li>
+		<li><a href="#" id="clkPopulate">Populate BBDD</a></li>
+        <li><a href="#" id="clkLinks">Links</a></li>
+        <li><a href="#">(-)Map</a></li>
+		<li><a href="#" id="clkHelp">Help</a></li>
+      </ul>
+    </div>
+    
+	<div id="content">
+    
+     <h2>Intro</h2>
+     <p>
+        En aquesta web podrem veure les reserves que hi ha fetes de les pistes i tambe fer-ne de noves.
+     </p>
+	 
+     <h3>Requeriments</h3>
+     <p>
+        Per fer reserves cal estar registrat.
+        De moment, per consultar l'ocupacio de les pistes, tambe.
+     </p>
+	 
+     <h3>Pantalles</h3>
+	 <p>
+	 Volem una SPA = Single Page Application (20141120)
+
+	</div>
+    
+    <div id="ads">
+        <p>Space reserved for text advertisements - index.htm</p>
+    </div>
+    
+    <div id="footer">
+        <p>
+        <a href="#">Privacy</a> | <a href="#">Terms</a>.
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+        Valid <a href="http://validator.w3.org/check?uri=referer">XHTML</a> | Valid <a href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a>
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+        &copy; 2014 Pere &amp; Sebas | template design by <a href="http://www.webtom.be">webtom.be</a>
+		</p>
+    </div>
+
+</div>
+
+<script>
+// 20141020, Lluis.
+// Quan es pica el link de "LOGON", demanen al servidor una pagina i la posem on indica "#content".
+$( function() {
+
+	$( "#clkLogon" ).click( function() {
+		$.get( '/logon.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina LOGON.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(logon)
+	}) ; // logon
+
+	
+	$( "#clkConsulta" ).click( function() {
+		$.get( '/consulta.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina CONSULTA.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(consulta)
+	}) ; // consulta
+
+	
+	$( "#clkReserva" ).click( function() {
+		$.get( '/reserva.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina RESERVA.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get (reserva)
+	}) ; // reserva
+
+	
+	$( "#clkPopulate" ).click( function() {
+		$.get( '/populate', function( page ) {
+			console.log( '**** Demanem al server popular la BBDD.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(populate)
+	}) ; // populate
+
+	
+	$( "#clkLinks" ).click( function() {
+		$.get( '/links.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina LINKS.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(links)
+	}) ; // links
+
+	
+	$( "#clkHelp" ).click( function() {
+		$.get( '/help.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina HELP.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(help)
+	}) ; // help
+	
+// more code goes here
+
+} ) ; // DOM ready
+</script>
+
+</body>
+</html>
+    
