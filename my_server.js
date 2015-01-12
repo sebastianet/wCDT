@@ -1,29 +1,37 @@
 
 // servidor per al CDT
-// Pere & Sebas, 2014, versio 2.2.b
+// Pere & Sebas, 2014, versio 2.2.e
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application
 // http://singlepageappbook.com/
 
-// Versions :
+
+// Versions (detailed text in HELP.HTM) :
+//
 // 1.2.d - remove bodyParser, deprecated
 // 1.3.a - get LOGON.HTM from server into #content
 // 2.1.d - populate()
 // 2.2.a - draw a table to fill with some data 
-// 2.2.b - mongo data enter the table properly
+// 2.2.b - enter then mongo data properly into the table
+// 2.2.c - 20141222 - create a new reservation
+// 2.2.d - 20141222 - fer un git al usb
+// 2.2.e - 20141223 - verify the reservation space is free before reserving it
+// 2.2.f - 20141224 - verify all paramaters are ok
+
 
 // Package install :
 // npm install -g morgan       --save
 // npm install -g body-parser  --save
 
+
 // Pending :
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) veure el codi a Chrome
-// (*) fer git()
 // (*) format de la data : ara es "own format"
 // (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
+
 
 // Let's go :
 
@@ -70,7 +78,7 @@ app.get( '/ping', function(req,res) {
 				+ currentdate.getMinutes() + ":"
 				+ currentdate.getSeconds() ;
 
-   var texte = "Hello from Koltrane v 2.1.b<p>(" + datetime + ')<p> <a href="./index.htm">Back</a>' ;
+   var texte = "Hello from Koltrane v 2.2.e<p>(" + datetime + ')<p> <a href="./index.htm">Back</a>' ;
    res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
    res.write( texte ) ;
    res.end( ) ;
@@ -156,31 +164,80 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 	var CollectionName = app.get( 'cname' ) ;     // get collection name
 	var MyCollection = db.get( CollectionName ) ; // get the collection
 	
-//	var MyReserva = req.body ; 
-	var MyReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;
+	var MyReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
 	MyReserva.rnom   = Reserva_NomSoci ;
 	MyReserva.rpista = Reserva_Pista ;
 	MyReserva.rdata  = Reserva_Dia ;
 	MyReserva.rhora  = Reserva_Hora ;
+
+// mirem que tots els parametres siguin correctes :
+
+    var iTotOK = 1 ;  // de moment, tot OK
+	var szErrorString = "" ;
+	var szResultat = "" ;
 	
-	console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+	if ( ( Reserva_Pista < 3 ) || ( Reserva_Pista > 5 ) ) {
+		szErrorString = "Numero de pista erroni (" + Reserva_Pista + ")" ;
+		iTotOK = 0 ;  // indicate error in parameters
+	} ;
+	if ( ( Reserva_Dia < 1 ) || ( Reserva_Dia > 31 ) ) {
+		szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
+		iTotOK = 0 ;  // indicate error in parameters
+	} ;
+
+	if ( ( Reserva_Hora < 9 ) || ( Reserva_Horaa > 20 ) ) {
+		szErrorString = "Horaa erronia (" + Reserva_Hora + ")" ;
+		iTotOK = 0 ;  // indicate error in parameters
+	} ;
 	
-	MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
-		if ( err ) {
-			res.status( 500 ) ; // internal error
-			res.send( {'error':'An error has occurred'} ) ;
-		} else {
-			console.log( '++++ Success: (' + JSON.stringify( result[0] ) + ').' ) ;
-//			res.send( result[0] ) ;
-			res.status( 200 ) ; // OK
-	        res.send( "+++ OK." ) ; // else, indicate OK.
-		} ; // if Error
-	} ) ; // insert
+	if ( iTotOK == 1 ) {  // parameters ok
+	
+// mirem si aquesta pista ja esta ocupada aquest dia i hora :
+
+		MyCollection.find( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+		
+			var  i = docs.length ;
+			console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
+
+			if ( i < 1 ) { // si no esta ocupat, la reservem
+		
+				console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+				
+				MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
+					if ( err ) {
+						console.log( '---- Could not insert reservation into MongoDB.' ) ;
+						res.status( 500 ) ; // internal error
+						res.send( {'error':'An error has occurred'} ) ;
+					} else {
+						console.log( '++++ Success: insert went ok.' ) ;
+						res.status( 200 ) ; // OK
+						res.send( "+++ reserva feta OK." ) ; // else, indicate OK.
+					} ; // if Error
+				} ) ; // insert
+			
+			} else { // else, tell customer the slot is not free
+
+				var QuiEs = '' ;
+				if ( i == 1 ) {
+					QuiEs = docs[0].rnom ;
+				} ;
+				szResultat = "--- ("+i+") slot ocupat per en (" + QuiEs + ")." ;
+				res.status( 200 ) ;      // OK as HTTP rc, but
+				res.send( szResultat ) ; // else, indicate no OK.
+			
+			} ;  // if did exist
+		}) ; // find()
+
+	} else {  // error en algun parametre
+		res.status( 200 ) ; // OK
+		szResultat = "--- Parametre incorrecte (" + szErrorString + ")." ;
+		res.send( szResultat ) ; // else, indicate no OK.
+	} ; // iTotOK
 	
 }); // get '/fer_una_reserva/<parametres>'
 
    
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server v 2.2.a listening on port ' + app.get( 'port' ) ) ;
+    console.log( 'Express server v 2.2.e listening on port ' + app.get( 'port' ) ) ;
 } ) ;

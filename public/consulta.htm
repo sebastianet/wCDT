@@ -4,7 +4,7 @@
  <hr>
 
  <p>
- Entra la data amb format <b>AAAA/MM/DD</b> i prem el boto".
+ Entra la data amb format <b>AAAA/MM/DD</b> i prem el boto.
  Exemple : (3) "2014/11/10", (1) "2014/11/09",
 
 <hr>
@@ -72,8 +72,9 @@ $(document).ready( function() {
 
 				$( '#ocupacio_1_dia>thead>tr>th:nth-child(1)' )
 //				    .css( 'color', '#000000')
-				    .css( {'color': 'blue', 'vertical-align': 'top'} )
-					.append( szJustDate + " &nbsp;" ) ;
+				    .css( {'color': 'blue', 'vertical-align': 'middle'} )
+					.text( szJustDate ) ;
+//					.append( szJustDate + " &nbsp;" ) ;
 
 			}); // get(dades)
 		

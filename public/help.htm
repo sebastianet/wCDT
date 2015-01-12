@@ -16,7 +16,7 @@ De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
  <li> v 1.0 - 20141101 - disseny inicial
  <li> v 2.0 - jQuery &amp; Ajax
  <li> v 2.1 - sub-pagines (a) Logon, (b) Consulta, (c) Reserva. (d) Populate ddbb, (e) dump all reserves
- <li> v 2.2 - (a) funciona consulta, (b) engeguem reserva
+ <li> v 2.2 - 20141223 - (a) funciona consulta, (b) engeguem reserva, (c) fer reserva, (d) usb git, (e) verify empty slot
 </ul>
 
 <hr>
@@ -27,12 +27,16 @@ De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
  <li> posar un rellotge JS en alguna part fixe
  <li> posar un calendari del mes i omplir "data request ocupacio" amb un click
  <li> logon / registrarse (alta) / re-send password to given e-mail
+ <li> el link "inici" no ha de posar tota la pagina, sino un "#content"
+ <li> hi ha 2 "click" per fer la mateixa accio - 1 no funciona 
+ <li> more at ... myserver.js 
 </ul>
 
 <hr>
 
 <p>
-<a href="#" id="clkConsultaAllReserves">Dump all reserves</a>
+Click here to
+<a href="#" id="clkConsultaAllReserves">dump all reserves from BBDD</a>
 
 <hr>
 
@@ -46,15 +50,16 @@ $(function () {
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;
 			
-            var texte = "";
-            if (lng > 0) {
-                texte = "Hi ha (" + lng + ") reserves a la BBDD <p>";
+            var texte = '<p class="pkon">';
+            if ( lng > 0 ) {
+                texte += "Hi ha (" + lng + ") reserves a la BBDD <br>";
                 var i = 0;
-                while (i < lng) {
-                    texte += "("+i+") en ("+page[i].rnom+") te la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores <br>";
+                while ( i < lng ) {
+                    texte += "("+i+") la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores la te reservada en ("+page[i].rnom+") <br>";
                     i++;
                 } // while
             } // lng > 0
+			texte += "</p>"
             $('#content').html(texte);  // or "text"
         }); // get()  
     }); // consulta

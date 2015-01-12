@@ -50,12 +50,17 @@
     border: 1px solid yellow ;
 	padding-left: 10px ;
 	padding-right: 10px ;
+	width: 100% ;
+	background: #B0B0B0 ;
+	font-size: 18px ;
  }
 
 #ocupacio_1_dia  TH {
     color: blue ;
 	border-bottom: 1px solid white ;
 	vertical-align: middle ;
+	padding: 0 10px 0 10px ; 
+	height: 40px ;
  }
  
 #ocupacio_1_dia  TD {
@@ -67,11 +72,15 @@
  }
  
 #ocupacio_1_dia  #thora {
-    font-size: 12px ;
-	color: red ;
+	color: black ;
+	font-weight: bold ;
 	width: 50px ;
  }
  
 #tdh10p3, #tdh12p3, #tdh14p3, #tdh16p3, #tdh18p3, #tdh10p4, #tdh12p4, #tdh14p4, #tdh16p4, #tdh18p4, #tdh10p5, #tdh12p5, #tdh14p5, #tdh16p5, #tdh18p5 {
     border-bottom: 1px solid gray ;
+ }
+ 
+.pkon {
+    font-family: "Lucida Console" ; 
  }

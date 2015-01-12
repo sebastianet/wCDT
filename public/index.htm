@@ -2,21 +2,21 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<meta name="MSSmartTagsPreventParsing" content="TRUE" /> 
-<meta http-equiv="expires" content="-1" /> 
-<meta http-equiv= "pragma" content="no-cache" /> 
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-<meta name="author" content="Tom Cryns" /> 
-<meta name="description" content="webtom grey website template" />
+ <meta name="MSSmartTagsPreventParsing" content="TRUE" /> 
+ <meta http-equiv="expires" content="-1" /> 
+ <meta http-equiv= "pragma" content="no-cache" /> 
+ <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+ <meta name="author" content="Tom Cryns" /> 
+ <meta name="description" content="webtom grey website template" />
 
-<link rel="shortcut icon" href="./favicon.ico" />
+ <link rel="shortcut icon" href="./favicon.ico" />
 
-<link rel="stylesheet" type="text/css" href="css/style.css" />
-<link rel="stylesheet" type="text/css" href="css/sebas.css" />
+ <link rel="stylesheet" type="text/css" href="css/style.css" />
+ <link rel="stylesheet" type="text/css" href="css/sebas.css" />
 
-<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+ <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 
-<title> Intro a CDT v 2.2.b </title>
+ <title> Intro a CDT v 2.2.e </title>
 </head>
 
 <body id="home">
@@ -28,29 +28,31 @@
     </div>
     
     <div id="header">
-         <h1> Benvingut a la web del CDT v 2.2.b </h1>
+         <h1> Benvingut a la web del CDT v 2.2.e </h1>
     </div>
     
     <ul id="nav">
-        <li><a id="homenav"     href="index.htm">Inici</a></li>
-        <li><a id="linksnav"    href="logon.htm">(-)Logon/Registrar-se</a></li>
-        <li><a id="contactnav"  href="consulta.htm">(-)Consultes</a></li>
-        <li><a id="reservesnav" href="reserva.html">(-)Reserves</a></li>
+        <li><a id="homenav"       href="index.htm">Inici</a></li>
+        <li><a id="clkLogon"     href="#">(-) Logon/(re)Registrar-se </a></li>
+		<li><a id="clkReserva"   href="#">[c] Fer reserva </a></li>
+        <li><a id="clkConsulta"  href="#">[r] Consultar ocupaci&oacute; </a></li>        		
     </ul>
     
     <div id="sidebar">
+
       <h2>Comandes</h2>
+  
       <ul id="sidebarnav">
         <li><a href="index.htm">Inici</a></li>
-        <li><a href="#" id="clkLogon">(-)Logon/Registrar-se</a></li>
-        <li><a href="#" id="clkConsulta">Consulta ocupacio</a></li>
-        <li><a href="#" id="clkReserva">Fer reserva</a></li>
-		<li><a href="#" id="clkDeleteReserva">(-)Esborrar reserva</a></li>
-        <li>&nbsp;</li>
-		<li><a href="ping">Ping</a></li>
+        <li><a href="#" id="clkLogon">(-) Logon/(re)Registrar-se</a></li>        
+        <li><a href="#" id="clkReserva">[c] Fer reserva</a></li>
+		<li><a href="#" id="clkConsulta">[r] Consultar ocupaci&oacute;</a></li>
+		<li><a href="#" id="clkUpdateReserva">(-)[u] Actualitzar reserva</a></li>
+		<li><a href="#" id="clkDeleteReserva">(-)[d] Esborrar reserva</a></li>
+		<li><a href="#" id="clkPing">Ping</a></li>
 		<li><a href="#" id="clkPopulate">Populate BBDD</a></li>
         <li><a href="#" id="clkLinks">Links</a></li>
-        <li><a href="#">(-)Map</a></li>
+        <li><a href="#">(-) Map</a></li>
 		<li><a href="#" id="clkHelp">Help</a></li>
       </ul>
     </div>
@@ -65,12 +67,16 @@
      <h3>Requeriments</h3>
      <p>
         Per fer reserves cal estar registrat.
-        De moment, per consultar l'ocupacio de les pistes, tambe.
+        De moment, per consultar l'ocupaci&oacute; de les pistes, tamb&eacute;.
      </p>
 	 
      <h3>Pantalles</h3>
 	 <p>
-	 Volem una SPA = Single Page Application (20141120)
+	 Volem una Single Page Application (SPA, 20141120)
+
+	 <h3> Timestamp</h3>
+	 <p>
+     Not implemented yet.
 
 	</div>
     
@@ -117,6 +123,14 @@ $( function() {
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get (reserva)
 	}) ; // reserva
+
+	
+	$( "#clkPing" ).click( function() {
+		$.get( '/ping', function( page ) {
+			console.log( '**** Demanem al server un PING.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(ping)
+	}) ; // ping
 
 	
 	$( "#clkPopulate" ).click( function() {

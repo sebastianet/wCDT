@@ -41,7 +41,6 @@ h2 {
   font-size:100%;
 }
 
-
 #watermark {
   height:20px;
   margin:0px;
@@ -62,7 +61,6 @@ h2 {
   text-align:left;
   clear:both;
 }
-
 
 #header h1{
   margin:0;
@@ -110,13 +108,11 @@ h2 {
   text-decoration:underline;
 }
 
-
 #content a img
 {
   text-decoration:none;
   border:0;
 }
-
 
 #ads {
   height:50px;
@@ -128,6 +124,7 @@ h2 {
   text-align:right;
   clear:both;
 }
+
 
 #footer {
   clear:both;
@@ -143,8 +140,6 @@ h2 {
 {
  color:#fff;
 }
-
-
 
 
 #nav {
@@ -174,7 +169,8 @@ h2 {
 }
 
 #nav li a:hover {
-  background:#555;
+  bbackground:#555;
+  background: yellow ;
   color:#fff; 
 }
 
@@ -186,11 +182,12 @@ h2 {
 {
   color:#fff;
   background:#555; 
+  bbackground: blue ; 
 }
 
 
-
 ul { margin: 0; padding : 0; list-style : none; }
+
 
 #sidebarnav {
   margin:0;
@@ -215,6 +212,7 @@ ul { margin: 0; padding : 0; list-style : none; }
 }
 
 #sidebarnav li a:hover {
-  background:#999;
+  bbackground:#999;
+  background: green ;
 }
 
