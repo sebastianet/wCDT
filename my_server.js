@@ -1,5 +1,5 @@
 
-// servidor per al CDT
+// servidor per al CDT.
 // Pere & Sebas, 2014, versio 2.2.e
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application
