@@ -1,10 +1,8 @@
 
-<h2>Com fer una reserva</h2>
-
-<hr>
+<h2> <i class="fa fa-eye"></i> &nbsp; Com fer una reserva &nbsp; <i class="fa fa-eye"></i> </h2>
 
 <p>
-	Entra el teu nom, el dia i l'hora que vulguis reservar i el numero de la pista, i prem el boto "Do Reserva".
+Entra el teu nom, el dia i l'hora que vulguis reservar i el numero de la pista, i prem el boto "Do Reserva".
 </p>
  
 <hr>
@@ -17,25 +15,34 @@
   <input type="submit" value=" Do reserva ">
 </form>
 
-<hr>	 
+<hr>
 
+<script src="client.js"></script>
 <script>
 $(document).ready( function() {
 	
 	$( "#myFormFerReserva" ).submit( function(event) {
 	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
-		console.log( '[+] boto polsat - fer una reserva.' ) ;
-		var myDades = $( this ).serialize() ;  // save user entry
-		$.post( "/fer_una_reserva/" + myDades, function( dades ) {
-			var lng = 0 ;
-            lng = dades.length ;
-			console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
-			
-			$('#content').html( dades );  // or "text"
+		console.log( '[+] boto RESERVA polsat - fer una reserva.' ) ;
+		
+		ferReserva( $(this).serialize(), "#content" ) ; // client.js
+		
+/*                  
+					var myDades = $( this ).serialize() ;  // save user entry
+					
+					$.post( "/fer_una_reserva/" + myDades, function( dades ) {
+						var lng = 0 ;
+						lng = dades.length ;
+						console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
+						
+						$('#content').html( dades );  // or "text"
 
-		}); // get(dades)
+					}); // get(dades) 
+*/
+					
 		return false ; // stop processing !!!
+		
 
 	}); // click "myFormFerReserva" submit
 } ) ; // DOM ready

@@ -16,7 +16,8 @@ De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
  <li> v 1.0 - 20141101 - disseny inicial
  <li> v 2.0 - jQuery &amp; Ajax
  <li> v 2.1 - sub-pagines (a) Logon, (b) Consulta, (c) Reserva. (d) Populate ddbb, (e) dump all reserves
- <li> v 2.2 - 20141223 - (a) funciona consulta, (b) engeguem reserva, (c) fer reserva, (d) usb git, (e) verify empty slot
+ <li> v 3.0 - 20150112 - use <a href="http://fortawesome.github.io/Font-Awesome/">Font-Awesome</a>
+ <li> v 4.0 - 20150113 - use <a href="http://passportjs.org/">Passport</a>
 </ul>
 
 <hr>
@@ -26,9 +27,7 @@ De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
 <ul>
  <li> posar un rellotge JS en alguna part fixe
  <li> posar un calendari del mes i omplir "data request ocupacio" amb un click
- <li> logon / registrarse (alta) / re-send password to given e-mail
  <li> el link "inici" no ha de posar tota la pagina, sino un "#content"
- <li> hi ha 2 "click" per fer la mateixa accio - 1 no funciona 
  <li> more at ... myserver.js 
 </ul>
 
@@ -36,7 +35,19 @@ De moment, per consultar l'ocupaci&oacute; de les pistes, tambe.
 
 <p>
 Click here to
-<a href="#" id="clkConsultaAllReserves">dump all reserves from BBDD</a>
+<a href="#" id="clkConsultaAllReserves">dump all reserves from BBDD</a>.
+
+Click here to
+<a href="#" id="clkPopulate">populate BBDD</a>.
+
+Click here for
+<a href="#" id="clkPing">Ping</a>.
+
+<hr>
+
+<p>
+<a href="#" id="clkLinks">Links</a>.
+Site Map.
 
 <hr>
 
@@ -63,5 +74,30 @@ $(function () {
             $('#content').html(texte);  // or "text"
         }); // get()  
     }); // consulta
+
+
+	$( "#clkPopulate" ).click( function() {
+		$.get( '/populate', function( page ) {
+			console.log( '**** Demanem al server omplir la BBDD.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(populate)
+	}) ; // populate
+
+
+	$( "#clkPing" ).click( function() {
+		$.get( '/ping', function( page ) {
+			console.log( '**** Demanem al server un PING.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(ping)
+	}) ; // ping
+
+
+	$( "#clkLinks" ).click( function() {
+		$.get( '/links.htm', function( page ) {
+			console.log( '**** Demanem al server la sub-pagina LINKS.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(links)
+	}) ; // links
+
 }); // DOM ready
 </script>

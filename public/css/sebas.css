@@ -2,7 +2,92 @@
    CSS sebas per CDT
 */
 
+/* taula dels botons de una consulta */
+
+.tfcon {
+    border: 1px solid white ;
+	width: 100% ;
+	background-color: #E0E0E0 ;
+ }
+
+.tfcon  TD {
+    vertical-align: middle ;
+}
  
+/* taula ocupacio */
+
+#thora09 { width: 150px ; }
+.ocupada { background-color: #ccc; }
+.lliure { background-color: #ddd; }
+
+/* taula logon */
+
+.tlogon {
+    border: 1px solid none ;
+	width: 100% ;
+ }
+ 
+.tlog_dyb {
+    border: 1px solid white ;
+	width: 100% ;
+ }
+
+/* calendari */
+
+#Cred { color: red ; }
+#Cyel { color: yellow ; }
+#Cfinde { color: black ; }
+#Cfestiu { color: black ; }
+
+.tblcal, .tblcal TD, .tblcal TH  {
+  font-family: Verdana, Arial, monospace, sans-serif ;
+  font-size: 12px ;
+  background-color: #E0E0E0 ;
+  color: blue ;
+  text-align: center ;
+ }
+
+ 
+/* format de la taula de ocupacio de un dia */
+
+#ocupacio_1_dia  {
+    border: 1px solid yellow ;
+	padding-left: 10px ;
+	padding-right: 10px ;
+	width: 100% ;
+	background: #B0B0B0 ;
+	font-size: 18px ;
+ }
+
+#ocupacio_1_dia  TH {
+    color: blue ;
+	border-bottom: 1px solid white ;
+	vertical-align: middle ;
+	padding: 0 10px 0 10px ; 
+	height: 40px ;
+ }
+ 
+#ocupacio_1_dia  TD {
+    color: green ;
+	padding-left: 5px ;
+	padding-right: 5px ;
+	wwidth: 200px ;
+	text-align: center ;
+ }
+ 
+#ocupacio_1_dia  #thora {
+	color: black ;
+	font-weight: bold ;
+	width: 50px ;
+ }
+ 
+#tdh10p3, #tdh12p3, #tdh14p3, #tdh16p3, #tdh18p3, #tdh10p4, #tdh12p4, #tdh14p4, #tdh16p4, #tdh18p4, #tdh10p5, #tdh12p5, #tdh14p5, #tdh16p5, #tdh18p5 {
+    border-bottom: 1px solid gray ;
+ }
+ 
+
+/* form webtom.de */
+
 #myFormReqDades1Dia  {
 	background: orange ;
 	padding: 10px ;
@@ -19,6 +104,12 @@
 	text-transform: uppercase ;
 	display: block ;
 	float: left
+}
+
+#myFormReqLogon  {
+	bbackground: orange ;
+	font-family: "Lucida Console" ; 
+	padding: 5px ;
 }
 
 /* augmentem el tamany per defecte dels butons */
@@ -44,43 +135,6 @@
 	background: #FFFF00 ;
 } 
 
-/* format de la taula de ocupacio de un dia */
-
-#ocupacio_1_dia  {
-    border: 1px solid yellow ;
-	padding-left: 10px ;
-	padding-right: 10px ;
-	width: 100% ;
-	background: #B0B0B0 ;
-	font-size: 18px ;
- }
-
-#ocupacio_1_dia  TH {
-    color: blue ;
-	border-bottom: 1px solid white ;
-	vertical-align: middle ;
-	padding: 0 10px 0 10px ; 
-	height: 40px ;
- }
- 
-#ocupacio_1_dia  TD {
-    color: green ;
-	padding-left: 5px ;
-	padding-right: 5px ;
-	width: 200px ;
-	text-align: center ;
- }
- 
-#ocupacio_1_dia  #thora {
-	color: black ;
-	font-weight: bold ;
-	width: 50px ;
- }
- 
-#tdh10p3, #tdh12p3, #tdh14p3, #tdh16p3, #tdh18p3, #tdh10p4, #tdh12p4, #tdh14p4, #tdh16p4, #tdh18p4, #tdh10p5, #tdh12p5, #tdh14p5, #tdh16p5, #tdh18p5 {
-    border-bottom: 1px solid gray ;
- }
- 
 .pkon {
     font-family: "Lucida Console" ; 
  }

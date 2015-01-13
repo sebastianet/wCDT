@@ -1,41 +1,45 @@
-    
- <h2>Com fer una consulta</h2>
+
+ <h2> <i class="fa fa-bus"></i> &nbsp; Com fer una consulta &nbsp; <i class="fa fa-bus"></i> </h2>
 
  <hr>
 
  <p>
- Entra la data amb format <b>AAAA/MM/DD</b> i prem el boto.
- Exemple : (3) "2014/11/10", (1) "2014/11/09",
+ Entra la data amb format <b>AAAA/MM/DD</b> (exemple : (3) "2014/11/10", (1) "2014/11/09",) i prem el bot&oacute; "Consultar les reserves".
 
 <hr>
 
 <form id="myFormReqDades1Dia">
+<table class="tfcon"> <tr> <td>
 	<label for="dataReserva">Dia per consultar: </label>
 	<input type="text" autofocus value="2014/11/10" name="data_Reserva" /> 
-	<p> &nbsp; <p> Pica aqu&iacute; :
-	<input type="submit" value=" Consulta les reserves d'aquest dia ">
+<td>
+	<p> Pica aqu&iacute; :
+	<input type="submit" value=" Consultar les reserves ">
+</table>
 </form>
 
 <hr>
 
+<script src="client.js"></script>
 <script> 
 $(document).ready( function() {
 	
 	$( "#myFormReqDades1Dia" ).submit( function(event) {
-	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
+	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server
 
-		console.log( '[+] boto polsat - get ocupacio de un dia.' ) ;
+		console.log( '[+] boto CONSULTA polsat - get ocupacio de un dia.' ) ;
 		
 // 1 - get table HTML
 
-		var myDate = $( this ).serialize() ;  // save user entry
+		var myDate = $( this ).serialize() ;  // save user entry of this form : [data_Reserva=2014%2F11%2F10]
 		var szJustDate = myDate.substring(13) ; // just after the "="
-		szJustDate = unescape ( szJustDate ) ;  // change %2F into "/"
+//		szJustDate = unescape ( szJustDate ) ;  // change %2F into "/", old style
+		szJustDate = decodeURIComponent ( szJustDate ) ;  // change %2F into "/"
 
 		$.get( '/tbl1day.htm', function( page ) {
-			console.log( '**** Demanem al server la taula on posar la ocupacio de un dia.' ) ;
+			console.log( '**** Demanem al server la taula on posar la ocupacio del dia ['+szJustDate+'].' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-
+			
 // 2 - get "dades" for the table
 
 			console.log( '**** Demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
@@ -59,22 +63,51 @@ $(document).ready( function() {
 					console.log( ">>> Ocupant [%i] : (%s).", i, sz1User ); // 
 					
 					var szCella = "#tdh"+szHora+"p"+szPista ;  // calculem a quina cella va el texte - veure els noms a sebas.css !
-					console.log( ">>> Cella (%s).", szCella ); // debug
-					$( szCella ).html( szNom ) ; // posar el texte a la cella
+					console.log( ">>> Ocupem la Cella (%s).", szCella ); // debug
+					$( szCella ).html( szNom ) ;           // posar el texte a la cella
+					$( szCella ).addClass( "ocupada" ) ;   // canviem la class de la cella : afegim "ocupada" ...
+					$( szCella ).removeClass( "lliure" ) ; // ... i treiem "lliure"
 					i++ ;  // per totes les reserves
 				  } ; // while  
 				} ; // lng > 0
 
-// mostrar el contingut de les dades
-//				$( '#content' ).text( texte ) ; // display (n) nom+deit a la pagina HTML -> esborra la taula ;
+// +++ codi per associar el event "click" a una cella de la taula
+
+	$('td.lliure').on('click',function(ev){
+	  //dia i hora i soci i pista construir serial...
+		var target = $(ev.target).parent();
+		var targetID = target.attr('id') ;
+		console.log( 'Consulta - onclick td.lliure - el seu ID es {'+targetID+'}' ) ;
+		  
+		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
+		var clkPista  = targetID.substring(6,7) ; // tdh10p3
+		var clkHora   = targetID.substring(3,5) ; // tdh10p3
+
+		if ( clkPrefix == 'tdh' ) {
+
+//			var soci = "Test3" ;
+//			var avui = "2014%2F11%2F10" 		
+
+			var avui = $ ('#ocupacio_1_dia>thead>tr>th:nth-child(1)').text() ;
+			var soci = window.session.user.nom ;
+			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
+
+			console.log( 'Consulta - fer reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
+			ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // client.js
+
+		} else { // wrong prefix
+		} ;
+		return false ;
+ 
+    });
+
+// ---
 
 // posar la data de la reserva al primer quadre dalt a l'esquerra
 
 				$( '#ocupacio_1_dia>thead>tr>th:nth-child(1)' )
-//				    .css( 'color', '#000000')
-				    .css( {'color': 'blue', 'vertical-align': 'middle'} )
+				    .css( {'color': 'black', 'vertical-align': 'middle'} )
 					.text( szJustDate ) ;
-//					.append( szJustDate + " &nbsp;" ) ;
 
 			}); // get(dades)
 		
@@ -82,6 +115,6 @@ $(document).ready( function() {
 		return false ; // stop processing !!!
 		
 	}); // click "myFormReqDades1Dia" submit
-	
+
 } ) ; // DOM ready
 </script>

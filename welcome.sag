@@ -48,3 +48,9 @@ b) per dies
             18-19   !!               !!               !!               !!			
             19-20   !!               !!               !!               !!
 .
+
+ git al usb
+ 
+ git remote add usb file://J:\GIT-repositoris\simple_web_server.git
+
+ .

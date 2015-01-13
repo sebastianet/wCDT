@@ -17,6 +17,7 @@
 // 2.2.d - 20141222 - fer un git al usb
 // 2.2.e - 20141223 - verify the reservation space is free before reserving it
 // 2.2.f - 20141224 - verify all paramaters are ok
+// 2.2.g - 20150112 - 2 botons fan la mateixa feina si en lloc de ID posem CLASS
 
 
 // Package install :
@@ -185,8 +186,8 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		iTotOK = 0 ;  // indicate error in parameters
 	} ;
 
-	if ( ( Reserva_Hora < 9 ) || ( Reserva_Horaa > 20 ) ) {
-		szErrorString = "Horaa erronia (" + Reserva_Hora + ")" ;
+	if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
+		szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
 		iTotOK = 0 ;  // indicate error in parameters
 	} ;
 	
