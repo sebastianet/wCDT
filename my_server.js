@@ -1,10 +1,8 @@
 
-// servidor per al CDT.
-// Pere & Sebas, 2014, versio 2.2.e
+// servidor per al CDT - projecte "WCDT"
+// Pere & Sebas, 2014 i 2015
 
-// Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application
-// http://singlepageappbook.com/
-
+// Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
 // Versions (detailed text in HELP.HTM) :
 //
@@ -18,6 +16,8 @@
 // 2.2.e - 20141223 - verify the reservation space is free before reserving it
 // 2.2.f - 20141224 - verify all paramaters are ok
 // 2.2.g - 20150112 - 2 botons fan la mateixa feina si en lloc de ID posem CLASS
+// 3.0.a - 20150113 - Font Awesome
+// 4.0.a - 20150114 - Passport()
 
 
 // Package install :

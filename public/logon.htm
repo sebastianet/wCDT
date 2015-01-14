@@ -67,7 +67,7 @@ $(document).ready( function() {
 		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
 
 		window.session.user.nom = logonUser ;
-		$( "#watermark" ).html( '<p>Ara soc en '+logonUser ) ; // show received HTML at specific <div>
+		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
 		
 		return false ; // stop processing !!!
 	
