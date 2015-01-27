@@ -28,3 +28,6 @@ node_modules
 
 # mongo database
 data
+
+# old code, cmds, etc
+oldies

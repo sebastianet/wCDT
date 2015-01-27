@@ -1,6 +1,7 @@
 
 // servidor per al CDT - projecte "WCDT"
 // Pere & Sebas, 2014 i 2015
+// s'engega amb "node my_server.js"
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
@@ -86,7 +87,7 @@ app.get( '/ping', function(req,res) {
  }) ; // get '/ping'
 
  
-// (2) populate ddbb
+// (2) populate ddbb (called from HELP page)
 
 app.get( '/populate', function( req, res ){
     console.log( ">>> POPULATE ddbb." ) ;
@@ -240,5 +241,5 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
    
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server v 2.2.e listening on port ' + app.get( 'port' ) ) ;
+    console.log( 'Express server v 4.0.a listening on port ' + app.get( 'port' ) ) ;
 } ) ;
