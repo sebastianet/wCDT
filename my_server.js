@@ -19,6 +19,7 @@
 // 2.2.g - 20150112 - 2 botons fan la mateixa feina si en lloc de ID posem CLASS
 // 3.0.a - 20150113 - Font Awesome
 // 4.0.a - 20150114 - Passport()
+// 4.0.b - 20150128 - fix "monk" in package.json, serve "index.htm"
 
 
 // Package install :
@@ -63,7 +64,12 @@
    app.use( bodyParser.json() ) ;
 
 // serve static files and css
-   app.get( '/*',express.static(__dirname + '/public') ) ; // serve whatever is in the "public" folder at the URL "/:filename"
+//   app.get( '/*', express.static( __dirname + '/public' ) ) ; // serve whatever is in the "public" folder at the URL "/:filename"
+
+   var staticPath =  __dirname + '/public';
+   var staticOptions = { index: 'index.htm' };
+
+   app.get('/',express.static( staticPath, staticOptions )) ;
 
  
 // Lets set some routes :
@@ -241,5 +247,5 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
    
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server v 4.0.a listening on port ' + app.get( 'port' ) ) ;
+    console.log( 'Express server v 4.0.b listening on port ' + app.get( 'port' ) ) ;
 } ) ;
