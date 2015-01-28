@@ -1,7 +1,8 @@
 
-// servidor per al CDT - projecte "WCDT"
 // Pere & Sebas, 2014 i 2015
-// s'engega amb "node my_server.js"
+// servidor per al CDT - projecte "WCDT"
+// github : https://github.com/sebastianet/wCDT
+// s'engega amb "node my_server.js" (veure "package.json")
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
@@ -69,7 +70,7 @@
    var staticPath =  __dirname + '/public';
    var staticOptions = { index: 'index.htm' };
 
-   app.get('/',express.static( staticPath, staticOptions )) ;
+   app.get('/*',express.static( staticPath, staticOptions )) ;
 
  
 // Lets set some routes :
