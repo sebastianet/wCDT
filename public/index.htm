@@ -49,25 +49,20 @@
         <li><a href="#" class="clkReserva">[c] Fer reserva</a></li>
 		<li><a href="#" class="clkConsulta">[r] Consultar ocupaci&oacute;</a></li>
 		<li><a href="#" id="clkUpdateReserva">(-)[u] Actualitzar reserva</a></li>
-		<li><a href="#" id="clkDeleteReserva">(-)[d] Esborrar reserva</a></li>
-		<li><a href="#" id="clkHelp">Help</a></li>
+		<li><a href="#" id="clkDeleteReserva">[d] Esborrar reserva</a></li>
+		<li><a href="#" id="clkHelp">Ajuda</a></li>
       </ul>
 
-<p>
-<center>
-<table border class="tblcal" cellpadding="2" >
-<tr> <th> &lt; <th colspan=5>  Gener 2015 </th> <th> &gt; </tr>
-<tr> <th>L</td> <th>M</td> <th>X</td> <th>J</td> <th>V</td> <th>S</td> <th>D</td> </tr> 
+<hr>
+<p>	  
+	<div id="my_month">
+	</div>
 
-<tr> <td> &nbsp; </td> <td> &nbsp; </td> <td> &nbsp; </td> <td>1</td><td>2</td><td id="Cfinde">3</td><td id="Cfinde">4</td> </tr>
-<tr> <td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td id="Cfinde">10</td><td id="Cfinde">11</td> </tr>
-<tr> <td>12</td><td>13</td><td>14</td><td>15</td><td>16</td><td id="Cfinde">17</td><td id="Cfinde">18</td> </tr>
-<tr> <td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td id="Cfinde">24</td><td id="Cfinde">25</td> </tr>
-<tr> <td>26</td><td>27</td><td>28</td><td>29</td><td>30</td><td id="Cfinde">31</td><td> &nbsp; </td> </tr>
-</table>
-</center>
+	<div id="my_date">
+	</div>
 
-    </div>
+	</div>
+
     
 	<div id="content">
     
@@ -85,10 +80,6 @@
      <h3>Pantalles</h3>
 	 <p>
 	 Volem una Single Page Application (SPA, 20141120)
-
-	 <h3> Timestamp</h3>
-	 <p>
-     Not implemented yet.
 
 	</div>
     
@@ -110,16 +101,38 @@
 
 <script>
 
-// 20141020, Lluis.
-// Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
+// "Page Ready" event
 
 $( function() {
 
 	window.session = {} ;             // unique global var for all the application !
-	window.session.avui = "";
-	window.session.user = {} ;
+	
+	window.session.user = {} ;        // set "no user" at begin
+	
+	var today = new Date();
+	var dd = today.getDate();
+	var mm = today.getMonth()+1;      //January is 0!
+	var yyyy = today.getFullYear();
+
+	if( dd<10 ) {
+		dd='0'+dd
+	} 
+	if( mm<10 ) {
+		mm='0'+mm
+	} 
+	window.session.avui = yyyy + '/' + mm + '/' + dd ;
+
 //	window.session.user.nom = 'pau' ;
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
+
+	$.get( '/mes_actual.htm', function( page ) {
+		console.log( '**** Demanem al server la sub-pagina MES_ACTUAL.' ) ;
+		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
+	}) ; // get(actual month html code)
+
+
+// 20141020, Lluis.
+// Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
 
 	$( ".clkLogon" ).click( function() {
 		$.get( '/logon.htm', function( page ) {

@@ -6,10 +6,11 @@
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
-// Versions (detailed text in HELP.HTM) :
+// Versions (more detailed than in HELP.HTM) :
 //
 // 1.2.d - remove bodyParser, deprecated
 // 1.3.a - get LOGON.HTM from server into #content
+// 2.0.a - use jQuery() and Ajax.
 // 2.1.d - populate()
 // 2.2.a - draw a table to fill with some data 
 // 2.2.b - enter then mongo data properly into the table
@@ -18,10 +19,11 @@
 // 2.2.e - 20141223 - verify the reservation space is free before reserving it
 // 2.2.f - 20141224 - verify all paramaters are ok
 // 2.2.g - 20150112 - 2 botons fan la mateixa feina si en lloc de ID posem CLASS
-// 3.0.a - 20150113 - Font Awesome
-// 4.0.a - 20150114 - Passport()
+// 3.0.a - 20150113 - use Font Awesome
+// 4.0.a - 20150114 - use Passport()
 // 4.0.b - 20150128 - fix "monk" in package.json, serve "index.htm"
-
+// 4.0.c - 20150206 - catch ddbb.find() error
+// 4.0.d - 20150209 - dump mongo ID's (start delete). February month.
 
 // Package install :
 // npm install -g morgan       --save
@@ -39,16 +41,16 @@
 
 // Let's go :
 
- var express    = require( 'express' ) ;          // http://expressjs.com/api.html#app.configure
+ var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
  var http       = require( 'http' ) ;
- var logger     = require( 'morgan' ) ;       // logging middleware
- var bodyParser = require( 'body-parser' ) ;  // parser
+ var logger     = require( 'morgan' ) ;          // logging middleware
+ var bodyParser = require( 'body-parser' ) ;     // parser
 
- var monk       = require( 'monk' ) ;         // access to mongo
+ var monk       = require( 'monk' ) ;            // access to mongo
 
- var app = express() ;                        // instantiate Express and assign our app variable to it
- var db  = monk( 'localhost:27017/cdt' ) ;    // BBDD := "cdt" ;
+ var app = express() ;                           // instantiate Express and assign our app variable to it
+ var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ;
  
 // +++ app.configure( function () {
 
@@ -105,7 +107,7 @@ app.get( '/populate', function( req, res ){
 
 		var My_Initial_Reserves = [ // see wines.js
 			{ rdata: "2014/11/09", rhora: "09", rpista: "3", rnom: "sebas" },
-			{ rdata: "2014/11/10", rhora: "11", rpista: "4", rnom: "pere" },
+			{ rdata: "2014/11/10", rhora: "11", rpista: "4", rnom: "perea" },
 			{ rdata: "2014/11/10", rhora: "13", rpista: "4", rnom: "enric" },
 			{ rdata: "2014/11/10", rhora: "13", rpista: "5", rnom: "anton" }
 		] ;
@@ -128,12 +130,20 @@ app.get( '/populate', function( req, res ){
 
 app.get( '/dump_all_reserves', function( req, res ){
 	console.log( ">>> GET ALL reserves : veure fins a 20 reserves de tots els dies." ) ;
-	var CollectionName = app.get( 'cname' ) ; // get collection name
+	var CollectionName = app.get( 'cname' ) ;     // get collection name
     var MyCollection = db.get( CollectionName ) ; // get the collection
+
 	MyCollection.find( {  }, { limit: 20 }, function( err, docs ){ // empty filter
-        var  i = docs.length ;
-        console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
-        res.json( docs ) ; // send JSON object
+	    if ( err ) { 
+            console.log( "--- error accessing DDBB (%s).", CollectionName, i ) ;
+            res.status( 500 ) ; // internal error
+            res.send( {'error':'DDBB error.'} ) ;
+// a la pantalla del server surt "--- error accessing DDBB (reserves_pistes). undefined" --- de on surt "undefined" ?
+        } else {
+            var  i = docs.length ;
+            console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
+            res.json( docs ) ; // send JSON object
+		} ;
 	}) ; // find()
 
 }); // get '/dump_all_reserves'
@@ -248,5 +258,5 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
    
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server v 4.0.b listening on port ' + app.get( 'port' ) ) ;
+    console.log( 'Express server v 4.0.c listening on port ' + app.get( 'port' ) ) ;
 } ) ;
