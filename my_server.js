@@ -29,8 +29,13 @@
 // npm install -g morgan       --save
 // npm install -g body-parser  --save
 
+// Problemes :
+//  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
+//  *) els quadres no lliures no s'hi pot fer clik (per des-ocupar)
+//
 
 // Pending :
+// (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) veure el codi a Chrome
 // (*) format de la data : ara es "own format"
@@ -40,6 +45,8 @@
 
 
 // Let's go :
+
+ var myVersio = "v 4.0.d" ;
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -89,7 +96,7 @@ app.get( '/ping', function(req,res) {
 				+ currentdate.getMinutes() + ":"
 				+ currentdate.getSeconds() ;
 
-   var texte = "Hello from Koltrane v 2.2.e<p>(" + datetime + ')<p> <a href="./index.htm">Back</a>' ;
+   var texte = "Hello from Koltrane "+myVersio+"<p>(" + datetime + ')<p> <a href="./index.htm">Back</a>' ;
    res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
    res.write( texte ) ;
    res.end( ) ;
@@ -258,5 +265,5 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
    
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server v 4.0.c listening on port ' + app.get( 'port' ) ) ;
+    console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
 } ) ;

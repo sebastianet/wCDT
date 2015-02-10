@@ -42,16 +42,16 @@ $(document).ready( function() {
 			
 // 2 - get "dades" for the table
 
-			console.log( '**** Demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
+			console.log( '*** consulta - demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
 
 // debugger;
 			$.get( "/qui_te_reserves/" + myDate, function( dades ) {
 
-				console.log( ">>> Server response : ", dades ); // show whole JSON object
+				console.log( ">>> consulta - server response : ", dades ); // show whole JSON object
 				
 				var lng = 0 ;
 				lng = dades.length ;
-				console.log( '+++ Llargada (%s).', lng ) ;
+				console.log( '+++ consulta - llargada (%s).', lng ) ;
 				if ( lng > 0 ) {
 				  var i = 0 ;
 				  while ( i < lng ) {
@@ -60,10 +60,10 @@ $(document).ready( function() {
 					var szData  = dades[i].rdata ;
 					var szHora  = dades[i].rhora ;
 					var sz1User = "En {" + szNom + "} te la pista [" + szPista + "] el dia {" + szData + "} a les {" + szHora + "} " ;
-					console.log( ">>> Ocupant [%i] : (%s).", i, sz1User ); // 
+					console.log( ">>> consulta - ocupant [%i] : (%s).", i, sz1User ); // 
 					
 					var szCella = "#tdh"+szHora+"p"+szPista ;  // calculem a quina cella va el texte - veure els noms a sebas.css !
-					console.log( ">>> Ocupem la Cella (%s).", szCella ); // debug
+					console.log( ">>> consulta - ocupem la Cella (%s).", szCella ); // debug
 					$( szCella ).html( szNom ) ;           // posar el texte a la cella
 					$( szCella ).addClass( "ocupada" ) ;   // canviem la class de la cella : afegim "ocupada" ...
 					$( szCella ).removeClass( "lliure" ) ; // ... i treiem "lliure"
@@ -71,13 +71,14 @@ $(document).ready( function() {
 				  } ; // while  
 				} ; // lng > 0
 
+
 // +++ codi per associar el event "click" a una cella de la taula
 
 	$('td.lliure').on('click',function(ev){
 	  //dia i hora i soci i pista construir serial...
 		var target = $(ev.target).parent();
 		var targetID = target.attr('id') ;
-		console.log( 'Consulta - onclick td.lliure - el seu ID es {'+targetID+'}' ) ;
+		console.log( 'consulta - onclick td.lliure - el seu ID es {'+targetID+'}' ) ;
 		  
 		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
 		var clkPista  = targetID.substring(6,7) ; // tdh10p3
@@ -92,16 +93,26 @@ $(document).ready( function() {
 			var soci = window.session.user.nom ;
 			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
 
-			console.log( 'Consulta - fer reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
+			console.log( 'consulta - fer reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
 			ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // client.js
 
 		} else { // wrong prefix
 		} ;
 		return false ;
  
-    });
+    }); // OnClick - codi a executar quan piquem TD.LLIURE
+
+	$('td.ocupada').on('click',function(ev){
+		var target = $(ev.target).parent();
+		var targetID = target.attr('id') ;
+		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+targetID+'}' ) ;
+
+		return false ;
+ 
+    }); // OnClick - codi a executar quan piquem TD.OCUPADA
 
 // ---
+
 
 // posar la data de la reserva al primer quadre dalt a l'esquerra
 
@@ -115,6 +126,7 @@ $(document).ready( function() {
 		return false ; // stop processing !!!
 		
 	}); // click "myFormReqDades1Dia" submit
+
 
 } ) ; // DOM ready
 </script>

@@ -17,7 +17,7 @@
 
  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 
- <title> Intro a CDT v 4.0.a </title>
+ <title> Intro a CDT v 4.0.d </title>
 </head>
 
 <body id="home">
@@ -29,7 +29,7 @@
     </div>
     
     <div id="header">
-         <h1> <i class="fa fa-wifi"></i> &nbsp; Benvingut a la web del CDT &nbsp; <i class="fa fa-wifi"></i> </h1>
+         <h1> <i class="fa fa-wifi"></i> &nbsp; Benvingut a la web del CDT &nbsp; <i class="fa fa-wifi"></i> (v4.0.d) </h1>
     </div>
     
     <ul id="nav">
@@ -111,7 +111,7 @@ $( function() {
 	
 	var today = new Date();
 	var dd = today.getDate();
-	var mm = today.getMonth()+1;      //January is 0!
+	var mm = today.getMonth()+1;      // January is 0!
 	var yyyy = today.getFullYear();
 
 	if( dd<10 ) {
@@ -126,7 +126,7 @@ $( function() {
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
 
 	$.get( '/mes_actual.htm', function( page ) {
-		console.log( '**** Demanem al server la sub-pagina MES_ACTUAL.' ) ;
+		console.log( '*** index - demanem al server la sub-pagina MES_ACTUAL.' ) ;
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(actual month html code)
 
@@ -136,7 +136,7 @@ $( function() {
 
 	$( ".clkLogon" ).click( function() {
 		$.get( '/logon.htm', function( page ) {
-			console.log( '**** Demanem al server la sub-pagina LOGON.' ) ;
+			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
 	}) ; // logon
@@ -144,7 +144,7 @@ $( function() {
 	
 	$( ".clkConsulta" ).click( function() {
 		$.get( '/consulta.htm', function( page ) {
-			console.log( '**** Demanem al server la sub-pagina CONSULTA.' ) ;
+			console.log( '*** index - demanem al server la sub-pagina CONSULTA.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(consulta)
 	}) ; // consulta
@@ -152,7 +152,7 @@ $( function() {
 	
 	$( ".clkReserva" ).click( function() {
 		$.get( '/reserva.htm', function( page ) {
-			console.log( '**** Demanem al server la sub-pagina RESERVA.' ) ;
+			console.log( '*** index - demanem al server la sub-pagina RESERVA.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get (reserva)
 	}) ; // reserva
@@ -160,7 +160,7 @@ $( function() {
 	
 	$( "#clkHelp" ).click( function() {
 		$.get( '/help.htm', function( page ) {
-			console.log( '**** Demanem al server la sub-pagina HELP.' ) ;
+			console.log( '*** index - demanem al server la sub-pagina HELP.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(help)
 	}) ; // help
