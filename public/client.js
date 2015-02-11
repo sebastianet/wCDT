@@ -59,7 +59,6 @@ function indexReady() {
 		$.get( '/consulta.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina CONSULTA.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-   subpageReady();
 		}) ; // get(consulta)
 	}) ; // consulta
 
@@ -82,6 +81,10 @@ function indexReady() {
 	}) ; // help
 	
 }
+
+function consulta_ready() {
+    subpageReady() ;
+} ;
 
 function subpageReady() {
 	$( "#myFormFerReserva" ).submit( function(event) {

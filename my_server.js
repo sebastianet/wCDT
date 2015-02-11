@@ -6,7 +6,8 @@
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
-// Versions (more detailed than in HELP.HTM) :
+// Versions (more detailed than in HELP.HTM)
+//     Numeracio : 1 lloc aqui (var "myVersio") i 2 llocs a INDEX.HTM
 //
 // 1.2.d - remove bodyParser, deprecated
 // 1.3.a - get LOGON.HTM from server into #content
@@ -24,6 +25,7 @@
 // 4.0.b - 20150128 - fix "monk" in package.json, serve "index.htm"
 // 4.0.c - 20150206 - catch ddbb.find() error
 // 4.0.d - 20150209 - dump mongo ID's (start delete). February month.
+// 4.1.a - 20150211 - reorganitzem el codi per veure-ho tot al debugger - CLIENT.JS
 
 // Package install :
 // npm install -g morgan       --save
@@ -32,7 +34,8 @@
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
 //  *) els quadres no lliures no s'hi pot fer clik (per des-ocupar)
-//
+//  *) *** index - demanem al server la sub-pagina CONSULTA.
+//         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 
 // Pending :
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
@@ -46,7 +49,7 @@
 
 // Let's go :
 
- var myVersio = "v 4.0.d" ;
+ var myVersio   = "v 4.1.a" ;
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 

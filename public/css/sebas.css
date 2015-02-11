@@ -17,8 +17,15 @@
 /* taula ocupacio */
 
 #thora09 { width: 150px ; }
-.ocupada { background-color: #ccc; }
-.lliure { background-color: #ddd; }
+.ocupada { 
+    background-color: #ccc;
+    cursor: pointer; 
+ }
+
+.lliure { 
+    background-color: #ddd;
+        cursor: pointer; 
+ }
 
 /* taula logon */
 
