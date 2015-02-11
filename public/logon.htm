@@ -49,29 +49,3 @@ Will use
 
 <hr>
 
-<script> 
-$(document).ready( function() {
-	
-	$( "#myFormReqLogon" ).submit( function(event) {
-		
-		var myLogon = $( this ).serialize() ;  // get user entry and display it
-		
-		console.log( '[+] boto LOGON polsat - logon ('+myLogon+').' ) ; // logon(nom_Logon=Ivan&pwd_Logon=Grozniy).
-		var i = myLogon.indexOf("&") ;
-//		console.log( '[+] boto polsat - AMP at ('+i+').' ) ;
-		var logonUser = myLogon.substring( 10, i ) ;
-		console.log( '[+] boto LOGON polsat - USR is ('+logonUser+').' ) ;
-		var j = myLogon.length ;
-//		console.log( '[+] boto polsat - PAR at ('+j+').' ) ;
-		var logonPwd = myLogon.substring( i+11, j ) ;
-		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
-
-		window.session.user.nom = logonUser ;
-		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
-		
-		return false ; // stop processing !!!
-	
-	}); // click "myFormReqLogon" submit
-	
-} ) ; // DOM ready
-</script>
