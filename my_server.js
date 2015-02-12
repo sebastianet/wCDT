@@ -26,6 +26,7 @@
 // 4.0.c - 20150206 - catch ddbb.find() error
 // 4.0.d - 20150209 - dump mongo ID's (start delete). February month.
 // 4.1.a - 20150211 - reorganitzem el codi per veure-ho tot al debugger - CLIENT.JS
+// 4.1.b - 
 
 // Package install :
 // npm install -g morgan       --save
@@ -33,23 +34,24 @@
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
-//  *) els quadres no lliures no s'hi pot fer clik (per des-ocupar)
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 
 // Pending :
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
-// (*) veure el codi a Chrome
 // (*) format de la data : ara es "own format"
 // (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
 
+// Dubtes :
+// *) a INDEX.HTM + DOM Ready() fem  : window.session.user = {} ;        // set "no user" at begin
+//    si re-carreguem la pagina es perd el usuari ?
 
 // Let's go :
 
- var myVersio   = "v 4.1.a" ;
+ var myVersio   = "v 4.1.b" ;
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -66,7 +68,7 @@
 
    app.set( 'port', process.env.PORT || 80 ) ;   // mind Apache !
    app.set( 'Title', 'My Koltrane Site' ) ;
-   app.set( 'cname', "reserves_pistes" ) ;       // only place we have the collection name
+   app.set( 'cname', "reserves_pistes" ) ;       // this is only place we have the collection name
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
@@ -79,10 +81,10 @@
 // serve static files and css
 //   app.get( '/*', express.static( __dirname + '/public' ) ) ; // serve whatever is in the "public" folder at the URL "/:filename"
 
-   var staticPath =  __dirname + '/public';
-   var staticOptions = { index: 'index.htm' };
+   var staticPath    =  __dirname + '/public';
+   var staticOptions = { index: 'index.htm' };  // provide "index.htm" instead of the default "index.html"
 
-   app.get('/*',express.static( staticPath, staticOptions )) ;
+   app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
  
 // Lets set some routes :

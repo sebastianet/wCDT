@@ -1,1 +1,1 @@
-start "" /B node  my_server.js
+node  my_server.js

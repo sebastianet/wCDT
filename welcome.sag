@@ -54,3 +54,9 @@ b) per dies
  git remote add usb file://J:\GIT-repositoris\simple_web_server.git
 
  .
+ ===
+ .
+    git status
+	git remote -v
+	git commit -am "comentari"
+	git push -u github master

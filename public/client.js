@@ -18,7 +18,8 @@ function ferReserva( myDades, content ) {
 		
 };
 
-function indexReady() {
+function indexReady() {               // DOM ready for index.htm
+
 	window.session = {} ;             // unique global var for all the application !
 	window.session.user = {} ;        // set "no user" at begin
 	
@@ -41,7 +42,6 @@ function indexReady() {
 	$.get( '/mes_actual.htm', function( page ) {
 		console.log( '*** index - demanem al server la sub-pagina MES_ACTUAL.' ) ;
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
-  subpageReady();
 	}) ; // get(actual month html code)
 
 
@@ -50,7 +50,6 @@ function indexReady() {
 		$.get( '/logon.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-   subpageReady();
 		}) ; // get(logon)
 	}) ; // logon
 
@@ -67,7 +66,6 @@ function indexReady() {
 		$.get( '/reserva.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina RESERVA.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-   subpageReady();
 		}) ; // get (reserva)
 	}) ; // reserva
 
@@ -76,63 +74,13 @@ function indexReady() {
 		$.get( '/help.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina HELP.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-   subpageReady();
 		}) ; // get(help)
 	}) ; // help
 	
-}
+} ; // DOM ready for INDEX.HTM
+
 
 function consulta_ready() {
-    subpageReady() ;
-} ;
-
-function subpageReady() {
-	$( "#myFormFerReserva" ).submit( function(event) {
-	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
-
-		console.log( '[+] boto RESERVA polsat - fer una reserva.' ) ;
-		
-		ferReserva( $(this).serialize(), "#content" ) ; // client.js
-		
-/*                  
-					var myDades = $( this ).serialize() ;  // save user entry
-					
-					$.post( "/fer_una_reserva/" + myDades, function( dades ) {
-						var lng = 0 ;
-						lng = dades.length ;
-						console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
-						
-						$('#content').html( dades );  // or "text"
-
-					}); // get(dades) 
-*/
-					
-		return false ; // stop processing !!!
-		
-
-	}); // click "myFormFerReserva" submit
-
- 	$( "#myFormReqLogon" ).submit( function(event) {
-		
-		var myLogon = $( this ).serialize() ;  // get user entry and display it
-		
-		console.log( '[+] boto LOGON polsat - logon ('+myLogon+').' ) ; // logon(nom_Logon=Ivan&pwd_Logon=Grozniy).
-		var i = myLogon.indexOf("&") ;
-//		console.log( '[+] boto polsat - AMP at ('+i+').' ) ;
-		var logonUser = myLogon.substring( 10, i ) ;
-		console.log( '[+] boto LOGON polsat - USR is ('+logonUser+').' ) ;
-		var j = myLogon.length ;
-//		console.log( '[+] boto polsat - PAR at ('+j+').' ) ;
-		var logonPwd = myLogon.substring( i+11, j ) ;
-		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
-
-		window.session.user.nom = logonUser ;
-		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
-		
-		return false ; // stop processing !!!
-	
-	}); // click "myFormReqLogon" submit
-
 
 	$( "#myFormReqDades1Dia" ).submit( function(event) {
 	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server
@@ -143,13 +91,12 @@ function subpageReady() {
 
 		var myDate = $( this ).serialize() ;  // save user entry of this form : [data_Reserva=2014%2F11%2F10]
 		var szJustDate = myDate.substring(13) ; // just after the "="
-//		szJustDate = unescape ( szJustDate ) ;  // change %2F into "/", old style
 		szJustDate = decodeURIComponent ( szJustDate ) ;  // change %2F into "/"
 
 		$.get( '/tbl1day.htm', function( page ) {
 			console.log( '**** Demanem al server la taula on posar la ocupacio del dia ['+szJustDate+'].' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-			subpageReady();
+
 // 2 - get "dades" for the table
 
 			console.log( '*** consulta - demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
@@ -194,10 +141,7 @@ function subpageReady() {
 
 		if ( clkPrefix == 'tdh' ) {
 
-//			var soci = "Test3" ;
-//			var avui = "2014%2F11%2F10" 		
-
-			var avui = $ ('#ocupacio_1_dia>thead>tr>th:nth-child(1)').text() ;
+			var avui = $ ('#ocupacio_1_dia>thead>tr>th:nth-child(1)').text() ; // "2014%2F11%2F10"
 			var soci = window.session.user.nom ;
 			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
 
@@ -213,6 +157,9 @@ function subpageReady() {
 	$('td.ocupada').on('click',function(ev){
 		var targetID = $(this).attr('id') ;
 		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+targetID+'}' ) ;
+
+		var targetUser = $(this).attr('innerText') ;
+		console.log( 'consulta - onclick td.ocupada - el seu USER es {'+targetUser+'}' ) ;
 
 		return false ;
  
@@ -233,13 +180,75 @@ function subpageReady() {
 		
 	}); // click "myFormReqDades1Dia" submit
 
-     var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
+} ; // consulta_ready()
+
+
+function reserva_ready() {
+
+	$( "#myFormFerReserva" ).submit( function(event) {
+	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
+
+		console.log( '[+] boto RESERVA polsat - fer una reserva.' ) ;
+		
+		ferReserva( $(this).serialize(), "#content" ) ; // client.js
+		
+/*                  
+					var myDades = $( this ).serialize() ;  // save user entry
+					
+					$.post( "/fer_una_reserva/" + myDades, function( dades ) {
+						var lng = 0 ;
+						lng = dades.length ;
+						console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
+						
+						$('#content').html( dades );  // or "text"
+
+					}); // get(dades) 
+*/
+					
+		return false ; // stop processing !!!
+		
+
+	}); // click "myFormFerReserva" submit
+
+} ; // reserva_ready()
+
+
+function logon_ready() {
+
+ 	$( "#myFormReqLogon" ).submit( function(event) {
+		
+		var myLogon = $( this ).serialize() ;  // get user entry and display it
+		
+		console.log( '[+] boto LOGON polsat - logon ('+myLogon+').' ) ; // logon(nom_Logon=Ivan&pwd_Logon=Grozniy).
+		var i = myLogon.indexOf("&") ;
+//		console.log( '[+] boto polsat - AMP at ('+i+').' ) ;
+		var logonUser = myLogon.substring( 10, i ) ;
+		console.log( '[+] boto LOGON polsat - USR is ('+logonUser+').' ) ;
+		var j = myLogon.length ;
+//		console.log( '[+] boto polsat - PAR at ('+j+').' ) ;
+		var logonPwd = myLogon.substring( i+11, j ) ;
+		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
+
+		window.session.user.nom = logonUser ;
+		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
+		
+		return false ; // stop processing !!!
 	
+	}); // click "myFormReqLogon" submit
+
+} ; // logon_ready()
+
+
+function help_ready() {
+
+// posar la data actual a baix a l'esquerra
+
+	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
 	$( "#my_date" ).html( szAvui ) ; // show actual date
 
     $("#clkConsultaAllReserves").click(function () {
         $.get('/dump_all_reserves', function ( page ) {
-            console.log( "**** Demanem la llista de totes les reserves. Server response {%s}", page ) ;
+            console.log( "*** Demanem la llista de totes les reserves. Server response {%s}", page ) ;
             var lng = 0 ;
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;
@@ -259,7 +268,7 @@ function subpageReady() {
 			texte += "</p>"
             $('#content').html(texte);  // or "text"
         }); // get()  
-    }); // consulta
+    }); // consulta all reserves
 
 
 	$( "#clkPopulate" ).click( function() {
@@ -284,14 +293,12 @@ function subpageReady() {
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(links)
 	}) ; // links
-}
+
+} ; // help_ready()
+
  
-$(function(){
-  indexReady();
-} ) ; // DOM ready
-
-
-
-
-
+$( function() {
 	
+    indexReady();
+  
+} ) ; // DOM ready
