@@ -4,6 +4,7 @@
 //    ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // consulta.htm
 
 function ferReserva( myDades, content ) {
+
 	$.post( "/fer_una_reserva/" + myDades, function( dades ) {
 	
 		var lng = 0 ;
@@ -12,11 +13,27 @@ function ferReserva( myDades, content ) {
 		
 		$(content).html( dades );  // or "text" - set server data onto actual page
 
-	}); // post(reservar)
+	}); // post(fer reserva)
 
 //	return false ; // stop processing !!!
 		
-};
+}; // ferReserva()
+
+
+function esborrarReserva( myDades, content ) {
+
+	$.post( "/esborrar_una_reserva/" + myDades, function( dades ) {
+	
+		var lng = 0 ;
+		lng = dades.length ;
+		console.log( ">>> Esborrar reserva - server response (%s) : ", lng, dades ); // show whole JSON object
+		
+		$(content).html( dades );  // or "text" - set server data onto actual page
+
+	}); // post(esborrar reserva)
+
+}; // esborrarReserva()
+
 
 function indexReady() {               // DOM ready for index.htm
 
@@ -54,22 +71,30 @@ function indexReady() {               // DOM ready for index.htm
 	}) ; // logon
 
 	
-	$( ".clkConsulta" ).click( function() {
-		$.get( '/consulta.htm', function( page ) {
-			console.log( '*** index - demanem al server la sub-pagina CONSULTA.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(consulta)
-	}) ; // consulta
-
-	
-	$( ".clkReserva" ).click( function() {
+	$( ".clkFerReserva" ).click( function() {
 		$.get( '/reserva.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina RESERVA.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get (reserva)
-	}) ; // reserva
+	}) ; // fer reserva
 
 	
+	$( ".clkConsultaReserva" ).click( function() {
+		$.get( '/consulta.htm', function( page ) {
+			console.log( '*** index - demanem al server la sub-pagina CONSULTA.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(consulta)
+	}) ; // consulta reserva
+
+
+	$( ".clkEsborrarReserva" ).click( function() {
+		$.get( '/esborra.htm', function( page ) {
+			console.log( '*** index - demanem al server la sub-pagina ESBORRAR.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(esborrar)
+	}) ; // esborrar reserva
+
+
 	$( "#clkHelp" ).click( function() {
 		$.get( '/help.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina HELP.' ) ;
@@ -150,7 +175,7 @@ function consulta_ready() {
 
 		} else { // wrong prefix
 		} ;
-		return false ;
+		return false ; // stop processing
  
     }); // OnClick - codi a executar quan piquem TD.LLIURE
 
@@ -190,7 +215,7 @@ function reserva_ready() {
 
 		console.log( '[+] boto RESERVA polsat - fer una reserva.' ) ;
 		
-		ferReserva( $(this).serialize(), "#content" ) ; // client.js
+		ferReserva( $(this).serialize(), "#content" ) ; // client.js - common code with "do reservation from "consulta"
 		
 /*                  
 					var myDades = $( this ).serialize() ;  // save user entry
@@ -207,10 +232,23 @@ function reserva_ready() {
 					
 		return false ; // stop processing !!!
 		
-
 	}); // click "myFormFerReserva" submit
 
 } ; // reserva_ready()
+
+
+function esborra_ready() {
+
+	$( "#myFormEsborrarReserva" ).submit( function(event) {
+	// will produce a msg as "GET /esborrar_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
+
+		console.log( '[+] boto ESBORRAR polsat - anular una reserva.' ) ;
+		esborrarReserva( $(this).serialize(), "#content" ) ; // client.js - common code with "erase reservation from "consulta"
+		return false ; // stop processing !!!
+
+	}); // click "myFormEsborrarReserva" submit
+		
+} ; // esborra_ready()
 
 
 function logon_ready() {
