@@ -299,7 +299,7 @@ function help_ready() {
 			
             var texte = '<p class="pkon">';
             if ( lng > 0 ) {
-                texte += "Hi ha (" + lng + ") reserves a la BBDD <br>";
+                texte += "Dump all data in DDBB. Hi ha (" + lng + ") reserves. <br>";
                 var i = 0;
                 while ( i < lng ) {
                     texte += "("+i+") la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores";
