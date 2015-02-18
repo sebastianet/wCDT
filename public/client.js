@@ -121,9 +121,12 @@ function consulta_ready() {
 					
 					var szCella = "#tdh"+szHora+"p"+szPista ;  // calculem a quina cella va el texte - veure els noms a sebas.css !
 					console.log( ">>> consulta - ocupem la Cella (%s).", szCella ); // debug
-					$( szCella ).html( szNom ) ;           // posar el texte a la cella
-					$( szCella ).addClass( "ocupada" ) ;   // canviem la class de la cella : afegim "ocupada" ...
-					$( szCella ).removeClass( "lliure" ) ; // ... i treiem "lliure"
+
+					$( szCella ).html( szNom ) ;                      // posar el texte visible a la cella
+					$( szCella ).addClass( "ocupada" ) ;              // canviem la class de la cella : afegim "ocupada" ...
+					$( szCella ).removeClass( "lliure" ) ;            // ... i treiem "lliure"
+					$( szCella ).attr( 'cdt_usuari_pista', szNom ) ;  // set user name in own field of cell
+					
 					i++ ;  // per totes les reserves
 				  } ; // while  
 				} ; // lng > 0
@@ -131,7 +134,8 @@ function consulta_ready() {
 // +++ codi per associar el event "click" a una cella de la taula
 
 	$('td.lliure').on('click',function(ev){
-	  //dia i hora i soci i pista construir serial...
+		//dia i hora i soci i pista construir serial...
+	
 		var targetID = $(this).attr('id') ;
 		console.log( 'consulta - onclick td.lliure - el seu ID es {'+targetID+'}' ) ;
 		  
@@ -154,11 +158,13 @@ function consulta_ready() {
  
     }); // OnClick - codi a executar quan piquem TD.LLIURE
 
+
 	$('td.ocupada').on('click',function(ev){
+
 		var targetID = $(this).attr('id') ;
 		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+targetID+'}' ) ;
 
-		var targetUser = $(this).attr('innerText') ;
+		var targetUser = $(this).text() ;
 		console.log( 'consulta - onclick td.ocupada - el seu USER es {'+targetUser+'}' ) ;
 
 		return false ;
