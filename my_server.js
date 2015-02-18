@@ -28,8 +28,9 @@
 // 4.1.a - 20150211 - reorganitzem el codi per veure-ho tot al debugger - CLIENT.JS
 // 4.1.b - 20150215 - esborrar reserva
 // 4.1.c - 20150218 - improve some messages
-// 4.1.d - 20150219 - HOURS must always be 2-digit. DatePicker(). HourSelector(). jQueryUI : User Interface.
-// 4.1.e -          .
+// 4.1.d - 20150218 - HOURS must always be 2-digit. DatePicker(). HourSelector(). jQueryUI : User Interface.
+// 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties.
+// 4.1.f - 
 
 // Package install :
 // npm install -g morgan       --save
@@ -54,7 +55,7 @@
 
 // Let's go :
 
- var myVersio   = "v 4.1.d" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 4.1.e" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session

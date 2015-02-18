@@ -1,8 +1,8 @@
 // nova funció yyyyymmdd de Date 
 Date.prototype.yyyymmdd = function() {                            
         var yyyy = this.getFullYear().toString();                                    
-        var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based         
-        var dd  = this.getDate().toString();
+        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+        var dd   = this.getDate().toString();
         return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
    };  
 
@@ -67,10 +67,26 @@ function indexReady() {               // DOM ready for index.htm
 //	window.session.user.nom = 'pau' ;
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
 
+// posem el calendari del mes actual
+
 	$.get( '/mes_actual.htm', function( page ) {
 		console.log( '*** index - demanem al server la sub-pagina MES_ACTUAL.' ) ;
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(actual month html code)
+
+// posem al CONTENT (we are a SPA) the INITAL.HTML
+	$.get( '/initial.htm', function( page ) {
+		console.log( '*** Demanem al server INITIAL.HTM, initial SPA text.' ) ;
+		$( "#content" ).html( page ) ; // show received HTML at specific <div>
+	}) ; // get(initial.htm)
+
+// Quan es pica el link de "INICI", demanem al servidor una pagina i la posem on indica "#content".
+	$( ".clkInici" ).click( function() {
+		$.get( '/initial.htm', function( page ) {
+			console.log( '*** index - demanem al server la sub-pagina INITIAL.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(logon)
+	}) ; // logon
 
 
 // Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
