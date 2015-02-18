@@ -60,3 +60,7 @@ b) per dies
 	git remote -v
 	git commit -am "comentari"
 	git push -u github master
+.
+> git remote remove origin
+> git remote add    origin    https://sebastianet:Sag.2014@github.com/sebastianet/wCDT.git
+.

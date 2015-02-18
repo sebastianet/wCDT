@@ -1,8 +1,16 @@
+// nova funció yyyyymmdd de Date 
+Date.prototype.yyyymmdd = function() {                            
+        var yyyy = this.getFullYear().toString();                                    
+        var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+        var dd  = this.getDate().toString();
+        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
+   };  
 
+   
 // exemple d'us:   
 //    ferReserva( $(this).serialize(), "#content" ) ; // reserva.htm
 //    ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // consulta.htm
-
+      
 function ferReserva( myDades, content ) {
 
 	$.post( "/fer_una_reserva/" + myDades, function( dades ) {
@@ -37,8 +45,11 @@ function esborrarReserva( myDades, content ) {
 
 function indexReady() {               // DOM ready for index.htm
 
+	
 	window.session = {} ;             // unique global var for all the application !
 	window.session.user = {} ;        // set "no user" at begin
+
+    console.log( '*** index ready. User (' + window.session.user.nom + ')' ) ;
 	
 	var today = new Date();
 	var dd = today.getDate();
@@ -215,7 +226,22 @@ function consulta_ready() {
 
 
 function reserva_ready() {
+	
+// construim jQuery widgets
+   $("#myFormFerReserva input[name='Dia_Reserva']").datepicker();
+   $("#myFormFerReserva input[name='Hora_Reserva']").spinner({	   
+	  min: 9,
+      max: 22,
+	  step: 1,
+	  start: 9,
+	  numberFormat: "n"	   
+   });
+   
+// assignem valors inicials 
+	$("#myFormFerReserva input[name='Dia_Reserva']").val((new Date).yyyymmdd());
+	$("#myFormFerReserva input[name='Nom_Soci']").val(window.session.user.nom);
 
+// injectem comportament de submit
 	$( "#myFormFerReserva" ).submit( function(event) {
 	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
