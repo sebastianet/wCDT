@@ -26,7 +26,8 @@
 // 4.0.c - 20150206 - catch ddbb.find() error
 // 4.0.d - 20150209 - dump mongo ID's (start delete). February month.
 // 4.1.a - 20150211 - reorganitzem el codi per veure-ho tot al debugger - CLIENT.JS
-// 4.1.b - 
+// 4.1.b - 20150215 - esborrar reserva
+// 4.1.c - 
 
 // Package install :
 // npm install -g morgan       --save
@@ -242,7 +243,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 					} else {
 						console.log( '++++ Success: insert went ok.' ) ;
 						res.status( 200 ) ; // OK
-						res.send( "+++ reserva feta OK." ) ; // else, indicate OK.
+						res.send( "+++ fer reserva OK." ) ; // else, indicate OK.
 					} ; // if Error
 				} ) ; // insert
 			
@@ -267,7 +268,61 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 	
 }); // get '/fer_una_reserva/<parametres>'
 
-   
+
+// (6) esborrar una reserva 
+// start with a msg as "GET /esborrar_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
+
+app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function( req, res ){
+	
+	var Esborra_Reserva_NomSoci = req.params.res_nom_soci ;
+	var Esborra_Reserva_Pista   = req.params.res_pista ;
+	var Esborra_Reserva_Dia     = req.params.res_dia ;
+	var Esborra_Reserva_Hora    = req.params.res_hora ;
+	console.log( ">>> POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
+
+	var CollectionName = app.get( 'cname' ) ;     // get collection name
+	var MyCollection = db.get( CollectionName ) ; // get the collection
+	
+	var MyEsborraReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
+	MyEsborraReserva.rnom   = Esborra_Reserva_NomSoci ;
+	MyEsborraReserva.rpista = Esborra_Reserva_Pista ;
+	MyEsborraReserva.rdata  = Esborra_Reserva_Dia ;
+	MyEsborraReserva.rhora  = Esborra_Reserva_Hora ;
+
+	MyCollection.find( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+	
+		var  i = docs.length ;
+		console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
+
+		if ( i < 1 ) { // si no esta ocupat, es un error
+		
+				szResultat = "--- ("+i+") slot lliure." ;
+				res.status( 200 ) ;      // OK as HTTP rc, but
+				res.send( szResultat ) ; // else, indicate no OK.
+
+		} else { // else, the slot is not free so we can remove it
+		
+			var ObjectIdPerEsborrar = docs[0]._id ;
+			console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
+			MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
+				if ( err ) {
+					console.log( '---- Could not remove reservation into MongoDB.' ) ;
+					res.status( 500 ) ; // internal error
+					res.send( {'error':'An error has occurred'} ) ;
+				} else {
+					console.log( '++++ Success: remove went ok.' ) ;
+					res.status( 200 ) ; // OK
+					res.send( "+++ esborrar reserva OK." ) ; // else, indicate OK.
+				} ; // if Error
+
+			} ) ; // remove
+		} ;  // if did exist
+
+	}) ; // find()
+			
+}); // get '/esborrar_una_reserva/<parametres>'
+
+
 // create our http server and launch it
 http.createServer( app ).listen( app.get( 'port' ), function() {
     console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
