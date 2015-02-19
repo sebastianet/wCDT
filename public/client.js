@@ -43,14 +43,11 @@ function esborrarReserva( myDades, content ) {
 }; // esborrarReserva()
 
 
-function indexReady() {               // DOM ready for index.htm
+function index_Ready() {              // DOM ready for index.htm
 
-	
-	window.session = {} ;             // unique global var for all the application !
+	window.session = {} ;             // unique global var for all the client application !
 	window.session.user = {} ;        // set "no user" at begin
 
-    console.log( '*** index ready. User (' + window.session.user.nom + ')' ) ;
-	
 	var today = new Date();
 	var dd = today.getDate();
 	var mm = today.getMonth()+1;      // January is 0!
@@ -64,6 +61,7 @@ function indexReady() {               // DOM ready for index.htm
 	} 
 	window.session.avui = yyyy + '/' + mm + '/' + dd ;
 
+// Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
 
@@ -133,6 +131,9 @@ function indexReady() {               // DOM ready for index.htm
 
 
 function consulta_ready() {
+
+	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( {dateFormat: "yy/mm/dd"});
+	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() );
 
 	$( "#myFormReqDades1Dia" ).submit( function(event) {
 	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server
@@ -219,6 +220,30 @@ function consulta_ready() {
 		var targetUser = $(this).text() ;
 		console.log( 'consulta - onclick td.ocupada - el seu USER es {'+targetUser+'}' ) ;
 
+		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
+		var clkPista  = targetID.substring(6,7) ; // tdh10p3
+		var clkHora   = targetID.substring(3,5) ; // tdh10p3
+
+		if ( clkPrefix == 'tdh' ) {
+
+			var avui = $ ('#ocupacio_1_dia>thead>tr>th:nth-child(1)').text() ; // "2014%2F11%2F10"
+			var soci = window.session.user.nom ;
+			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
+
+			console.log( 'consulta - esborrar reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
+
+			// create a msg as "GET /esborrar_una_reserva/Nom_Soci_Esborrar=Ivan&Pista_Reserva_Esborrar=3&Dia_Reserva_Esborrar=2015%2F02%2F19&Hora_Reserva_Esborrar=10"
+			var szEsborrarReserva = "Nom_Soci_Esborrar=" + soci ;
+			szEsborrarReserva += "&Pista_Reserva_Esborrar=" + clkPista ;
+			szEsborrarReserva += "&Dia_Reserva_Esborrar=" + avui ;
+			szEsborrarReserva += "&Hora_Reserva_Esborrar=" + clkHora ;
+
+			// call code
+			esborrarReserva( szEsborrarReserva, "#content" ) ; // client.js - common code with "erase reservation from "consulta"
+
+		} else { // wrong prefix
+		} ;
+		
 		return false ;
  
     }); // OnClick - codi a executar quan piquem TD.OCUPADA
@@ -244,8 +269,8 @@ function consulta_ready() {
 function reserva_ready() {
 	
 // construim jQuery widgets
-   $("#myFormFerReserva input[name='Dia_Reserva']").datepicker();
-   $("#myFormFerReserva input[name='Hora_Reserva']").spinner({	   
+   $( "#myFormFerReserva input[name='Dia_Reserva']" ).datepicker( {dateFormat: "yy/mm/dd"} );
+   $( "#myFormFerReserva input[name='Hora_Reserva']" ).spinner({	   
 	  min: 9,
       max: 22,
 	  step: 1,
@@ -254,8 +279,8 @@ function reserva_ready() {
    });
    
 // assignem valors inicials 
-	$("#myFormFerReserva input[name='Dia_Reserva']").val((new Date).yyyymmdd());
-	$("#myFormFerReserva input[name='Nom_Soci']").val(window.session.user.nom);
+	$( "#myFormFerReserva input[name='Dia_Reserva']" ).val( (new Date).yyyymmdd() );
+	$( "#myFormFerReserva input[name='Nom_Soci']" ).val( window.session.user.nom );
 
 // injectem comportament de submit
 	$( "#myFormFerReserva" ).submit( function(event) {
@@ -287,6 +312,10 @@ function reserva_ready() {
 
 function esborra_ready() {
 
+	$( "#myFormEsborrarReserva input[name='Dia_Reserva_Esborrar']").datepicker( {dateFormat: "yy/mm/dd"} );
+	$( "#myFormEsborrarReserva input[name='Dia_Reserva_Esborrar']").val( (new Date).yyyymmdd() );
+	$( "#myFormEsborrarReserva input[name='Nom_Soci_Esborrar']" ).val( window.session.user.nom );
+	
 	$( "#myFormEsborrarReserva" ).submit( function(event) {
 	// will produce a msg as "GET /esborrar_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
@@ -329,8 +358,8 @@ function help_ready() {
 
 // posar la data actual a baix a l'esquerra
 
-	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
-	$( "#my_date" ).html( szAvui ) ; // show actual date
+//	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
+//	$( "#my_date" ).html( szAvui ) ; // show actual date
 
     $("#clkConsultaAllReserves").click(function () {
         $.get('/dump_all_reserves', function ( page ) {
@@ -385,6 +414,6 @@ function help_ready() {
  
 $( function() {
 	
-    indexReady();
+    index_Ready();
   
 } ) ; // DOM ready

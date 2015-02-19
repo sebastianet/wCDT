@@ -11,7 +11,7 @@
 //
 // 1.2.d - remove bodyParser, deprecated
 // 1.3.a - get LOGON.HTM from server into #content
-// 2.0.a - use jQuery() and Ajax.
+// 2.0.a - use jQuery() and Ajax
 // 2.1.d - populate()
 // 2.2.a - draw a table to fill with some data 
 // 2.2.b - enter then mongo data properly into the table
@@ -24,13 +24,14 @@
 // 4.0.a - 20150114 - use Passport()
 // 4.0.b - 20150128 - fix "monk" in package.json, serve "index.htm"
 // 4.0.c - 20150206 - catch ddbb.find() error
-// 4.0.d - 20150209 - dump mongo ID's (start delete). February month.
+// 4.0.d - 20150209 - dump mongo ID's (start delete). February month
 // 4.1.a - 20150211 - reorganitzem el codi per veure-ho tot al debugger - CLIENT.JS
 // 4.1.b - 20150215 - esborrar reserva
 // 4.1.c - 20150218 - improve some messages
-// 4.1.d - 20150218 - HOURS must always be 2-digit. DatePicker(). HourSelector(). jQueryUI : User Interface.
-// 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties.
-// 4.1.f - 
+// 4.1.d - 20150218 - DatePicker(). HourSelector(). jQueryUI : User Interface
+// 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties
+// 4.1.f - 20150219 - posar la data actual a totes les funcions
+// 4.1.g
 
 // Package install :
 // npm install -g morgan       --save
@@ -38,6 +39,7 @@
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
+//  *) HOURS must always be 2-digit - ok des consulta, pero reserva pot entrar "9" en lloc de "09".
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 
@@ -50,12 +52,12 @@
 // (*) tancar la conexio amb el mongo - quan es fa ?
 
 // Dubtes :
-// *) a INDEX.HTM + DOM Ready() fem  : window.session.user = {} ;        // set "no user" at begin
-//    si re-carreguem la pagina es perd el usuari ?
+// *)
+//
 
 // Let's go :
 
- var myVersio   = "v 4.1.e" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 4.1.f" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -100,19 +102,21 @@
 // (1) if customers asks for a "ping", we send actual date and a link back to main page :
 
 app.get( '/ping', function(req,res) {
-   var currentdate = new Date();
-   var datetime = "Last Sync: " + currentdate.getDate() + "/"
+	var currentdate = new Date();
+	var datetime = "Last Sync: " + currentdate.getDate() + "/"
 				+ (currentdate.getMonth()+1)  + "/"
 				+ currentdate.getFullYear() + " @ "
 				+ currentdate.getHours() + ":"
 				+ currentdate.getMinutes() + ":"
 				+ currentdate.getSeconds() ;
 
-   var texte = "Hello from Koltrane "+myVersio+"<p>(" + datetime + ')<p> <a href="./index.htm">Back</a>' ;
-   res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
-   res.write( texte ) ;
-   res.end( ) ;
- }) ; // get '/ping'
+	var texte = "Hello from Koltrane " + myVersio ;
+	texte += "<p>(" + datetime + ")" ;
+
+	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
+	res.write( texte ) ;
+	res.end( ) ;
+}) ; // get '/ping'
 
  
 // (2) populate ddbb (called from HELP page)
@@ -280,7 +284,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 
 // (6) esborrar una reserva 
-// start with a msg as "GET /esborrar_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
+// start with a msg as "GET /esborrar_una_reserva/Nom_Soci_Esborrar=Ivan&Pista_Reserva_Esborrar=3&Dia_Reserva_Esborrar=2015%2F02%2F19&Hora_Reserva_Esborrar=10"
 
 // Podem esborrar una reserva si :
 //    *) som el seu propietari (o som el Administrador)
