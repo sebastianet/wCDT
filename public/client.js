@@ -1,17 +1,18 @@
+
 // nova funció yyyyymmdd de Date 
 Date.prototype.yyyymmdd = function() {                            
-        var yyyy = this.getFullYear().toString();                                    
-        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
-        var dd   = this.getDate().toString();
-        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-   };  
+	var yyyy = this.getFullYear().toString();                                    
+	var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+	var dd   = this.getDate().toString();
+	return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
+};  
 
    
 // exemple d'us:   
 //    ferReserva( $(this).serialize(), "#content" ) ; // reserva.htm
 //    ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // consulta.htm
       
-function ferReserva( myDades, content ) {
+function ferReserva( myDades, myContent ) {
 
 	$.post( "/fer_una_reserva/" + myDades, function( dades ) {
 	
@@ -19,7 +20,7 @@ function ferReserva( myDades, content ) {
 		lng = dades.length ;
 		console.log( ">>> Fer reserva - server response (%s) : ", lng, dades ); // show whole JSON object
 		
-		$(content).html( dades );  // or "text" - set server data onto actual page
+		$( myContent ).html( dades );  // or "text" - set server data onto actual page
 
 	}); // post(fer reserva)
 
@@ -28,7 +29,7 @@ function ferReserva( myDades, content ) {
 }; // ferReserva()
 
 
-function esborrarReserva( myDades, content ) {
+function esborrarReserva( myDades, myContent ) {
 
 	$.post( "/esborrar_una_reserva/" + myDades, function( dades ) {
 	
@@ -36,7 +37,7 @@ function esborrarReserva( myDades, content ) {
 		lng = dades.length ;
 		console.log( ">>> Esborrar reserva - server response (%s) : ", lng, dades ); // show whole JSON object
 		
-		$(content).html( dades );  // or "text" - set server data onto actual page
+		$( myContent ).html( dades );  // or "text" - set server data onto actual page
 
 	}); // post(esborrar reserva)
 
@@ -344,6 +345,13 @@ function logon_ready() {
 		var logonPwd = myLogon.substring( i+11, j ) ;
 		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
 
+		$.get( '/logonuser/'+myLogon, function( page ) {
+			console.log( '**** Demanem al server de fer LOGON() de un usuari.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(logon)
+
+// com podem saber si ha anat be o malament ?
+		
 		window.session.user.nom = logonUser ;
 		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
 		

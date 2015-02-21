@@ -3,8 +3,6 @@
 
  node  my_server.js
 .
- si engeguem "node ver_bbdd.js", llavors hem de obrir un browser a "cli.htm"
-.
 ===
 Instalacio (sequencia)
  *) npm link express
@@ -63,4 +61,15 @@ b) per dies
 .
 > git remote remove origin
 > git remote add    origin    https://sebastianet:Sag.2014@github.com/sebastianet/wCDT.git
+.
+ ===================================================================================================================
+.
+ per veure el contingut de les BBDD, fer :   	mongo < wCDT_veure_BBDD.js
+.
+ per afegir a la BBDD un usuari :               node  wCDT_create_users_ddbb.js
+.
+ per depurar un JS (server) :                   node-debug  wCDT_create_users_ddbb.js
+ engega http://127.0.0.1:8080/debug?port=5858
+.
+ ===================================================================================================================
 .

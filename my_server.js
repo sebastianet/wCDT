@@ -31,7 +31,8 @@
 // 4.1.d - 20150218 - DatePicker(). HourSelector(). jQueryUI : User Interface
 // 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties
 // 4.1.f - 20150219 - posar la data actual a totes les funcions
-// 4.1.g
+// 4.2.a - 20150221 - BBDD usuaris.
+// 4.2.b
 
 // Package install :
 // npm install -g morgan       --save
@@ -57,7 +58,7 @@
 
 // Let's go :
 
- var myVersio   = "v 4.1.f" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 4.2.a" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -77,7 +78,9 @@
 
    app.set( 'port', process.env.PORT || 80 ) ;   // mind Apache !
    app.set( 'Title', 'My Koltrane Site' ) ;
-   app.set( 'cname', "reserves_pistes" ) ;       // this is only place we have the collection name
+
+   app.set( 'rcolname', "reserves_pistes" ) ;    // this is only place we specify the collection name(s)
+   app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
@@ -111,7 +114,7 @@ app.get( '/ping', function(req,res) {
 				+ currentdate.getSeconds() ;
 
 	var texte = "Hello from Koltrane " + myVersio ;
-	texte += "<p>(" + datetime + ")" ;
+	texte += "<p>(" + datetime + ")<p<<hr>" ;
 
 	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
 	res.write( texte ) ;
@@ -123,8 +126,8 @@ app.get( '/ping', function(req,res) {
 
 app.get( '/populate', function( req, res ){
     
-	var CollectionName = app.get( 'cname' ) ;     // get collection name
-    var MyCollection = db.get( CollectionName ) ; // get the collection
+	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
+    var MyCollection = db.get( CollectionName ) ;    // get the collection
 	console.log( ">>> POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
     MyCollection.drop( function(e) {              // drop old database and wait completion
@@ -155,12 +158,12 @@ app.get( '/populate', function( req, res ){
 app.get( '/dump_all_reserves', function( req, res ){
 	
 	console.log( ">>> GET ALL reserves : veure fins a 20 reserves de tots els dies." ) ;
-	var CollectionName = app.get( 'cname' ) ;     // get collection name
-    var MyCollection = db.get( CollectionName ) ; // get the collection
+	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
+    var MyCollection = db.get( CollectionName ) ;    // get the collection
 
 	MyCollection.find( {  }, { limit: 20 }, function( err, docs ){ // empty filter
 	    if ( err ) { 
-            console.log( "--- error accessing DDBB (%s).", CollectionName ) ;
+            console.log( "--- Dump all reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
             res.send( {'error':'dump all DDBB error.'} ) ;
         } else {
@@ -180,15 +183,22 @@ app.get( '/dump_all_reserves', function( req, res ){
 app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function( req, res ){
 	
     var DiaConsultat = req.params.dia_consultat ; // if BLANK then 404 ;
-	console.log( ">>> GET veure reserves 1 dia : veure fins a 20 reserves del dia (%s) ", DiaConsultat ) ;
-	
-	var CollectionName = app.get( 'cname' ) ;     // get collection name
+	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
    	var MyCollection = db.get( CollectionName ) ; // get the collection
+	console.log( ">>> GET veure reserves 1 dia - collection(%s) - veure fins a 20 reserves del dia (%s) ", CollectionName, DiaConsultat ) ;
 	
 	MyCollection.find( { rdata: DiaConsultat }, { limit: 20 }, function( err, docs ){ 
-        var  i = docs.length ;
-        console.log( "+++ the collection (%s) for the date (%s) has (%s) elements.", CollectionName, DiaConsultat, i ) ;
-        res.json( docs ) ; // send JSON object
+
+		if ( err ) {
+			console.log( '--- Veure reserves. Error mongodb is (' + err.message + ').' ) ;
+			res.status( 500 ) ; // internal error
+			res.send( {'error':'mongodb error has occurred'} ) ;
+		} else {	
+			var  i = docs.length ;
+			console.log( "+++ the collection (%s) for the date (%s) has (%s) elements.", CollectionName, DiaConsultat, i ) ;
+			res.json( docs ) ; // send JSON object
+		} ; // if Error
+
 	}) ; // find()
 
 }); // get '/qui_te_reserves/data_Reserva=:dia_consultat'
@@ -207,7 +217,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 //	if ( Reserva_Hora < 10 ) { Reserva_Hora = '0' + Reserva_Hora } ;
 	console.log( ">>> POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 	
-	var CollectionName = app.get( 'cname' ) ;     // get collection name
+	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 	var MyCollection = db.get( CollectionName ) ; // get the collection
 	
 	var MyReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
@@ -241,37 +251,44 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 // mirem si aquesta pista ja esta ocupada aquest dia i hora :
 
 		MyCollection.find( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
-		
-			var  i = docs.length ;
-			console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
 
-			if ( i < 1 ) { // si no esta ocupat, la reservem
+			if ( err ) { 
+				console.log( "--- Fer Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+				res.status( 500 ) ; // internal error
+				res.send( {'error': 'fer reserva DDBB error.'} ) ;
+			} else {
 		
-				console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+				var  i = docs.length ;
+				console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
+
+				if ( i < 1 ) { // si no esta ocupat, la reservem
+		
+					console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
 				
-				MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
-					if ( err ) {
-						console.log( '---- Could not insert reservation into MongoDB.' ) ;
-						res.status( 500 ) ; // internal error
-						res.send( {'error':'An error has occurred'} ) ;
-					} else {
-						console.log( '++++ Success: insert went ok.' ) ;
-						res.status( 200 ) ; // OK
-						res.send( "+++ fer reserva OK. User("+Reserva_NomSoci+"), pista("+Reserva_Pista+"), dia("+Reserva_Dia+"), hora("+Reserva_Hora+")." ) ; // else, indicate OK.
-					} ; // if Error
-				} ) ; // insert
+					MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
+						if ( err ) {
+							console.log( '---- Could not insert reservation into MongoDB.' ) ;
+							res.status( 500 ) ; // internal error
+							res.send( {'error':'An error has occurred'} ) ;
+						} else {
+							console.log( '++++ Success: insert went ok.' ) ;
+							res.status( 200 ) ; // OK
+							res.send( "+++ fer reserva OK. User("+Reserva_NomSoci+"), pista("+Reserva_Pista+"), dia("+Reserva_Dia+"), hora("+Reserva_Hora+")." ) ; // else, indicate OK.
+						} ; // if Error
+					} ) ; // insert
 			
-			} else { // else, tell customer the slot is not free
+				} else { // else, tell customer the slot is not free
 
-				var QuiEs = '' ;
-				if ( i == 1 ) {
-					QuiEs = docs[0].rnom ;
-				} ;
-				szResultat = "--- Error Reserva - ("+i+") slot Pista("+Reserva_Pista+") Dia("+Reserva_Dia+") Hora("+Reserva_Hora+") ocupat per en (" + QuiEs + ")." ;
-				res.status( 200 ) ;      // OK as HTTP rc, but
-				res.send( szResultat ) ; // else, indicate no OK.
+					var QuiEs = '' ;
+					if ( i == 1 ) {
+						QuiEs = docs[0].rnom ;
+					} ;
+					szResultat = "--- Error Reserva - ("+i+") slot Pista("+Reserva_Pista+") Dia("+Reserva_Dia+") Hora("+Reserva_Hora+") ocupat per en (" + QuiEs + ")." ;
+					res.status( 200 ) ;      // OK as HTTP rc, but
+					res.send( szResultat ) ; // else, indicate no OK.
 			
-			} ;  // if did exist
+				} ;  // if did exist
+			} ; // error in find()
 		}) ; // find()
 
 	} else {  // error en algun parametre
@@ -288,7 +305,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 // Podem esborrar una reserva si :
 //    *) som el seu propietari (o som el Administrador)
-//    *) la data es "futura", es a dir, que no s'ha jugat
+//    *) la data es "futura", es a dir, que no s'ha jugat}); // get '/esborrar_una_reserva/<parametres>'
 
 app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function( req, res ){
 	
@@ -298,7 +315,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	var Esborra_Reserva_Hora    = req.params.res_hora ;
 	console.log( ">>> POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
 
-	var CollectionName = app.get( 'cname' ) ;     // get collection name
+	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 	var MyCollection = db.get( CollectionName ) ; // get the collection
 	
 	var MyEsborraReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
@@ -308,38 +325,100 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	MyEsborraReserva.rhora  = Esborra_Reserva_Hora ;
 
 	MyCollection.find( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+
+		if ( err ) { 
+			console.log( "--- Esborrar Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+			res.status( 500 ) ; // internal error
+			res.send( {'error': 'fer reserva DDBB error.'} ) ;
+		} else {
 	
-		var  i = docs.length ;
-		console.log( "+++ Remove reserva - the slot for that moment has (%s) elements.", i ) ;
+			var  i = docs.length ;
+			console.log( "+++ Remove reserva - the slot for that moment has (%s) elements.", i ) ;
 
-		if ( i < 1 ) { // si no esta ocupat, es un error
+			if ( i < 1 ) { // si no esta ocupat, es un error
 		
-				szResultat = "--- Error esborrant reserva - ("+i+") slot lliure." ;
-				res.status( 200 ) ;      // OK as HTTP rc, but
-				res.send( szResultat ) ; // else, indicate no OK.
+					szResultat = "--- Error esborrant reserva - ("+i+") slot lliure." ;
+					res.status( 200 ) ;      // OK as HTTP rc, but
+					res.send( szResultat ) ; // else, indicate no OK.
 
-		} else { // else, the slot is not free so we can remove it
+			} else { // else, the slot is not free so we can remove it
 		
-			var ObjectIdPerEsborrar = docs[0]._id ;
-			var UsuariPerEsborrar   = docs[0].rnom ;
-			console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
-			MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
-				if ( err ) {
-					console.log( '---- Could not remove reservation from MongoDB.' ) ;
-					res.status( 500 ) ; // internal error
-					res.send( {'error':'An error has occurred'} ) ;
-				} else {
-					console.log( '++++ Esborrar Reserva Success: remove went ok.' ) ;
-					res.status( 200 ) ; // OK
-					res.send( "+++ esborrar reserva OK. User("+UsuariPerEsborrar+"), pista("+Esborra_Reserva_Pista+"), dia("+Esborra_Reserva_Dia+"), hora("+Esborra_Reserva_Hora+")." ) ; // else, indicate OK.
-				} ; // if Error
+				var ObjectIdPerEsborrar = docs[0]._id ;
+				var UsuariPerEsborrar   = docs[0].rnom ;
+				console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
+				MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
+					if ( err ) {
+						console.log( '--- Could not remove reservation from MongoDB. Error is (%s).', err.message ) ;
+						res.status( 500 ) ; // internal error
+						res.send( {'error':'An error has occurred'} ) ;
+					} else {
+						console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
+						res.status( 200 ) ; // OK
+						res.send( "+++ esborrar reserva OK. User("+UsuariPerEsborrar+"), pista("+Esborra_Reserva_Pista+"), dia("+Esborra_Reserva_Dia+"), hora("+Esborra_Reserva_Hora+")." ) ; // else, indicate OK.
+					} ; // if Error
 
-			} ) ; // remove
-		} ;  // if did exist
+				} ) ; // remove
+			} ;  // if did exist
+		} ; // if error
 
 	}) ; // find()
 			
 }); // get '/esborrar_una_reserva/<parametres>'
+
+
+// 7 - fer logon() de un usuari
+// rebem GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy
+
+app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req, res ){
+
+	var Logon_NomSoci = req.params.log_nom_soci ;
+	var Logon_PwdUser = req.params.log_pwd ;
+	console.log( ">>> POST un LOGON(). Nom (%s), pwd (%s).", Logon_NomSoci, Logon_PwdUser ) ;
+	
+	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
+	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
+	console.log( ">>> Using USERS ddbb (" + MyUsersCollection.name + ")." ) ;
+
+	MyUsersCollection.find( { uAlias: Logon_NomSoci }, { limit: 20 }, function( err, docs ){ 
+		var  i = docs.length ;
+		console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
+
+		if ( err ) {
+			console.log( '--- Logon MongoDB error. Error is (%s)', err.message ) ;
+			res.status( 500 ) ; // internal error
+			res.send( {'error':'mongodb error has occurred'} ) ;
+		} else {
+			if ( docs ) {
+				if ( i > 0 ) {
+					console.log( '+++ user found. Lets see its PWD.' ) ;
+					var ObjectId_User_at_bbdd = docs[0]._id ;
+					var Logon_Pwd_From_bbdd   = docs[0].uPwd ;
+					console.log( 'PWD - bbdd [' + Logon_Pwd_From_bbdd + '], user [' + Logon_PwdUser + '].' ) ;
+					
+					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
+						res.status( 200 ) ; // OK
+						res.send( "+++ logon and PWD OK." ) ; 
+					} else {
+						console.log( '--- PWD not right.' ) ;
+						res.status( 200 ) ; // 404 ?
+						res.send( "--- user provided pwd (" + Logon_PwdUser + ") does not match bbdd." ) ; 
+					} ; // both passwords are the same ?
+
+				} else {
+					console.log( '--- USER NOT FOUND.' ) ;
+					res.status( 200 ) ; // 404 ?
+					res.send( "--- User("+Logon_NomSoci+") not found." ) ; 
+				} ;
+			} else {
+				console.log( '--- no DOCS returned.' ) ;
+				res.status( 404 ) ; // 404 ?
+				res.send( "--- no DOCS." ) ; 
+			} ; // if Docs
+		} ; // if Error
+
+	}) ; // find()
+	
+}); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
 
 
 // create our http server and launch it
