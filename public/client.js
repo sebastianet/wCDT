@@ -46,21 +46,11 @@ function esborrarReserva( myDades, myContent ) {
 
 function index_Ready() {              // DOM ready for index.htm
 
+	console.log( '*** index ready.' ) ;
+	
 	window.session = {} ;             // unique global var for all the client application !
 	window.session.user = {} ;        // set "no user" at begin
-
-	var today = new Date();
-	var dd = today.getDate();
-	var mm = today.getMonth()+1;      // January is 0!
-	var yyyy = today.getFullYear();
-
-	if( dd<10 ) {
-		dd='0'+dd
-	} 
-	if( mm<10 ) {
-		mm='0'+mm
-	} 
-	window.session.avui = yyyy + '/' + mm + '/' + dd ;
+// ---	window.session.avui = (new Date).yyyymmdd() ;
 
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
@@ -345,15 +335,23 @@ function logon_ready() {
 		var logonPwd = myLogon.substring( i+11, j ) ;
 		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
 
-		$.get( '/logonuser/'+myLogon, function( page ) {
+/* 		$.get( '/logonuser/'+myLogon, function( page ) {
 			console.log( '**** Demanem al server de fer LOGON() de un usuari.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
+ */
+//					window.session.user.nom = logonUser ;
+//					$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '} | Logoff.' ) ;
 
-// com podem saber si ha anat be o malament ?
-		
-		window.session.user.nom = logonUser ;
-		$( "#watermark" ).html( '<p>Ara soc en {'+logonUser+ '} | Logoff' ) ; // show received HTML at specific <div>
+ 		$.get( {
+			url: '/logonuser/'+myLogon,
+			success : function( page ) { $( "#content" ).html( page ) },
+			statusCode: {
+				401: function() { $( "#content" ).html( '<p>Logon() not authorized</p>' ) },
+				404: function() { $( "#content" ).html( '<p>Logon() unavailable   </p>' ) },
+				500: function() { $( "#content" ).html( '<p>Logon() server error  </p>' ) }
+			} 
+		} ) ; // get(logon)
 		
 		return false ; // stop processing !!!
 	

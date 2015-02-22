@@ -1,10 +1,60 @@
 
 // Pere & Sebas, 2014 i 2015
-// servidor per al CDT - projecte "WCDT"
+// Projecte "WCDT" - servidor de reserves de pistes per al CDT
 // github : https://github.com/sebastianet/wCDT
-// s'engega amb "node my_server.js" (veure "package.json")
+// Sequencia d'engegada :
+//    1) engegar el MongoDB
+//    2) "node my_server.js" (veure "package.json")
+//    3) Finalment, cal obrir la URL http://localhost/index.htm
 
-// Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
+// Project files and folders structure :
+//
+// <actual directory>
+//     |
+//    my_server.js
+//    <public>
+//        |
+//       consulta.htm
+//       esborra.htm
+//       help.htm
+//       index.htm
+//       links.htm
+//       logon.htm
+//       <css>
+//           |
+//          sebas.css
+//      
+
+// DataBases structure (2)
+//
+//    Reserves :
+//
+//        { 
+//          rdata: "2014/11/09", 
+//          rhora: "09", 
+//          rpista: "3", 
+//          rnom: "sebas" 
+//        }
+//
+//    Usuaris :
+//				uAlias        : "sebas", 
+//				uPwd          : "sebastia2015", 
+//				uNom          : "Sebastia Altemir",
+//				uEmail        : "sebastiasebas@gmail.com",
+//				uLastLogin    : "2015/01/01",
+//				uNumReserves  : "3",
+//				uReserves     : 
+//					[ 
+//						{ uReservaPista : "5", uReservaDia : "2015/02/21", uReservaHora  : "09" } ,
+//						{ uReservaPista : "3", uReservaDia : "2015/02/23", uReservaHora  : "10" } ,
+//						{ uReservaPista : "4", uReservaDia : "2015/02/25", uReservaHora  : "12" } 
+//					],
+//				uMisc         : "-" 
+//
+
+//
+// node-inspector :
+//
 
 // Versions (more detailed than in HELP.HTM)
 //     Numeracio : 1 lloc aqui (var "myVersio") i 2 llocs a INDEX.HTM
@@ -31,12 +81,15 @@
 // 4.1.d - 20150218 - DatePicker(). HourSelector(). jQueryUI : User Interface
 // 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties
 // 4.1.f - 20150219 - posar la data actual a totes les funcions
-// 4.2.a - 20150221 - BBDD usuaris.
-// 4.2.b
+// 4.2.a - 20150221 - BBDD usuaris
+// 4.2.b - 20150221 - send logon failure
+// 4.2.c -
 
 // Package install :
 // npm install -g morgan       --save
 // npm install -g body-parser  --save
+
+// Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
@@ -58,7 +111,7 @@
 
 // Let's go :
 
- var myVersio   = "v 4.2.a" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 4.2.b" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -305,7 +358,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 // Podem esborrar una reserva si :
 //    *) som el seu propietari (o som el Administrador)
-//    *) la data es "futura", es a dir, que no s'ha jugat}); // get '/esborrar_una_reserva/<parametres>'
+//    *) la data es "futura", es a dir, que no s'ha jugat
 
 app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function( req, res ){
 	
@@ -380,6 +433,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 	console.log( ">>> Using USERS ddbb (" + MyUsersCollection.name + ")." ) ;
 
 	MyUsersCollection.find( { uAlias: Logon_NomSoci }, { limit: 20 }, function( err, docs ){ 
+	
 		var  i = docs.length ;
 		console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
 
@@ -387,7 +441,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 			console.log( '--- Logon MongoDB error. Error is (%s)', err.message ) ;
 			res.status( 500 ) ; // internal error
 			res.send( {'error':'mongodb error has occurred'} ) ;
-		} else {
+		} else { // no ERR
 			if ( docs ) {
 				if ( i > 0 ) {
 					console.log( '+++ user found. Lets see its PWD.' ) ;
@@ -400,14 +454,12 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 						res.send( "+++ logon and PWD OK." ) ; 
 					} else {
 						console.log( '--- PWD not right.' ) ;
-						res.status( 200 ) ; // 404 ?
-						res.send( "--- user provided pwd (" + Logon_PwdUser + ") does not match bbdd." ) ; 
+						res.send( 401,'user ('+ Logon_NomSoci + ') incorrect password ('+Logon_PwdUser+').' ) ;
 					} ; // both passwords are the same ?
 
 				} else {
 					console.log( '--- USER NOT FOUND.' ) ;
-					res.status( 200 ) ; // 404 ?
-					res.send( "--- User("+Logon_NomSoci+") not found." ) ; 
+					res.send( 401,'user ('+ Logon_NomSoci + ') not found.' ) ;
 				} ;
 			} else {
 				console.log( '--- no DOCS returned.' ) ;

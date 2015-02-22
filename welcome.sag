@@ -1,4 +1,4 @@
-.
+
  start with
 
  node  my_server.js
@@ -72,4 +72,26 @@ b) per dies
  engega http://127.0.0.1:8080/debug?port=5858
 .
  ===================================================================================================================
+.
+
+GET /initial.htm 304 6.799 ms - -
+GET /logon.htm 304 4.982 ms - -
+>>> POST un LOGON(). Nom (Ivan), pwd (Grozniy).
+>>> Using USERS ddbb (wCDT_users).
++++ the collection (wCDT_users) for the user (Ivan) has (0) elements.
+--- USER NOT FOUND.
+GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy 401 21.356 ms - 22
+GET /index.htm 304 0.835 ms - -
+
+c:\Sebas\JavaScript\wCDT>node  my_server.js
+Express server v 4.2.b listening on port 80
+GET /initial.htm 304 8.009 ms - -
+GET /logon.htm 304 4.856 ms - -
+GET /[object%20Object] 404 4.676 ms - -
+
+.
+ start node-inspector
+ node  --debug-brk  my_server.js
+  o
+ node  --debug      my_server.js
 .
