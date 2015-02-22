@@ -335,17 +335,19 @@ function logon_ready() {
 		var logonPwd = myLogon.substring( i+11, j ) ;
 		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
 
-/* 		$.get( '/logonuser/'+myLogon, function( page ) {
-			console.log( '**** Demanem al server de fer LOGON() de un usuari.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(logon)
- */
-//					window.session.user.nom = logonUser ;
-//					$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '} | Logoff.' ) ;
+//		$.get( '/logonuser/'+myLogon, function( page ) {
+//			console.log( '**** Demanem al server de fer LOGON() de un usuari.' ) ;
+//			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+//		}) ; // get(logon)
 
- 		$.get( {
+		event.preventDefault(); // what is it for ?
+ 		$.ajax( {
 			url: '/logonuser/'+myLogon,
-			success : function( page ) { $( "#content" ).html( page ) },
+			success : function( page ) { 
+				$( "#content" ).html( page ) 
+				window.session.user.nom = logonUser ;
+				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '} | Logoff.' ) ;
+			},
 			statusCode: {
 				401: function() { $( "#content" ).html( '<p>Logon() not authorized</p>' ) },
 				404: function() { $( "#content" ).html( '<p>Logon() unavailable   </p>' ) },

@@ -57,7 +57,6 @@
 //
 
 // Versions (more detailed than in HELP.HTM)
-//     Numeracio : 1 lloc aqui (var "myVersio") i 2 llocs a INDEX.HTM
 //
 // 1.2.d - remove bodyParser, deprecated
 // 1.3.a - get LOGON.HTM from server into #content
@@ -81,9 +80,10 @@
 // 4.1.d - 20150218 - DatePicker(). HourSelector(). jQueryUI : User Interface
 // 4.1.e - 20150218 - load subPage "initial.htm" so we dont lose user's properties
 // 4.1.f - 20150219 - posar la data actual a totes les funcions
-// 4.2.a - 20150221 - BBDD usuaris
-// 4.2.b - 20150221 - send logon failure
-// 4.2.c -
+// 4.2.a - 20150221 - BBDD usuaris. Display mongo error text (err.message) if any
+// 4.2.b - 20150221 - cath logon failure
+// 4.2.c - 20150222 - display user data at logon 
+// 4.2.d - 
 
 // Package install :
 // npm install -g morgan       --save
@@ -111,7 +111,7 @@
 
 // Let's go :
 
- var myVersio   = "v 4.2.b" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 4.2.c" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -178,6 +178,14 @@ app.get( '/ping', function(req,res) {
 // (2) populate ddbb (called from HELP page)
 
 app.get( '/populate', function( req, res ){
+
+// nova funció yyyyymmdd de Date()
+Date.prototype.yyyymmdd = function() {                            
+        var yyyy = this.getFullYear().toString();                                    
+        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+        var dd   = this.getDate().toString();
+        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
+}; // yyyymmdd()
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
@@ -191,7 +199,13 @@ app.get( '/populate', function( req, res ){
 			{ rdata: "2014/11/10", rhora: "13", rpista: "4", rnom: "enric" },
 			{ rdata: "2014/11/10", rhora: "13", rpista: "5", rnom: "anton" }
 		] ;
-	 
+
+		var Avui = (new Date).yyyymmdd() ;
+		My_Initial_Reserves[0].rdata = Avui ;
+		My_Initial_Reserves[1].rdata = Avui ;
+		My_Initial_Reserves[2].rdata = Avui ;
+		My_Initial_Reserves[3].rdata = Avui ;
+		
 		MyCollection.insert( My_Initial_Reserves, { safe:true }, function( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
                 res.status( 500 ) ; // Internal Error
@@ -426,6 +440,10 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 
 	var Logon_NomSoci = req.params.log_nom_soci ;
 	var Logon_PwdUser = req.params.log_pwd ;
+
+//	var Logon_NomSoci = req.query.log_nom_soci ;
+//	var Logon_PwdUser = req.query.log_pwd ;
+
 	console.log( ">>> POST un LOGON(). Nom (%s), pwd (%s).", Logon_NomSoci, Logon_PwdUser ) ;
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
@@ -451,7 +469,10 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						res.status( 200 ) ; // OK
-						res.send( "+++ logon and PWD OK." ) ; 
+						var szMsg_Logon_OK = "+++ logon and PWD OK."
+						szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors.' ;
+						szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}.' ;
+						res.send( szMsg_Logon_OK ) ; 
 					} else {
 						console.log( '--- PWD not right.' ) ;
 						res.send( 401,'user ('+ Logon_NomSoci + ') incorrect password ('+Logon_PwdUser+').' ) ;
