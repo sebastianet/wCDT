@@ -82,13 +82,41 @@ GET /logon.htm 304 4.982 ms - -
 --- USER NOT FOUND.
 GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy 401 21.356 ms - 22
 GET /index.htm 304 0.835 ms - -
+.
+===
+c:\sebas\JavaScript\wCDT>git pull origin master
+remote: Counting objects: 47, done.
+remote: Compressing objects: 100% (44/44), done.
+remote: Total 47 (delta 41), reused 9 (delta 3)
+Unpacking objects: 100% (47/47), done.
+From https://github.com/sebastianet/wCDT
+ * branch            master     -> FETCH_HEAD
+   d9b7665..f1788be  master     -> origin/master
+Updating d9b7665..f1788be
+Fast-forward
+ mongod_t430.cfg           |   2 +-
+ my_server.js              | 320 ++++++++++++++++++++++++++++++++++------------
+ public/cli.htm            | 183 --------------------------
+ public/client.js          | 107 +++++++++++-----
+ public/consulta.htm       |  10 +-
+ public/esborra.htm        |  15 ++-
+ public/help.htm           |  18 ++-
+ public/index.htm          |  27 ++--
+ public/initial.htm        |  20 ++-
+ public/links.htm          |  34 ++++-
+ public/logon.htm          |  15 ++-
+ public/reserva.htm        |  13 +-
+ wCDT_create_users_ddbb.js |  64 ++++++++++
+ wCDT_veure_BBDD.js        |   7 +
+ welcome.sag               |  37 +++++-
+ 15 files changed, 512 insertions(+), 360 deletions(-)
+ delete mode 100644 public/cli.htm
+ create mode 100644 wCDT_create_users_ddbb.js
+ create mode 100644 wCDT_veure_BBDD.js
 
-c:\Sebas\JavaScript\wCDT>node  my_server.js
-Express server v 4.2.b listening on port 80
-GET /initial.htm 304 8.009 ms - -
-GET /logon.htm 304 4.856 ms - -
-GET /[object%20Object] 404 4.676 ms - -
-
+c:\sebas\JavaScript\wCDT>
+.
+===
 .
  start node-inspector
  node  --debug-brk  my_server.js

@@ -83,7 +83,8 @@
 // 4.2.a - 20150221 - BBDD usuaris. Display mongo error text (err.message) if any
 // 4.2.b - 20150221 - cath logon failure
 // 4.2.c - 20150222 - display user data at logon 
-// 4.2.d - 
+// 4.2.d - 20150223 - populate() does not drop() so we keep old data
+// 5.0.a - 20150223 - use HTTPS
 
 // Package install :
 // npm install -g morgan       --save
@@ -191,7 +192,7 @@ Date.prototype.yyyymmdd = function() {
     var MyCollection = db.get( CollectionName ) ;    // get the collection
 	console.log( ">>> POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
-    MyCollection.drop( function(e) {              // drop old database and wait completion
+//    MyCollection.drop( function(e) {              // drop old database and wait completion
 
 		var My_Initial_Reserves = [ // see wines.js
 			{ rdata: "2014/11/09", rhora: "09", rpista: "3", rnom: "sebas" },
@@ -215,7 +216,8 @@ Date.prototype.yyyymmdd = function() {
 	            res.send( "+++ ddbb (" + MyCollection.name + ") populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
-	} ) ; // drop
+
+	//	} ) ; // drop
 	
 } ) ; // get '/populate'
 

@@ -32,33 +32,44 @@ Date.prototype.yyyymmdd = function() {
 			{ 	
 				uAlias        : "sebas", 
 				uPwd          : "sebastia2015", 
+				uRole         : "Administrator",
 				uNom          : "Sebastia Altemir",
 				uEmail        : "sebastiasebas@gmail.com",
 				uLastLogin    : "2015/01/01",
 				uNumReserves  : "3",
-				uReserves     : 
-					[ 
-						{ uReservaPista : "5", uReservaDia : "2015/02/21", uReservaHora  : "09" } ,
-						{ uReservaPista : "3", uReservaDia : "2015/02/23", uReservaHora  : "10" } ,
-						{ uReservaPista : "4", uReservaDia : "2015/02/25", uReservaHora  : "12" } 
-					],
 				uMisc         : "-" 
+
+/* 				uAlias        : "pere", 
+				uPwd          : "pere2015", 
+				uRole         : "Administrator",
+				uNom          : "Pere Albert Labal",
+				uEmail        : "palbcn@yahoo.com",
+				uLastLogin    : "2015/01/01",
+				uNumReserves  : "3",
+				uMisc         : "-" 
+ */
+/* 				uAlias        : "guest", 
+				uPwd          : "guest2015", 
+				uRole         : "Guest User",
+				uNom          : "Usuari General",
+				uEmail        : "nope@yahoo.com",
+				uLastLogin    : "2015/01/01",
+				uNumReserves  : "0",
+				uMisc         : "-" 
+ */
 			} ;
-	 
-		var Avui = (new Date).yyyymmdd() ;
-		My_User_To_Add.uLastLogin = Avui ;
-		
-		My_User_To_Add.uReserves[0].uReservaDia = Avui ;
-		My_User_To_Add.uReserves[1].uReservaDia = Avui ;
-		My_User_To_Add.uReserves[2].uReservaDia = Avui ;
-		
+	 		
 		MyCollection.insert( My_User_To_Add, { safe:true }, function( err, result ) {
 	        if ( err ) { 
                 console.log( "--- populate ddbb (" + MyCollection.name + ") ERROR." ) ;
 	        } else { 
                 console.log( "+++ populate ddbb (" + MyCollection.name + ") OK." ) ;
 	        } ; // else
+
+// +++ mode code comes here
+
 			db.close(); // allow the program to exit
+
 		} ) ; // insert
 
 //	} ) ; // drop

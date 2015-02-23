@@ -1,4 +1,3 @@
-
 db.adminCommand('listDatabases')
 use cdt
 db.getCollectionNames()
