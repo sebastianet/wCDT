@@ -105,6 +105,9 @@
 // (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
+// (*) RoboMongo - no ensenya les dades
+// (*) node-inspector session
+// (*) package.json : com sap comengegar : "start": "node my_server.js"
 
 // Dubtes :
 // *)
