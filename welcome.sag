@@ -117,6 +117,73 @@ Fast-forward
 c:\sebas\JavaScript\wCDT>
 .
 ===
+c:\sebas\JavaScript\wCDT\sslcert>openssl genrsa -des3 -out server.key 2048
+Generating RSA private key, 2048 bit long modulus
+..................+++
+..........+++
+unable to write 'random state'
+e is 65537 (0x10001)
+Enter pass phrase for server.key:                    Sebas.2015
+Verifying - Enter pass phrase for server.key:        Sebas.2015
+
+c:\sebas\JavaScript\wCDT\sslcert>dir
+ Volume in drive C is T430-OPSYS
+ Volume Serial Number is 4012-4FD0
+
+ Directory of c:\sebas\JavaScript\wCDT\sslcert
+
+23-02-15  15:00    <DIR>          .
+23-02-15  15:00    <DIR>          ..
+23-02-15  15:01             1.743 server.key
+               1 File(s)          1.743 bytes
+               2 Dir(s)  193.506.525.184 bytes free
+
+c:\sebas\JavaScript\wCDT\sslcert>
+.
+
+
+
+
+c:\sebas\JavaScript\wCDT\sslcert>openssl req -x509 -newkey rsa:1024 -keyout server.pem -out server.crt
+Generating a 1024 bit RSA private key
+......++++++
+............++++++
+writing new private key to 'server.pem'
+Enter PEM pass phrase:                                   Sebas.2015
+Verifying - Enter PEM pass phrase:                       Sebas.2015
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:ES
+State or Province Name (full name) [Some-State]:Catalunya
+Locality Name (eg, city) []:Barcelona
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:CDT
+Organizational Unit Name (eg, section) []:tennis
+Common Name (eg, YOUR name) []:myname
+Email Address []:campdefabes@gmail.com
+
+c:\sebas\JavaScript\wCDT\sslcert>dir
+ Volume in drive C is T430-OPSYS
+ Volume Serial Number is 4012-4FD0
+
+ Directory of c:\sebas\JavaScript\wCDT\sslcert
+
+23-02-15  15:24    <DIR>          .
+23-02-15  15:24    <DIR>          ..
+23-02-15  15:22             1.024 .rnd
+23-02-15  15:24             1.289 server.crt
+23-02-15  15:01             1.743 server.key
+23-02-15  15:24               963 server.pem
+23-02-15  15:22             2.530 welcome.sag
+               5 File(s)          7.549 bytes
+               2 Dir(s)  193.493.098.496 bytes free
+			   
+===
 .
  start node-inspector
  node  --debug-brk  my_server.js

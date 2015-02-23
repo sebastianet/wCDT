@@ -112,7 +112,7 @@
 
 // Let's go :
 
- var myVersio   = "v 4.2.c" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.0.a" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -120,20 +120,27 @@
 // app.use( coookieParser('secretSebas') ) ;          // pwd to encrypt all cookies 
 
  var http       = require( 'http' ) ;
+ var https      = require( 'https' ) ;
  var logger     = require( 'morgan' ) ;          // logging middleware
  var bodyParser = require( 'body-parser' ) ;     // parser
 
+ var fs         = require('fs') ;                // r/w files
  var monk       = require( 'monk' ) ;            // access to mongo
+
+var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
+var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
+
+var credentials = {key: privateKey, cert: certificate};
 
  var app = express() ;                           // instantiate Express and assign our app variable to it
  var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ;
  
 // +++ app.configure( function () {
 
-   app.set( 'port', process.env.PORT || 80 ) ;   // mind Apache !
+   app.set( 'port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
    app.set( 'Title', 'My Koltrane Site' ) ;
-
-   app.set( 'rcolname', "reserves_pistes" ) ;    // this is only place we specify the collection name(s)
+                                                 // This is only place we specify the collection name(s) : 
+   app.set( 'rcolname', "reserves_pistes" ) ;    // reservation data := "reserves_pistes" ;
    app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
 
 
@@ -497,6 +504,11 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 
 
 // create our http server and launch it
-http.createServer( app ).listen( app.get( 'port' ), function() {
-    console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
-} ) ;
+
+// http.createServer( app ).listen( app.get( 'port' ), function() {
+//     console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
+// } ) ; // create server
+
+	var httpsServer = https.createServer( credentials, app ) ;
+	httpsServer.listen( app.get( 'port' ) ) ;
+	console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;

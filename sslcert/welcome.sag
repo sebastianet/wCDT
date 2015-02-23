@@ -1,0 +1,105 @@
+===
+c:\sebas\JavaScript\wCDT\sslcert>openssl genrsa -des3 -out server.key 2048
+Generating RSA private key, 2048 bit long modulus
+..................+++
+..........+++
+unable to write 'random state'
+e is 65537 (0x10001)
+Enter pass phrase for server.key:                    Sebas.2015
+Verifying - Enter pass phrase for server.key:        Sebas.2015
+
+c:\sebas\JavaScript\wCDT\sslcert>dir
+ Volume in drive C is T430-OPSYS
+ Volume Serial Number is 4012-4FD0
+
+ Directory of c:\sebas\JavaScript\wCDT\sslcert
+
+23-02-15  15:00    <DIR>          .
+23-02-15  15:00    <DIR>          ..
+23-02-15  15:01             1.743 server.key
+               1 File(s)          1.743 bytes
+               2 Dir(s)  193.506.525.184 bytes free
+
+c:\sebas\JavaScript\wCDT\sslcert>
+.
+===
+.
+openssl req -x509 -newkey rsa:1024 -keyout server.pem -out server.crt
+.
+===================================================================================================================
+.
+c:\sebas\JavaScript\wCDT\sslcert> openssl req -x509 -newkey rsa:1024 -keyout cakey.pem -out cacert.crt
+Generating a 1024 bit RSA private key
+........................++++++
+....................................................++++++
+writing new private key to 'cakey.pem'
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:mycity
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:mysection
+Common Name (eg, YOUR name) []:myname
+Email Address []:myemail@here.com
+
+c:\sebas\JavaScript\wCDT\sslcert>dir
+ Volume in drive C is T430-OPSYS
+ Volume Serial Number is 4012-4FD0
+
+ Directory of c:\sebas\JavaScript\wCDT\sslcert
+
+23-02-15  15:10    <DIR>          .
+23-02-15  15:10    <DIR>          ..
+23-02-15  15:10             1.024 .rnd
+23-02-15  15:10             1.359 cacert.crt
+23-02-15  15:10               963 cakey.pem
+23-02-15  15:01             1.743 server.key
+               4 File(s)          5.089 bytes
+               2 Dir(s)  193.500.626.944 bytes free
+
+c:\sebas\JavaScript\wCDT\sslcert>
+
+.
+===================================================================================================================
+.
+c:\sebas\JavaScript\wCDT\sslcert>openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt
+Generating a 2048 bit RSA private key
+....................................+++
+...........................................+++
+writing new private key to 'server.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:
+State or Province Name (full name) [Some-State]:
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+Organizational Unit Name (eg, section) []:
+Common Name (eg, YOUR name) []:
+Email Address []:
+
+c:\sebas\JavaScript\wCDT\sslcert>dir
+ Volume in drive C is T430-OPSYS
+ Volume Serial Number is 4012-4FD0
+
+ Directory of c:\sebas\JavaScript\wCDT\sslcert
+
+23-02-15  15:41    <DIR>          .
+23-02-15  15:41    <DIR>          ..
+23-02-15  15:41             1.024 .rnd
+23-02-15  15:41             1.346 server.crt
+23-02-15  15:41             1.675 server.key
