@@ -365,7 +365,6 @@ function logon_ready() {
 function help_ready() {
 
 // posar la data actual a baix a l'esquerra
-
 //	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
 //	$( "#my_date" ).html( szAvui ) ; // show actual date
 
@@ -378,7 +377,7 @@ function help_ready() {
 			
             var texte = '<p class="pkon">';
             if ( lng > 0 ) {
-                texte += "Dump all data in DDBB. Hi ha (" + lng + ") reserves. <br>";
+                texte += "Dump all data in <i>reserves</i> DDBB. Hi ha (" + lng + ") reserves. <br>";
                 var i = 0;
                 while ( i < lng ) {
                     texte += "("+i+") la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores";
@@ -417,6 +416,32 @@ function help_ready() {
 		}) ; // get(links)
 	}) ; // links
 
+	
+    $("#clkConsultaAllUsers").click(function () {
+        $.get('/dump_all_users', function ( page ) {
+            console.log( "*** Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
+            var lng = 0 ;
+            lng = page.length ;
+            console.log( '+++ Llargada (%s).', lng ) ;
+			
+            var texte = '<p class="pkon">';
+            if ( lng > 0 ) {
+                texte += "Dump all data in <i>users</i> DDBB. Hi ha (" + lng + ") usuaris. <br>";
+                var i = 0;
+                while ( i < lng ) {
+                    texte += "("+i+") user (" + page[i].uAlias + ")";
+					texte += " te (" + page[i].uNumReserves + ") reserves fetes" ;
+					texte += " - ID [" + page[i]._id + "]" ;
+					texte += " <br>" ;
+                    i++;
+                } // while
+            } // lng > 0
+			texte += "</p>"
+            $('#content').html(texte);  // or "text"
+        }); // get()  
+    }); // consulta all reserves
+
+	
 } ; // help_ready()
 
  

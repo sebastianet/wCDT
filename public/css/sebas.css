@@ -1,6 +1,12 @@
 /*
    CSS sebas per CDT
+   a un CLASS "nom" li correspon un ".nom"
+   a un ID "nom" li correspon un "#nom"
 */
+
+.txtblanc {
+	background-color: #FFFFFF ;
+ }
 
 /* taula dels botons de una consulta */
 
@@ -17,6 +23,7 @@
 /* taula ocupacio */
 
 #thora09 { width: 150px ; }
+
 .ocupada { 
     background-color: #ccc;
     cursor: pointer; 

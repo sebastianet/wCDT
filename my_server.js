@@ -80,6 +80,7 @@
 // 4.2.c - 20150222 - display user data at logon 
 // 4.2.d - 20150223 - populate() does not drop() so we keep old data
 // 5.0.a - 20150223 - use HTTPS
+// 5.0.b - 20150224 - show user's ddbb contents from help
 
 // Package install :
 // npm install -g morgan       --save
@@ -239,7 +240,7 @@ app.get( '/dump_all_reserves', function( req, res ){
 	    if ( err ) { 
             console.log( "--- Dump all reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
-            res.send( {'error':'dump all DDBB error.'} ) ;
+            res.send( {'error':'dump all reserves DDBB error.'} ) ;
         } else {
             var  i = docs.length ;
             console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
@@ -440,7 +441,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 }); // get '/esborrar_una_reserva/<parametres>'
 
 
-// 7 - fer logon() de un usuari
+// (7) fer logon() de un usuari
 // rebem GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy
 
 app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req, res ){
@@ -499,6 +500,29 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 	}) ; // find()
 	
 }); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
+
+
+// (8) dump all users (called from HELP page)
+
+app.get( '/dump_all_users', function( req, res ){
+	
+	console.log( ">>> GET ALL users : veure fins a 20 usuaris de tots els dies." ) ;
+	var CollectionName = app.get( 'userscolname' ) ;   // get "users" collection name
+    var MyCollection = db.get( CollectionName ) ;      // get the collection
+
+	MyCollection.find( {  }, { limit: 20 }, function( err, docs ){ // empty filter
+	    if ( err ) { 
+            console.log( "--- Dump all users. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+            res.status( 500 ) ; // internal error
+            res.send( {'error':'dump all users DDBB error.'} ) ;
+        } else {
+            var  i = docs.length ;
+            console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
+            res.json( docs ) ; // send JSON object
+		} ;
+	}) ; // find()
+
+}); // get '/dump_all_users'
 
 
 // create our http server and launch it
