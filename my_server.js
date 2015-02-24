@@ -81,6 +81,7 @@
 // 4.2.d - 20150223 - populate() does not drop() so we keep old data
 // 5.0.a - 20150223 - use HTTPS
 // 5.0.b - 20150224 - show user's ddbb contents from help
+// 5.0.c - 20150224 - allow "fer reserva" only in logged in
 
 // Package install :
 // npm install -g morgan       --save
@@ -111,7 +112,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.0.b" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.0.c" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session

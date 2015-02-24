@@ -46,11 +46,13 @@ function esborrarReserva( myDades, myContent ) {
 
 function index_Ready() {              // DOM ready for index.htm
 
-	console.log( '*** index ready.' ) ;
+	console.log( '*** index DOM ready.' ) ;
 	
 	window.session = {} ;             // unique global var for all the client application !
 	window.session.user = {} ;        // set "no user" at begin
+//	window.session.user.nom = '-' ;   // set "no user name" at begin
 // ---	window.session.avui = (new Date).yyyymmdd() ;
+	delete window.session.user.nom ;  // same at logoff() time !
 
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
@@ -88,10 +90,18 @@ function index_Ready() {              // DOM ready for index.htm
 
 	
 	$( ".clkFerReserva" ).click( function() {
-		$.get( '/reserva.htm', function( page ) {
-			console.log( '*** index - demanem al server la sub-pagina RESERVA.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get (reserva)
+		
+		console.log( '*** Fer reserva - nom (%s).', window.session.user.nom ) ;
+		if ( window.session.user.nom ) { // "logged in" 
+
+			$.get( '/reserva.htm', function( page ) {
+				console.log( '*** index - demanem al server la sub-pagina RESERVA.' ) ;
+				$( "#content" ).html( page ) ; // show received HTML at specific <div>
+			}) ; // get (reserva)
+			
+		} else {
+			$( "#content" ).html( "--- do Logon() before reserving." ) ;
+		} ; //
 	}) ; // fer reserva
 
 	
@@ -123,6 +133,8 @@ function index_Ready() {              // DOM ready for index.htm
 
 function consulta_ready() {
 
+	console.log( '*** consulta DOM ready.' ) ;
+	
 	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( {dateFormat: "yy/mm/dd"});
 	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() );
 
@@ -259,6 +271,8 @@ function consulta_ready() {
 
 function reserva_ready() {
 	
+	console.log( '*** reserva DOM ready.' ) ;
+	
 // construim jQuery widgets
    $( "#myFormFerReserva input[name='Dia_Reserva']" ).datepicker( {dateFormat: "yy/mm/dd"} );
    $( "#myFormFerReserva input[name='Hora_Reserva']" ).spinner({	   
@@ -303,6 +317,8 @@ function reserva_ready() {
 
 function esborra_ready() {
 
+	console.log( '*** reserva DOM ready.' ) ;
+	
 	$( "#myFormEsborrarReserva input[name='Dia_Reserva_Esborrar']").datepicker( {dateFormat: "yy/mm/dd"} );
 	$( "#myFormEsborrarReserva input[name='Dia_Reserva_Esborrar']").val( (new Date).yyyymmdd() );
 	$( "#myFormEsborrarReserva input[name='Nom_Soci_Esborrar']" ).val( window.session.user.nom );
@@ -321,6 +337,8 @@ function esborra_ready() {
 
 function logon_ready() {
 
+	console.log( '*** logon DOM ready.' ) ;
+	
  	$( "#myFormReqLogon" ).submit( function(event) {
 		
 		var myLogon = $( this ).serialize() ;  // get user entry and display it
@@ -344,7 +362,8 @@ function logon_ready() {
  		$.ajax( {
 			url: '/logonuser/'+myLogon,
 			success : function( page ) { 
-				$( "#content" ).html( page ) 
+				$( "#content" ).html( page ) ;
+				
 				window.session.user.nom = logonUser ;
 				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '} | Logoff.' ) ;
 			},
@@ -364,6 +383,8 @@ function logon_ready() {
 
 function help_ready() {
 
+	console.log( '*** help DOM ready.' ) ;
+	
 // posar la data actual a baix a l'esquerra
 //	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
 //	$( "#my_date" ).html( szAvui ) ; // show actual date
@@ -424,9 +445,9 @@ function help_ready() {
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;
 			
-            var texte = '<p class="pkon">';
+            var texte = '<p class="pkon">Dump all data in <i>users</i> DDBB. ';
             if ( lng > 0 ) {
-                texte += "Dump all data in <i>users</i> DDBB. Hi ha (" + lng + ") usuaris. <br>";
+                texte += "Hi ha (" + lng + ") usuaris. <br>";
                 var i = 0;
                 while ( i < lng ) {
                     texte += "("+i+") user (" + page[i].uAlias + ")";
@@ -435,7 +456,9 @@ function help_ready() {
 					texte += " <br>" ;
                     i++;
                 } // while
-            } // lng > 0
+            } else { 
+				texte += "No users defined yet.";
+			} ; // lng = 0
 			texte += "</p>"
             $('#content').html(texte);  // or "text"
         }); // get()  
@@ -447,6 +470,6 @@ function help_ready() {
  
 $( function() {
 	
-    index_Ready();
+    index_Ready(); // DOM ready event
   
 } ) ; // DOM ready
