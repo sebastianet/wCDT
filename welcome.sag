@@ -64,7 +64,8 @@ b) per dies
 .
  ===================================================================================================================
 .
- per veure el contingut de les BBDD, fer :   	mongo < wCDT_veure_BBDD.js
+ per veure el contingut de les BBDD, fer :   	mongo < wCDT_veure_BBDD.mongo
+ per veure la BBDD de usuaris, fer :            node wCDT_veure_BBDD.js
 .
  per afegir a la BBDD un usuari :               node  wCDT_create_users_ddbb.js
 .
@@ -186,6 +187,7 @@ c:\sebas\JavaScript\wCDT\sslcert>dir
 ===
 .
  start node-inspector
+ browser ( http://127.0.0.1:8080/debug?port=5858
  node  --debug-brk  my_server.js
   o
  node  --debug      my_server.js

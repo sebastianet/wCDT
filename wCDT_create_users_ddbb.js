@@ -16,60 +16,65 @@
     var MyCollection = db.get( CollectionName ) ; // get the collection
 	console.log( ">>> POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
-// nova funció yyyyymmdd de Date()
-Date.prototype.yyyymmdd = function() {                            
-        var yyyy = this.getFullYear().toString();                                    
-        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
-        var dd   = this.getDate().toString();
-        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-}; // yyyymmdd()
+	var My_User_To_Add_sebas = 
+		{ 	
+			uAlias        : "sebas", 
+			uPwd          : "sebastia2015", 
+			uRole         : "Administrator",
+			uNom          : "Sebastia Altemir",
+			uEmail        : "sebastiasebas@gmail.com",
+			uLastLogin    : "2015/01/01",
+			uNumReserves  : "3",
+			uMisc         : "-" 
+		} ;
 
-// do NOT drop, so we just ADD a new user
+	var My_User_To_Add_pere = 
+		{ 	
+			uAlias        : "pere", 
+			uPwd          : "pere2015", 
+			uRole         : "Administrator",
+			uNom          : "Pere Albert Labal",
+			uEmail        : "palbcn@yahoo.com",
+			uLastLogin    : "2015/01/01",
+			uNumReserves  : "3",
+			uMisc         : "-" 
+		} ;
 
-//    MyCollection.drop( function(e) {              // drop old database and wait completion
-
-		var My_User_To_Add = 
-			{ 	
-				uAlias        : "sebas", 
-				uPwd          : "sebastia2015", 
-				uRole         : "Administrator",
-				uNom          : "Sebastia Altemir",
-				uEmail        : "sebastiasebas@gmail.com",
-				uLastLogin    : "2015/01/01",
-				uNumReserves  : "3",
-				uMisc         : "-" 
-
-/* 				uAlias        : "pere", 
-				uPwd          : "pere2015", 
-				uRole         : "Administrator",
-				uNom          : "Pere Albert Labal",
-				uEmail        : "palbcn@yahoo.com",
-				uLastLogin    : "2015/01/01",
-				uNumReserves  : "3",
-				uMisc         : "-" 
- */
-/* 				uAlias        : "guest", 
-				uPwd          : "guest2015", 
-				uRole         : "Guest User",
-				uNom          : "Usuari General",
-				uEmail        : "nope@yahoo.com",
-				uLastLogin    : "2015/01/01",
-				uNumReserves  : "0",
-				uMisc         : "-" 
- */
-			} ;
-	 		
-		MyCollection.insert( My_User_To_Add, { safe:true }, function( err, result ) {
-	        if ( err ) { 
-                console.log( "--- populate ddbb (" + MyCollection.name + ") ERROR." ) ;
-	        } else { 
-                console.log( "+++ populate ddbb (" + MyCollection.name + ") OK." ) ;
-	        } ; // else
-
+	var My_User_To_Add_guest = 
+		{ 				
+			uAlias        : "guest", 
+			uPwd          : "guest2015", 
+			uRole         : "Guest User",
+			uNom          : "Usuari General",
+			uEmail        : "nope@yahoo.com",
+			uLastLogin    : "2015/01/01",
+			uNumReserves  : "0",
+			uMisc         : "-" 
+		} ;
+		
+	var My_User_To_Add = My_User_To_Add_sebas ;
+	
 // +++ mode code comes here
 
-			db.close(); // allow the program to exit
+	MyCollection.find( { uAlias: My_User_To_Add.uAlias }, { limit: 20 }, function( err, docs ){ 
+		if ( err ) { 
+			console.log( "--- Create user. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+		} else {
+			var  i = docs.length ;
+			console.log( "+++ Before insert, the collection (%s) for Alias (%s) has (%s) elements.", CollectionName, My_User_To_Add.uAlias, i ) ;
+			if ( i < 1 ) {
+				MyCollection.insert( My_User_To_Add, { safe:true }, function( err, result ) {
+					if ( err ) { 
+						console.log( "--- populate ddbb (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+					} else { 
+						console.log( "+++ populate ddbb (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add.uAlias ) ;
+					} ; // else
+					db.close(); // allow the program to exit
+				} ) ; // insert
 
-		} ) ; // insert
-
-//	} ) ; // drop
+			} else {
+				console.log( "--- Create user - user (%s) already exists.", My_User_To_Add.uAlias ) ;
+				db.close(); // allow the program to exit
+			} ;
+		} ;
+	} ) ; // find()
