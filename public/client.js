@@ -365,7 +365,7 @@ function logon_ready() {
 				$( "#content" ).html( page ) ;
 				
 				window.session.user.nom = logonUser ;
-				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '} | Logoff.' ) ;
+				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 			},
 			statusCode: {
 				401: function() { $( "#content" ).html( '<p>Logon() not authorized</p>' ) },
@@ -378,6 +378,17 @@ function logon_ready() {
 	
 	}); // click "myFormReqLogon" submit
 
+ 	$( "#myFormReqLogoff" ).submit( function(event) {
+		
+		delete window.session.user.nom ;
+		$( "#watermark" ).html( '<p>Logged off.' ) ;
+		
+		$( "#content" ).html( '<p>Logged off successfully.</p>' ) ;
+		
+		return false ; // stop processing !!!
+
+	}); // click "myFormReqLogoff" submit
+		
 } ; // logon_ready()
 
 
