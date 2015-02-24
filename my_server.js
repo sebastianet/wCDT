@@ -1,11 +1,14 @@
 
+//
 // Pere & Sebas, 2014 i 2015
 // Projecte "WCDT" - servidor de reserves de pistes per al CDT
-// github : https://github.com/sebastianet/wCDT
+//
+// Repositori : github : https://github.com/sebastianet/wCDT
+//
 // Sequencia d'engegada :
 //    1) engegar el MongoDB
 //    2) "node my_server.js" (veure "package.json")
-//    3) Finalment, cal obrir la URL http://localhost/index.htm
+//    3) finalment, cal obrir el client a la URL https://localhost/index.htm {compte amb HTTPS des la verios 5.0}
 
 // Project files and folders structure :
 //
@@ -13,16 +16,17 @@
 //     |
 //    my_server.js
 //    <public>
-//        |
-//       consulta.htm
-//       esborra.htm
-//       help.htm
-//       index.htm
-//       links.htm
-//       logon.htm
-//       <css>
-//           |
-//          sebas.css
+//    .  |
+//    .  consulta.htm
+//    .  esborra.htm
+//    .  help.htm
+//    .  index.htm
+//    .  links.htm
+//    .  logon.htm
+//    .  <css>
+//    .      |
+//    .     sebas.css
+//    <sslcert>
 //      
 
 // DataBases structure (2)
@@ -39,21 +43,12 @@
 //    Usuaris :
 //				uAlias        : "sebas", 
 //				uPwd          : "sebastia2015", 
+//              uRole         : "Administrator" / "Guest User"
 //				uNom          : "Sebastia Altemir",
 //				uEmail        : "sebastiasebas@gmail.com",
 //				uLastLogin    : "2015/01/01",
 //				uNumReserves  : "3",
-//				uReserves     : 
-//					[ 
-//						{ uReservaPista : "5", uReservaDia : "2015/02/21", uReservaHora  : "09" } ,
-//						{ uReservaPista : "3", uReservaDia : "2015/02/23", uReservaHora  : "10" } ,
-//						{ uReservaPista : "4", uReservaDia : "2015/02/25", uReservaHora  : "12" } 
-//					],
 //				uMisc         : "-" 
-//
-
-//
-// node-inspector :
 //
 
 // Versions (more detailed than in HELP.HTM)
@@ -112,7 +107,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.0.a" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.0.b" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 // var session    = require('express-session') ;      // express session
@@ -511,4 +506,4 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 
 	var httpsServer = https.createServer( credentials, app ) ;
 	httpsServer.listen( app.get( 'port' ) ) ;
-	console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
+	console.log( 'Express server ' + myVersio + ' listening on port [' + app.get( 'port' ) + '].' ) ;
