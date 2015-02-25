@@ -83,10 +83,14 @@
 // 5.0.b - 20150224 - show user's ddbb contents from help
 // 5.0.c - 20150224 - allow "fer reserva" only in logged in
 // 5.0.d - 20150224 - create logoff() button
+// 5.1.a - 20150225 - use session
+//
 
 // Package install :
-// npm install -g morgan       --save
-// npm install -g body-parser  --save
+// npm install morgan           --save
+// npm install body-parser      --save
+// npm install express-session  --save
+// npm install cookie-parser    --save
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
@@ -113,12 +117,12 @@
 
 // Let's go :
 
- var myVersio   = "v 5.0.d" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.a" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
-// var session    = require('express-session') ;      // express session
-// var  cookieParser = require('cookie-parser) ;      // data cookies
-// app.use( coookieParser('secretSebas') ) ;          // pwd to encrypt all cookies 
+
+ var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
+ var cookieParser = require( 'cookie-parser' ) ;      // data cookies
 
  var http       = require( 'http' ) ;
  var https      = require( 'https' ) ;
@@ -128,26 +132,28 @@
  var fs         = require('fs') ;                // r/w files
  var monk       = require( 'monk' ) ;            // access to mongo
 
-var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
-var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
-
-var credentials = {key: privateKey, cert: certificate};
+ var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
+ var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
+ var credentials = { key: privateKey, cert: certificate } ;
 
  var app = express() ;                           // instantiate Express and assign our app variable to it
  var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ;
  
 // +++ app.configure( function () {
 
-   app.set( 'port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
-   app.set( 'Title', 'My Koltrane Site' ) ;
+	app.set( 'port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
+	app.set( 'Title', 'My Koltrane Site' ) ;
                                                  // This is only place we specify the collection name(s) : 
-   app.set( 'rcolname', "reserves_pistes" ) ;    // reservation data := "reserves_pistes" ;
-   app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
+	app.set( 'rcolname', "reserves_pistes" ) ;    // reservation data := "reserves_pistes" ;
+	app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
 
-   app.use( logger( "dev" ) ) ;                         // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
+	app.use( logger( "dev" ) ) ;                      // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
+
+	app.use( cookieParser('secretSebas') ) ;                                               // pwd to encrypt all cookies 
+	app.use( session({secret:'secretsebas', resave:false, saveUninitialized:false}) );     // encrypt session contents
 
 // parse application/json and application/x-www-form-urlencoded
    app.use( bodyParser.json() ) ;
@@ -478,10 +484,15 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 					console.log( 'PWD - bbdd [' + Logon_Pwd_From_bbdd + '], user [' + Logon_PwdUser + '].' ) ;
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
+						
+						req.session.nomsoci = Logon_NomSoci ; // guardar nom soci en la sessio
+						var mSg = new Date() ;                      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now : time in milliseconds
+						req.session.lastlogon = mSg.toISOString() ; 
+						
 						res.status( 200 ) ; // OK
-						var szMsg_Logon_OK = "+++ logon and PWD OK."
-						szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors.' ;
-						szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}.' ;
+					var szMsg_Logon_OK = "+++ logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+						szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+						szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
 						res.send( szMsg_Logon_OK ) ; 
 					} else {
 						console.log( '--- PWD not right.' ) ;
@@ -504,7 +515,22 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 }); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
 
 
-// (8) dump all users (called from HELP page)
+// (8) logoff de un usuari
+
+app.post( '/logoff_user', function( req, res ){
+	
+	console.log( ">>> POST un LOGOFF(). Nom (%s).", req.session.nomsoci ) ;
+	
+	delete req.session.nomsoci  ; // remove session field
+	
+	res.status( 200 ) ; // OK
+	var szMsg_Logoff_OK = "+++ logoff at server OK."
+	res.send( szMsg_Logoff_OK ) ; 
+	
+}); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
+
+
+// (9) dump all users (called from HELP page)
 
 app.get( '/dump_all_users', function( req, res ){
 	

@@ -379,14 +379,21 @@ function logon_ready() {
 	}); // click "myFormReqLogon" submit
 
  	$( "#myFormReqLogoff" ).submit( function(event) {
+
+		$.post( "/logoff_user", function( dades ) {
 		
-		delete window.session.user.nom ;
-		$( "#watermark" ).html( '<p>Logged off.' ) ;
-		
-		$( "#content" ).html( '<p>Logged off successfully.</p>' ) ;
-		
+			console.log( ">>> Esborrar reserva - server response (%s) : ", lng, dades ); // show whole JSON object
+			
+			$( "#content" ).html( dades );  // or "text" - set server data onto actual page
+			$( "#content" ).html( '<p>Logged off successfully.</p>' ) ;
+			
+			delete window.session.user.nom ;
+			$( "#watermark" ).html( '<p>Logged off.' ) ;
+
 		return false ; // stop processing !!!
 
+		}); // post(esborrar reserva)
+	
 	}); // click "myFormReqLogoff" submit
 		
 } ; // logon_ready()
