@@ -69,6 +69,8 @@ b) per dies
 .
  per afegir a la BBDD un usuari :               node  wCDT_create_users_ddbb.js
 .
+ per esborrar la BBDD de reserves :             mongo < wCDT_drop_BBDD.mongo
+.
  per depurar amb node-inspector:                1) start node-inspector
                                                 2) open Chrome at http://127.0.0.1:8080/debug?port=5858
                                                 3) node --debug-brk my_server.js

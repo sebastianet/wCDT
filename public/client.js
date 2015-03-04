@@ -409,7 +409,7 @@ function help_ready() {
 
     $("#clkConsultaAllReserves").click(function () {
         $.get('/dump_all_reserves', function ( page ) {
-            console.log( "*** Demanem la llista de totes les reserves. Server response {%s}", page ) ;
+            console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}", page ) ;
             var lng = 0 ;
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;
@@ -425,7 +425,9 @@ function help_ready() {
 					texte += " <br>" ;
                     i++;
                 } // while
-            } // lng > 0
+            } else {  // lng = 0
+				texte += "Dump all data in <i>reserves</i> DDBB. No hi ha reserves. <br>";
+			} ;
 			texte += "</p>"
             $('#content').html(texte);  // or "text"
         }); // get()  
@@ -434,7 +436,7 @@ function help_ready() {
 
 	$( "#clkPopulate" ).click( function() {
 		$.get( '/populate', function( page ) {
-			console.log( '**** Demanem al server omplir la BBDD.' ) ;
+			console.log( '**** HELP.HTM - Demanem al server omplir la BBDD.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(populate)
 	}) ; // populate
@@ -442,7 +444,7 @@ function help_ready() {
 
 	$( "#clkPing" ).click( function() {
 		$.get( '/ping', function( page ) {
-			console.log( '**** Demanem al server un PING.' ) ;
+			console.log( '**** HELP.HTM - Demanem al server un PING.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(ping)
 	}) ; // ping
@@ -450,7 +452,7 @@ function help_ready() {
 
 	$( "#clkLinks" ).click( function() {
 		$.get( '/links.htm', function( page ) {
-			console.log( '**** Demanem al server la sub-pagina LINKS.' ) ;
+			console.log( '**** HELP.HTM - Demanem al server la sub-pagina LINKS.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(links)
 	}) ; // links
@@ -458,7 +460,7 @@ function help_ready() {
 	
     $("#clkConsultaAllUsers").click(function () {
         $.get('/dump_all_users', function ( page ) {
-            console.log( "*** Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
+            console.log( "*** HELP.HTM - Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
             var lng = 0 ;
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;

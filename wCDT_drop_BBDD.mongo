@@ -1,0 +1,5 @@
+db.adminCommand('listDatabases')
+use cdt
+db.getCollectionNames()
+db.reserves_pistes.drop()
+exit

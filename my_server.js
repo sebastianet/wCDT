@@ -84,6 +84,7 @@
 // 5.0.c - 20150224 - allow "fer reserva" only in logged in
 // 5.0.d - 20150224 - create logoff() button
 // 5.1.a - 20150225 - use session
+// 5.1.b - 20150226 - send messages to client with user name
 //
 
 // Package install :
@@ -110,14 +111,20 @@
 // (*) RoboMongo - no ensenya les dades
 // (*) node-inspector session
 // (*) package.json : com sap comengegar : "start": "node my_server.js"
+// (*) fer reserva nomes dies futurs
+// (*) fer delete nomes dies futurs
+// (*) fer delete nomes same user
+// (*) enviar texte del server amb en nom del usuari
+
 
 // Dubtes :
+// (*) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
 // *)
 //
 
 // Let's go :
 
- var myVersio   = "v 5.1.a" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.b" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -204,7 +211,7 @@ Date.prototype.yyyymmdd = function() {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> POPULATE ddbb (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+req.session.nomsoci+"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
 //    MyCollection.drop( function(e) {              // drop old database and wait completion
 
@@ -223,11 +230,12 @@ Date.prototype.yyyymmdd = function() {
 		
 		MyCollection.insert( My_Initial_Reserves, { safe:true }, function( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
+				console.log( "--- Populate reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
                 res.status( 500 ) ; // Internal Error
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
                 res.status( 200 ) ; // OK
-	            res.send( "+++ ddbb (" + MyCollection.name + ") populated OK." ) ; // else, indicate OK.
+	            res.send( "+++ {"+req.session.nomsoci+"} ddbb [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
 
@@ -298,87 +306,93 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 //	if ( Reserva_Dia < 10 ) { Reserva_Dia = '0' + Reserva_Dia } ;
 	var Reserva_Hora    = req.params.res_hora ;
 //	if ( Reserva_Hora < 10 ) { Reserva_Hora = '0' + Reserva_Hora } ;
-	console.log( ">>> POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
-	
-	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
-	var MyCollection = db.get( CollectionName ) ; // get the collection
-	
-	var MyReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
-	MyReserva.rnom   = Reserva_NomSoci ;
-	MyReserva.rpista = Reserva_Pista ;
-	MyReserva.rdata  = Reserva_Dia ;
-	MyReserva.rhora  = Reserva_Hora ;
 
-// mirem que tots els parametres siguin correctes :
-
-    var iTotOK = 1 ;  // de moment, tot OK
-	var szErrorString = "" ;
-	var szResultat = "" ;
-	
-	if ( ( Reserva_Pista < 3 ) || ( Reserva_Pista > 5 ) ) {
-		szErrorString = "Numero de pista erroni (" + Reserva_Pista + ")" ;
-		iTotOK = 0 ;  // indicate error in parameters
-	} ;
-	if ( ( Reserva_Dia < 1 ) || ( Reserva_Dia > 31 ) ) {
-		szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
-		iTotOK = 0 ;  // indicate error in parameters
-	} ;
-
-	if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
-		szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
-		iTotOK = 0 ;  // indicate error in parameters
-	} ;
-	
-	if ( iTotOK == 1 ) {  // parameters ok
-	
-// mirem si aquesta pista ja esta ocupada aquest dia i hora :
-
-		MyCollection.find( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
-
-			if ( err ) { 
-				console.log( "--- Fer Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
-				res.status( 500 ) ; // internal error
-				res.send( {'error': 'fer reserva DDBB error.'} ) ;
-			} else {
+	if ( defined(req.session.nomsoci) )
+	{
+		console.log( ">>> ["+req.session.nomsoci+"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
-				var  i = docs.length ;
-				console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
-
-				if ( i < 1 ) { // si no esta ocupat, la reservem
+		var CollectionName = app.get( 'rcolname' ) ;  // get collection name
+		var MyCollection = db.get( CollectionName ) ; // get the collection
 		
-					console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+		var MyReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
+		MyReserva.rnom   = Reserva_NomSoci ;
+		MyReserva.rpista = Reserva_Pista ;
+		MyReserva.rdata  = Reserva_Dia ;
+		MyReserva.rhora  = Reserva_Hora ;
+
+	// mirem que tots els parametres siguin correctes :
+
+		var iTotOK = 1 ;  // de moment, tot OK
+		var szErrorString = "" ;
+		var szResultat = "" ;
+		
+		if ( ( Reserva_Pista < 3 ) || ( Reserva_Pista > 5 ) ) {
+			szErrorString = "Numero de pista erroni (" + Reserva_Pista + ")" ;
+			iTotOK = 0 ;  // indicate error in parameters
+		} ;
+		if ( ( Reserva_Dia < 1 ) || ( Reserva_Dia > 31 ) ) {
+			szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
+			iTotOK = 0 ;  // indicate error in parameters
+		} ;
+
+		if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
+			szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
+			iTotOK = 0 ;  // indicate error in parameters
+		} ;
+		
+		if ( iTotOK == 1 ) {  // parameters ok
+		
+	// mirem si aquesta pista ja esta ocupada aquest dia i hora :
+
+			MyCollection.find( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+
+				if ( err ) { 
+					console.log( "--- Fer Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+					res.status( 500 ) ; // internal error
+					res.send( {'error': 'fer reserva DDBB error.'} ) ;
+				} else {
+			
+					var  i = docs.length ;
+					console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
+
+					if ( i < 1 ) { // si no esta ocupat, la reservem
+			
+						console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+					
+						MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
+							if ( err ) {
+								console.log( '---- Could not insert reservation into MongoDB.' ) ;
+								res.status( 500 ) ; // internal error
+								res.send( {'error':'An error has occurred'} ) ;
+							} else {
+								console.log( '++++ Success: insert went ok.' ) ;
+								res.status( 200 ) ; // OK
+								res.send( "+++ fer reserva OK. User("+Reserva_NomSoci+"), pista("+Reserva_Pista+"), dia("+Reserva_Dia+"), hora("+Reserva_Hora+")." ) ; // else, indicate OK.
+							} ; // if Error
+						} ) ; // insert
 				
-					MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
-						if ( err ) {
-							console.log( '---- Could not insert reservation into MongoDB.' ) ;
-							res.status( 500 ) ; // internal error
-							res.send( {'error':'An error has occurred'} ) ;
-						} else {
-							console.log( '++++ Success: insert went ok.' ) ;
-							res.status( 200 ) ; // OK
-							res.send( "+++ fer reserva OK. User("+Reserva_NomSoci+"), pista("+Reserva_Pista+"), dia("+Reserva_Dia+"), hora("+Reserva_Hora+")." ) ; // else, indicate OK.
-						} ; // if Error
-					} ) ; // insert
-			
-				} else { // else, tell customer the slot is not free
+					} else { // else, tell customer the slot is not free
 
-					var QuiEs = '' ;
-					if ( i == 1 ) {
-						QuiEs = docs[0].rnom ;
-					} ;
-					szResultat = "--- Error Reserva - ("+i+") slot Pista("+Reserva_Pista+") Dia("+Reserva_Dia+") Hora("+Reserva_Hora+") ocupat per en (" + QuiEs + ")." ;
-					res.status( 200 ) ;      // OK as HTTP rc, but
-					res.send( szResultat ) ; // else, indicate no OK.
-			
-				} ;  // if did exist
-			} ; // error in find()
-		}) ; // find()
+						var QuiEs = '' ;
+						if ( i == 1 ) {
+							QuiEs = docs[0].rnom ;
+						} ;
+						szResultat = "--- Error Reserva - ("+i+") slot Pista("+Reserva_Pista+") Dia("+Reserva_Dia+") Hora("+Reserva_Hora+") ocupat per en (" + QuiEs + ")." ;
+						res.status( 200 ) ;      // OK as HTTP rc, but
+						res.send( szResultat ) ; // else, indicate no OK.
+				
+					} ;  // if did exist
+				} ; // error in find()
+			}) ; // find()
 
-	} else {  // error en algun parametre
-		res.status( 200 ) ; // OK
-		szResultat = "--- Parametre incorrecte (" + szErrorString + ")." ;
-		res.send( szResultat ) ; // else, indicate no OK.
-	} ; // iTotOK
+		} else {  // error en algun parametre
+			res.status( 200 ) ; // OK
+			szResultat = "--- Parametre incorrecte (" + szErrorString + ")." ;
+			res.send( szResultat ) ; // else, indicate no OK.
+		} ; // iTotOK
+	} else {
+		console.log( "--- CANT do a new reserva - soci ["+req.session.nomsoci+"] undefined."  ) ;
+	} ;; // req.session.nomsoci not defined
 	
 }); // get '/fer_una_reserva/<parametres>'
 
