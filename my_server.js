@@ -85,6 +85,7 @@
 // 5.0.d - 20150224 - create logoff() button
 // 5.1.a - 20150225 - use session
 // 5.1.b - 20150226 - send messages to client with user name
+// 5.1.c - 20150305 - verify user is logged before doing a reserva from consulta
 //
 
 // Package install :
@@ -119,12 +120,12 @@
 
 // Dubtes :
 // (*) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
-// *)
+// (*) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 //
 
 // Let's go :
 
- var myVersio   = "v 5.1.b" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.c" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -267,6 +268,11 @@ app.get( '/dump_all_reserves', function( req, res ){
 }); // get '/dump_all_reserves'
 
 
+function hiHaSociEnSessio( ParamSessio, ParamNom ) {
+  return (typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === ParamNom );
+} ; // hiHaSociEnSessio()
+
+
 // (4) mostrar les reserves que hi ha per un dia donat
 // start with a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
 // "data_Reserva" surt del "name" del input field en el "form"
@@ -307,7 +313,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 	var Reserva_Hora    = req.params.res_hora ;
 //	if ( Reserva_Hora < 10 ) { Reserva_Hora = '0' + Reserva_Hora } ;
 
-	if ( defined(req.session.nomsoci) )
+	if ( hiHaSociEnSessio(req.session, req.session.nomsoci) )
 	{
 		console.log( ">>> ["+req.session.nomsoci+"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
@@ -392,6 +398,9 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		} ; // iTotOK
 	} else {
 		console.log( "--- CANT do a new reserva - soci ["+req.session.nomsoci+"] undefined."  ) ;
+		res.status( 200 ) ; // 404 does not display attached text
+		res.send( "--- Error Reserva - cant do reserva if not logged." ) ; 
+
 	} ;; // req.session.nomsoci not defined
 	
 }); // get '/fer_una_reserva/<parametres>'
@@ -499,7 +508,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
-						req.session.nomsoci = Logon_NomSoci ; // guardar nom soci en la sessio
+						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio
 						var mSg = new Date() ;                      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now : time in milliseconds
 						req.session.lastlogon = mSg.toISOString() ; 
 						
