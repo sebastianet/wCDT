@@ -114,11 +114,20 @@ function index_Ready() {              // DOM ready for index.htm
 
 
 	$( ".clkEsborrarReserva" ).click( function() {
-		$.get( '/esborra.htm', function( page ) {
-			console.log( '*** index - demanem al server la sub-pagina ESBORRAR.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(esborrar)
+
+		console.log( '*** Fer reserva - nom (%s).', window.session.user.nom ) ;
+		if ( window.session.user.nom ) { // "logged in" 
+
+			$.get( '/esborra.htm', function( page ) {
+				console.log( '*** index - demanem al server la sub-pagina ESBORRAR.' ) ;
+				$( "#content" ).html( page ) ; // show received HTML at specific <div>
+			}) ; // get(esborrar)
+			
+		} else {
+			$( "#content" ).html( "--- do Logon() before deleting a reserva." ) ;
+		} ;
 	}) ; // esborrar reserva
+
 
 
 	$( "#clkHelp" ).click( function() {
