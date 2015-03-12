@@ -87,13 +87,15 @@
 // 5.1.b - 20150226 - send messages to client with user name
 // 5.1.c - 20150305 - verify user is logged in before "fer reserva" from consulta
 // 5.1.d - 20150311 - allow "esborrar reserva" only in logged in
+// 5.1.e - 20150312 - verify date is in the future (in delete and do reserva too)
+//                    verify user is logged in before "delete reserva" from consulta
 //
 
 // Package install :
-// npm install morgan           --save
-// npm install body-parser      --save
-// npm install express-session  --save
-// npm install cookie-parser    --save
+//   npm install morgan           --save
+//   npm install body-parser      --save
+//   npm install express-session  --save
+//   npm install cookie-parser    --save
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
@@ -112,11 +114,12 @@
 // (*) tancar la conexio amb el mongo - quan es fa ?
 // (*) RoboMongo - no ensenya les dades
 // (*) node-inspector session
-// (*) package.json : com sap comengegar : "start": "node my_server.js"
+// (*) package.json : com sap com engegar : "start": "node my_server.js" - de quan hem fet "npm init" i hem contestat preguntes
 // (*) fer reserva nomes dies futurs
 // (*) fer delete nomes dies futurs
 // (*) fer delete nomes same user
 // (*) enviar texte del server amb en nom del usuari
+// (*) tenir la PWD al Mongo "hashed"
 
 
 // Dubtes :
@@ -138,7 +141,7 @@
  var logger     = require( 'morgan' ) ;          // logging middleware
  var bodyParser = require( 'body-parser' ) ;     // parser
 
- var fs         = require('fs') ;                // r/w files
+ var fs         = require( 'fs' ) ;              // r/w files
  var monk       = require( 'monk' ) ;            // access to mongo
 
  var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
@@ -146,23 +149,23 @@
  var credentials = { key: privateKey, cert: certificate } ;
 
  var app = express() ;                           // instantiate Express and assign our app variable to it
- var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ;
+ var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ; unic lloc on s'escriu el nom de la base de dades
  
 // +++ app.configure( function () {
 
 	app.set( 'port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
 	app.set( 'Title', 'My Koltrane Site' ) ;
-                                                 // This is only place we specify the collection name(s) : 
+                                                  // This is only place we specify the collection name(s) : 
 	app.set( 'rcolname', "reserves_pistes" ) ;    // reservation data := "reserves_pistes" ;
 	app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
 
-	app.use( logger( "dev" ) ) ;                      // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
+	app.use( logger( "dev" ) ) ;                  // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
 
 	app.use( cookieParser('secretSebas') ) ;                                               // pwd to encrypt all cookies 
-	app.use( session({secret:'secretsebas', resave:false, saveUninitialized:false}) ) ;    // encrypt session contents, allow "req.session."
+	app.use( session( {secret:'secretsebas', resave:false, saveUninitialized:false} ) ) ;  // encrypt session contents, allow "req.session."
 
 // parse application/json and application/x-www-form-urlencoded
    app.use( bodyParser.json() ) ;
