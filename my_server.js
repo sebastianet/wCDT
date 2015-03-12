@@ -87,7 +87,7 @@
 // 5.1.b - 20150226 - send messages to client with user name
 // 5.1.c - 20150305 - verify user is logged in before "fer reserva" from consulta
 // 5.1.d - 20150311 - allow "esborrar reserva" only in logged in
-// 5.1.e - 20150312 - verify date is in the future (in delete and do reserva too)
+// 5.1.e - 20150312 - verify date is in the future (in fer reserva and also delete reserva)
 //                    verify user is logged in before "delete reserva" from consulta
 //
 // verify PASSAT o FUTUR
@@ -110,6 +110,7 @@
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) format de la data : ara es "own format"
+// (*) compte que des teclat es pot entrar una hora de valor "9" mentre que internament fem servir sempre "09"
 // (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
@@ -130,7 +131,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.d" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.e" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -179,6 +180,7 @@
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
+   
 // Let write some subroutines
 
 // nova funció yyyyymmdd de Date() - at server
@@ -191,7 +193,7 @@ Date.prototype.yyyymmdd = function() {
 
 // funcio per determinar si hi ha un soci logonejat
 function hiHaSociEnSessio( ParamSessio ) {
-	return (typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === 'string' ) ;
+	return ( typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === 'string' ) ;
 } ; // hiHaSociEnSessio()
 
 // funcio per determinar si la data indicada esta 
@@ -200,13 +202,12 @@ function hiHaSociEnSessio( ParamSessio ) {
 //   en el passat - no es permet fer reserves ni esborrar-les
 function Fecha_En_El_Passat( Param_Dia ) {
 	var Avui = (new Date).yyyymmdd() ;
-	Avui_Dia = 0 ;
-	Avui_Dia = '2099/03/11' ;
-
-	console.log( ">>> Mirem si el dia {%s} es en el futur respecte de {%s}.", Param_Dia, Avui_Dia ) ;
-//	return ( Param_Dia >= Avui_Dia ) ;
-	return true ;
+	var ComEs = ( Param_Dia < Avui ) ;
+	console.log( ">>> Mirem (%s) si el dia demanat {%s} es en el futur respecte de avui {%s}.", ComEs, Param_Dia, Avui ) ;
+	return ( ComEs ) ;
+//	return true ;
 } ; // Fecha_En_El_Passat
+
 
 // Lets set some routes for express() :
 
@@ -365,7 +366,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 			iTotOK = 0 ;  // indicate error in parameters
 		} ;
 		if ( Fecha_En_El_Passat( Reserva_Dia ) ) {
-			szErrorString = "La data requerida {" + Reserva_Dia + "} es en el passat" ;
+			szErrorString = "La data requerida {" + Reserva_Dia + "} es en el passat. No es poden fer reserves en el passat." ;
 			iTotOK = 0 ;  // indicate error in parameters
 		} ;
 		
@@ -416,9 +417,10 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 		} else {  // error en algun parametre
 			res.status( 200 ) ; // OK
-			szResultat = "--- Parametre incorrecte (" + szErrorString + ")." ;
+			szResultat = "--- Parametre incorrecte : (" + szErrorString + ")." ;
 			res.send( szResultat ) ; // else, indicate no OK.
 		} ; // iTotOK
+		
 	} else {
 		console.log( "--- CANT do a new reserva - soci ["+req.session.nomsoci+"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
@@ -445,55 +447,65 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	if ( hiHaSociEnSessio( req.session ) )
 	{
 
-		console.log( ">>> ["+req.session.nomsoci+"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
+		if ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) {
+			res.status( 200 ) ; // OK
+			szResultat = "La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
+			res.send( szResultat ) ; 
 
-		var CollectionName = app.get( 'rcolname' ) ;  // get collection name
-		var MyCollection = db.get( CollectionName ) ; // get the collection
-		
-		var MyEsborraReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
-		MyEsborraReserva.rnom   = Esborra_Reserva_NomSoci ;
-		MyEsborraReserva.rpista = Esborra_Reserva_Pista ;
-		MyEsborraReserva.rdata  = Esborra_Reserva_Dia ;
-		MyEsborraReserva.rhora  = Esborra_Reserva_Hora ;
+		} else {
 
-		MyCollection.find( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+			console.log( ">>> ["+req.session.nomsoci+"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
 
-			if ( err ) { 
-				console.log( "--- Esborrar Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
-				res.status( 500 ) ; // internal error
-				res.send( {'error': 'fer reserva DDBB error.'} ) ;
-			} else {
-		
-				var  i = docs.length ;
-				console.log( "+++ Remove reserva - the slot for that moment has (%s) elements.", i ) ;
-
-				if ( i < 1 ) { // si no esta ocupat, es un error
+			var CollectionName = app.get( 'rcolname' ) ;  // get collection name
+			var MyCollection = db.get( CollectionName ) ; // get the collection
 			
-						szResultat = "--- Error esborrant reserva - ("+i+") slot lliure." ;
-						res.status( 200 ) ;      // OK as HTTP rc, but
-						res.send( szResultat ) ; // else, indicate no OK.
+			var MyEsborraReserva = { rnom: "", rpista: "", rdata: "", rhora: "" } ;  // new object with empty fields
+			MyEsborraReserva.rnom   = Esborra_Reserva_NomSoci ;
+			MyEsborraReserva.rpista = Esborra_Reserva_Pista ;
+			MyEsborraReserva.rdata  = Esborra_Reserva_Dia ;
+			MyEsborraReserva.rhora  = Esborra_Reserva_Hora ;
 
-				} else { // else, the slot is not free so we can remove it
+			MyCollection.find( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+
+				if ( err ) { 
+					console.log( "--- Esborrar Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+					res.status( 500 ) ; // internal error
+					res.send( {'error': 'fer reserva DDBB error.'} ) ;
+				} else {
 			
-					var ObjectIdPerEsborrar = docs[0]._id ;
-					var UsuariPerEsborrar   = docs[0].rnom ;
-					console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
-					MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
-						if ( err ) {
-							console.log( '--- Could not remove reservation from MongoDB. Error is (%s).', err.message ) ;
-							res.status( 500 ) ; // internal error
-							res.send( {'error':'An error has occurred'} ) ;
-						} else {
-							console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
-							res.status( 200 ) ; // OK
-							res.send( "+++ esborrar reserva OK. User("+UsuariPerEsborrar+"), pista("+Esborra_Reserva_Pista+"), dia("+Esborra_Reserva_Dia+"), hora("+Esborra_Reserva_Hora+")." ) ; // else, indicate OK.
-						} ; // if Error
+					var  i = docs.length ;
+					console.log( "+++ Remove reserva - the slot for that moment has (%s) elements.", i ) ;
 
-					} ) ; // remove
-				} ;  // if did exist
-			} ; // if error
+					if ( i < 1 ) { // si no esta ocupat, es un error
+				
+							szResultat = "--- Error esborrant reserva - ("+i+") slot lliure." ;
+							res.status( 200 ) ;      // OK as HTTP rc, but
+							res.send( szResultat ) ; // else, indicate no OK.
 
-		}) ; // find()
+					} else { // else, the slot is not free so we can remove it
+				
+						var ObjectIdPerEsborrar = docs[0]._id ;
+						var UsuariPerEsborrar   = docs[0].rnom ;
+						console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
+						MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
+							if ( err ) {
+								console.log( '--- Could not remove reservation from MongoDB. Error is (%s).', err.message ) ;
+								res.status( 500 ) ; // internal error
+								res.send( {'error':'An error has occurred'} ) ;
+							} else {
+								console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
+								res.status( 200 ) ; // OK
+								res.send( "+++ esborrar reserva OK. User("+UsuariPerEsborrar+"), pista("+Esborra_Reserva_Pista+"), dia("+Esborra_Reserva_Dia+"), hora("+Esborra_Reserva_Hora+")." ) ; // else, indicate OK.
+							} ; // if Error
+
+						} ) ; // remove
+					} ;  // if did exist
+				} ; // if error
+
+			}) ; // find()
+		
+		} ; // la data requerida no es en el passat
+		
 	} else {
 		console.log( "--- CANT delete an old reserva - soci ["+req.session.nomsoci+"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
