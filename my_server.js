@@ -90,6 +90,7 @@
 // 5.1.e - 20150312 - verify date is in the future (in delete and do reserva too)
 //                    verify user is logged in before "delete reserva" from consulta
 //
+// verify PASSAT o FUTUR
 
 // Package install :
 //   npm install morgan           --save
@@ -178,8 +179,36 @@
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
- 
-// Lets set some routes :
+// Let write some subroutines
+
+// nova funció yyyyymmdd de Date() - at server
+Date.prototype.yyyymmdd = function() {                            
+        var yyyy = this.getFullYear().toString();                                    
+        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+        var dd   = this.getDate().toString();
+        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
+}; // yyyymmdd()
+
+// funcio per determinar si hi ha un soci logonejat
+function hiHaSociEnSessio( ParamSessio ) {
+	return (typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === 'string' ) ;
+} ; // hiHaSociEnSessio()
+
+// funcio per determinar si la data indicada esta 
+//   en el futur - es poden fer reserves o esborrar-les
+//     o
+//   en el passat - no es permet fer reserves ni esborrar-les
+function Fecha_En_El_Passat( Param_Dia ) {
+	var Avui = (new Date).yyyymmdd() ;
+	Avui_Dia = 0 ;
+	Avui_Dia = '2099/03/11' ;
+
+	console.log( ">>> Mirem si el dia {%s} es en el futur respecte de {%s}.", Param_Dia, Avui_Dia ) ;
+//	return ( Param_Dia >= Avui_Dia ) ;
+	return true ;
+} ; // Fecha_En_El_Passat
+
+// Lets set some routes for express() :
 
 
 // (1) if customers asks for a "ping", we send actual date and a link back to main page :
@@ -205,14 +234,6 @@ app.get( '/ping', function(req,res) {
 // (2) populate ddbb (called from HELP page)
 
 app.get( '/populate', function( req, res ){
-
-// nova funció yyyyymmdd de Date()
-Date.prototype.yyyymmdd = function() {                            
-        var yyyy = this.getFullYear().toString();                                    
-        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
-        var dd   = this.getDate().toString();
-        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-}; // yyyymmdd()
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
@@ -272,12 +293,6 @@ app.get( '/dump_all_reserves', function( req, res ){
 }); // get '/dump_all_reserves'
 
 
-function hiHaSociEnSessio( ParamSessio, ParamNom ) {
-	console.log( ">>> HiHaSociEnSessio sessio (%s), nom (%s/%s).", ParamSessio, ParamSessio.nomsoci, ParamNom ) ;
-	return (typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === ParamNom );
-} ; // hiHaSociEnSessio()
-
-
 // (4) mostrar les reserves que hi ha per un dia donat
 // start with a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
 // "data_Reserva" surt del "name" del input field en el "form"
@@ -318,7 +333,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 	var Reserva_Hora    = req.params.res_hora ;
 //	if ( Reserva_Hora < 10 ) { Reserva_Hora = '0' + Reserva_Hora } ;
 
-	if ( hiHaSociEnSessio( req.session, req.session.nomsoci ) )
+	if ( hiHaSociEnSessio( req.session ) )
 	{
 		console.log( ">>> ["+req.session.nomsoci+"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
@@ -345,9 +360,12 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 			szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
 			iTotOK = 0 ;  // indicate error in parameters
 		} ;
-
 		if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
 			szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
+			iTotOK = 0 ;  // indicate error in parameters
+		} ;
+		if ( Fecha_En_El_Passat( Reserva_Dia ) ) {
+			szErrorString = "La data requerida {" + Reserva_Dia + "} es en el passat" ;
 			iTotOK = 0 ;  // indicate error in parameters
 		} ;
 		
@@ -424,7 +442,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	var Esborra_Reserva_Dia     = req.params.res_dia ;
 	var Esborra_Reserva_Hora    = req.params.res_hora ;
 	
-	if ( hiHaSociEnSessio( req.session, req.session.nomsoci ) )
+	if ( hiHaSociEnSessio( req.session ) )
 	{
 
 		console.log( ">>> ["+req.session.nomsoci+"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
