@@ -34,10 +34,10 @@
 //    Reserves :
 //
 //        { 
-//          rdata: "2014/11/09", 
-//          rhora: "09", 
+//          rdata:  "2014/11/09", 
+//          rhora:  "09", 
 //          rpista: "3", 
-//          rnom: "sebas" 
+//          rnom:   "sebas" 
 //        }
 //
 //    Usuaris :
@@ -88,6 +88,8 @@
 // 5.1.c - 20150305 - verify user is logged in before "fer reserva" from consulta
 // 5.1.d - 20150311 - allow "esborrar reserva" only in logged in
 // 5.1.e - 20150312 - verify date is in the future (in fer reserva and also delete reserva)
+// 5.1.f - 20150313 - display actual reservas when logon()
+//                    display actual reservas when logoff()
 //                    verify user is logged in before "delete reserva" from consulta
 //
 // verify PASSAT o FUTUR
@@ -107,6 +109,7 @@
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 
 // Pending :
+// (***) mostrar quines reserves te pendentes un usuari, en fer logon() i tambe en logoff()
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) format de la data : ara es "own format"
@@ -129,9 +132,13 @@
 // (*) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 //
 
+// Missatges numerats :
+// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+
+
 // Let's go :
 
- var myVersio   = "v 5.1.e" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.f" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -207,6 +214,41 @@ function Fecha_En_El_Passat( Param_Dia ) {
 	return ( ComEs ) ;
 //	return true ;
 } ; // Fecha_En_El_Passat
+
+// falta posar-hi la data actual en el filtre del mongo,
+// per a que no compti els dies passats
+function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
+
+	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
+   	var MyCollection = db.get( CollectionName ) ; // get the collection
+	console.log( ">>> GET ocupacio - soci (%s) - veure fins a 20 reserves a partir del dia (%s) ", Param_NomSoci, Param_Avui ) ;
+	
+	MyCollection.find( { rnom: Param_NomSoci }, { limit: 20 }, function( err, docs ){ 
+
+		szTxt = "" ;
+		if ( err ) {
+			console.log( '--- Get ocupacio. Error mongodb is (' + err.message + ').' ) ;
+			szTxt +=  '<p>--- Get ocupacio. Error mongodb is (' + err.message + ').' ;
+		} else {	
+			var  i = docs.length ;
+			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
+
+			szTxt = "<p>Les teves ["+ i +"] reserves anteriors son: " ;			
+			var idx = 0 ;
+			while ( idx < i ) {
+				var OcupacioPista = docs[idx].rpista ;
+				var OcupacioData  = docs[idx].rdata ;
+				var OcupacioHora  = docs[idx].rhora ;
+				szTxt += "<p>["+ idx +"] - pista ["+ OcupacioPista +"], dia ["+ OcupacioData +"], hora ["+ OcupacioHora+"]. " ;
+				idx ++ ;
+			} ;
+		} ; // if Error
+
+		CB ( szTxt ) ; // dintre de la funcio del find() !
+		
+	}) ; // find()
+
+} ; // Get_Ocupacio ( Param_NomSoci, Param_Avui ) 
 
 
 // Lets set some routes for express() :
@@ -544,22 +586,31 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 		} else { // no ERR
 			if ( docs ) {
 				if ( i > 0 ) {
-					console.log( '+++ user found. Lets see its PWD.' ) ;
+					console.log( '+++ user (%s) found. Lets see its PWD.', Logon_NomSoci ) ;
 					var ObjectId_User_at_bbdd = docs[0]._id ;
 					var Logon_Pwd_From_bbdd   = docs[0].uPwd ;
-					console.log( 'PWD - bbdd [' + Logon_Pwd_From_bbdd + '], user [' + Logon_PwdUser + '].' ) ;
+					console.log( '+++ PWD - bbdd [' + Logon_Pwd_From_bbdd + '], user [' + Logon_PwdUser + '].' ) ;
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
 						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio
-						var mSg = new Date() ;                      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now : time in milliseconds
-						req.session.lastlogon = mSg.toISOString() ; 
+						var mSg = new Date() ;                      // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
+						req.session.lastlogon = mSg.toISOString() ; // 
 						
 						res.status( 200 ) ; // OK
-					var szMsg_Logon_OK = "+++ logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
-						szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
-						szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
-						res.send( szMsg_Logon_OK ) ; 
+
+						var Avui = (new Date).yyyymmdd() ;
+						console.log( '*** cridem GETOCUPACIO.' ) ;
+						Get_Ocupacio ( Logon_NomSoci, Avui, function ( szOcupacio ) {
+							console.log( '*** acaba GETOCUPACIO.' ) ;
+							var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+							szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
+							szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+							szMsg_Logon_OK += szOcupacio ;
+							
+							res.send( szMsg_Logon_OK ) ; 
+						} ) ;
+						
 					} else {
 						console.log( '--- PWD not right.' ) ;
 						res.send( 401,'user ('+ Logon_NomSoci + ') incorrect password ('+Logon_PwdUser+').' ) ;

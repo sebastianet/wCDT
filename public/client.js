@@ -347,6 +347,7 @@ function esborra_ready() {
 function logon_ready() {
 
 	console.log( '*** logon DOM ready.' ) ;
+
 	
  	$( "#myFormReqLogon" ).submit( function(event) {
 		
@@ -387,22 +388,23 @@ function logon_ready() {
 	
 	}); // click "myFormReqLogon" submit
 
+	
  	$( "#myFormReqLogoff" ).submit( function(event) {
 
 		$.post( "/logoff_user", function( dades ) {
 		
-			console.log( ">>> Esborrar reserva - server response (%s) : ", lng, dades ); // show whole JSON object
+			console.log( ">>> Request logoff - server response (%s) : ", dades ); // show whole JSON object
 			
 			$( "#content" ).html( dades );  // or "text" - set server data onto actual page
-			$( "#content" ).html( '<p>Logged off successfully.</p>' ) ;
+			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
 			
 			delete window.session.user.nom ;
 			$( "#watermark" ).html( '<p>Logged off.' ) ;
 
-		return false ; // stop processing !!!
+		}); // post( logoff )
 
-		}); // post(esborrar reserva)
-	
+		return false ; // stop processing !!!
+		
 	}); // click "myFormReqLogoff" submit
 		
 } ; // logon_ready()
