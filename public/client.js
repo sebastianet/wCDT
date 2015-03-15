@@ -396,7 +396,7 @@ function logon_ready() {
 			console.log( ">>> Request logoff - server response (%s) : ", dades ); // show whole JSON object
 			
 			$( "#content" ).html( dades );  // or "text" - set server data onto actual page
-			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
+//			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
 			
 			delete window.session.user.nom ;
 			$( "#watermark" ).html( '<p>Logged off.' ) ;

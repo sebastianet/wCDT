@@ -86,13 +86,12 @@
 // 5.1.a - 20150225 - use session
 // 5.1.b - 20150226 - send messages to client with user name
 // 5.1.c - 20150305 - verify user is logged in before "fer reserva" from consulta
-// 5.1.d - 20150311 - allow "esborrar reserva" only in logged in
+// 5.1.d - 20150311 - allow "esborrar reserva" only in logged in, also from consulta
 // 5.1.e - 20150312 - verify date is in the future (in fer reserva and also delete reserva)
 // 5.1.f - 20150313 - display actual reservas when logon()
-//                    display actual reservas when logoff()
-//                    verify user is logged in before "delete reserva" from consulta
+// 5.1.g - 20150314 - display actual reservas when logoff()
 //
-// verify PASSAT o FUTUR
+
 
 // Package install :
 //   npm install morgan           --save
@@ -107,9 +106,11 @@
 //  *) HOURS must always be 2-digit - ok des consulta, pero reserva pot entrar "9" en lloc de "09".
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
+//  *) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
+//  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 
 // Pending :
-// (***) mostrar quines reserves te pendentes un usuari, en fer logon() i tambe en logoff()
+// (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) format de la data : ara es "own format"
@@ -124,21 +125,20 @@
 // (*) fer delete nomes dies futurs
 // (*) fer delete nomes same user
 // (*) enviar texte del server amb en nom del usuari
-// (*) tenir la PWD al Mongo "hashed"
+// (*) tenir la PWD al mongo "hashed"
 
 
 // Dubtes :
-// (*) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
-// (*) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 //
 
 // Missatges numerats :
 // "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+// "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}. "
 
 
 // Let's go :
 
- var myVersio   = "v 5.1.f" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.g" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -191,7 +191,7 @@
 // Let write some subroutines
 
 // nova funció yyyyymmdd de Date() - at server
-Date.prototype.yyyymmdd = function() {                            
+Date.prototype.yyyymmdd = function ( ) {                            
         var yyyy = this.getFullYear().toString();                                    
         var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
         var dd   = this.getDate().toString();
@@ -223,7 +223,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
    	var MyCollection = db.get( CollectionName ) ; // get the collection
 	console.log( ">>> GET ocupacio - soci (%s) - veure fins a 20 reserves a partir del dia (%s) ", Param_NomSoci, Param_Avui ) ;
 	
-	MyCollection.find( { rnom: Param_NomSoci }, { limit: 20 }, function( err, docs ){ 
+	MyCollection.find ( { rnom: Param_NomSoci }, { limit: 20 }, function ( err, docs ) { 
 
 		szTxt = "" ;
 		if ( err ) {
@@ -233,7 +233,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 			var  i = docs.length ;
 			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
 
-			szTxt = "<p>Les teves ["+ i +"] reserves anteriors son: " ;			
+			szTxt = "<p>Tens ["+ i +"] reserves vigents : " ;			
 			var idx = 0 ;
 			while ( idx < i ) {
 				var OcupacioPista = docs[idx].rpista ;
@@ -244,7 +244,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 			} ;
 		} ; // if Error
 
-		CB ( szTxt ) ; // dintre de la funcio del find() !
+		CB ( err, szTxt ) ; // dintre de la funcio del find() !
 		
 	}) ; // find()
 
@@ -256,7 +256,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 // (1) if customers asks for a "ping", we send actual date and a link back to main page :
 
-app.get( '/ping', function(req,res) {
+app.get( '/ping', function ( req, res ) {
 	var currentdate = new Date();
 	var datetime = "Last Sync: " + currentdate.getDate() + "/"
 				+ (currentdate.getMonth()+1)  + "/"
@@ -276,7 +276,7 @@ app.get( '/ping', function(req,res) {
  
 // (2) populate ddbb (called from HELP page)
 
-app.get( '/populate', function( req, res ){
+app.get( '/populate', function ( req, res ) {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
@@ -297,7 +297,7 @@ app.get( '/populate', function( req, res ){
 		My_Initial_Reserves[2].rdata = Avui ;
 		My_Initial_Reserves[3].rdata = Avui ;
 		
-		MyCollection.insert( My_Initial_Reserves, { safe:true }, function( err, result ) {
+		MyCollection.insert ( My_Initial_Reserves, { safe:true }, function ( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
 				console.log( "--- Populate reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
                 res.status( 500 ) ; // Internal Error
@@ -315,13 +315,13 @@ app.get( '/populate', function( req, res ){
 
 // (3) dump all reserves (called from HELP page)
 
-app.get( '/dump_all_reserves', function( req, res ){
+app.get( '/dump_all_reserves', function ( req, res ) {
 	
 	console.log( ">>> GET ALL reserves : veure fins a 20 reserves de tots els dies." ) ;
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
 
-	MyCollection.find( {  }, { limit: 20 }, function( err, docs ){ // empty filter
+	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
 	    if ( err ) { 
             console.log( "--- Dump all reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
@@ -340,14 +340,14 @@ app.get( '/dump_all_reserves', function( req, res ){
 // start with a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
 // "data_Reserva" surt del "name" del input field en el "form"
 
-app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function( req, res ){
+app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 	
     var DiaConsultat = req.params.dia_consultat ; // if BLANK then 404 ;
 	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
    	var MyCollection = db.get( CollectionName ) ; // get the collection
 	console.log( ">>> GET veure reserves 1 dia - collection (%s) - veure fins a 20 reserves del dia (%s) ", CollectionName, DiaConsultat ) ;
 	
-	MyCollection.find( { rdata: DiaConsultat }, { limit: 20 }, function( err, docs ){ 
+	MyCollection.find ( { rdata: DiaConsultat }, { limit: 20 }, function ( err, docs ) { 
 
 		if ( err ) {
 			console.log( '--- Veure reserves. Error mongodb is (' + err.message + ').' ) ;
@@ -367,7 +367,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function( req, res ){
 // (5) fer una reserva nova
 // start with a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
-app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_Reserva=:res_dia&Hora_Reserva=:res_hora', function( req, res ){
+app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_Reserva=:res_dia&Hora_Reserva=:res_hora', function ( req, res ) {
 
 	var Reserva_NomSoci = req.params.res_nom_soci ;
 	var Reserva_Pista   = req.params.res_pista ;
@@ -416,7 +416,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		
 	// mirem si aquesta pista ja esta ocupada aquest dia i hora :
 
-			MyCollection.find( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+			MyCollection.find ( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
 					console.log( "--- Fer Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
@@ -431,7 +431,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 			
 						console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
 					
-						MyCollection.insert( MyReserva, { safe:true }, function( err, result ) {
+						MyCollection.insert ( MyReserva, { safe:true }, function ( err, result ) {
 							if ( err ) {
 								console.log( '---- Could not insert reservation into MongoDB.' ) ;
 								res.status( 500 ) ; // internal error
@@ -479,7 +479,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 //    *) som el seu propietari (o som el Administrador)
 //    *) la data es "futura", es a dir, que no s'ha jugat
 
-app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function( req, res ){
+app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function ( req, res ) {
 	
 	var Esborra_Reserva_NomSoci = req.params.res_nom_soci ;
 	var Esborra_Reserva_Pista   = req.params.res_pista ;
@@ -507,7 +507,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 			MyEsborraReserva.rdata  = Esborra_Reserva_Dia ;
 			MyEsborraReserva.rhora  = Esborra_Reserva_Hora ;
 
-			MyCollection.find( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function( err, docs ){ 
+			MyCollection.find ( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
 					console.log( "--- Esborrar Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
@@ -529,7 +529,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 						var ObjectIdPerEsborrar = docs[0]._id ;
 						var UsuariPerEsborrar   = docs[0].rnom ;
 						console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
-						MyCollection.remove( {"_id": ObjectIdPerEsborrar }, { safe:true }, function( err, result ) {
+						MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
 							if ( err ) {
 								console.log( '--- Could not remove reservation from MongoDB. Error is (%s).', err.message ) ;
 								res.status( 500 ) ; // internal error
@@ -560,21 +560,19 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 // (7) fer logon() de un usuari
 // rebem GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy
 
-app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req, res ){
+app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req, res ) {
 
-	var Logon_NomSoci = req.params.log_nom_soci ;
+	var Logon_NomSoci = req.params.log_nom_soci ; // instaead of req.query.log_nom_soci
 	var Logon_PwdUser = req.params.log_pwd ;
 
-//	var Logon_NomSoci = req.query.log_nom_soci ;
-//	var Logon_PwdUser = req.query.log_pwd ;
-
-	console.log( ">>> POST un LOGON(). Nom (%s), pwd (%s).", Logon_NomSoci, Logon_PwdUser ) ;
+	var Avui = (new Date).yyyymmdd() ;
+	console.log( ">>> POST un LOGON(). Data (%s). Nom (%s), pwd (%s).", Avui, Logon_NomSoci, Logon_PwdUser ) ;
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
 	console.log( ">>> Using USERS ddbb (" + MyUsersCollection.name + ")." ) ;
 
-	MyUsersCollection.find( { uAlias: Logon_NomSoci }, { limit: 20 }, function( err, docs ){ 
+	MyUsersCollection.find( { uAlias: Logon_NomSoci }, { limit: 20 }, function ( err, docs ) { 
 	
 		var  i = docs.length ;
 		console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
@@ -597,19 +595,22 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 						var mSg = new Date() ;                      // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
 						req.session.lastlogon = mSg.toISOString() ; // 
 						
-						res.status( 200 ) ; // OK
+						console.log( '*** cridem GETOCUPACIO logon.' ) ;
+						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, szOcupacio ) {
+							console.log( '*** acaba GETOCUPACIO logon.' ) ;
+							if ( err ) {
+								console.log( '--- logon get_ocupacio trouble.' ) ;
+								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
+							} else {
 
-						var Avui = (new Date).yyyymmdd() ;
-						console.log( '*** cridem GETOCUPACIO.' ) ;
-						Get_Ocupacio ( Logon_NomSoci, Avui, function ( szOcupacio ) {
-							console.log( '*** acaba GETOCUPACIO.' ) ;
-							var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
-							szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
-							szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
-							szMsg_Logon_OK += szOcupacio ;
-							
-							res.send( szMsg_Logon_OK ) ; 
-						} ) ;
+								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
+								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+								szMsg_Logon_OK += szOcupacio ;
+								
+								res.send( 200, szMsg_Logon_OK ) ;
+							} ; // error dins get ocupacio
+						} ) ; // own async function : get_ocupacio (uses mongo)
 						
 					} else {
 						console.log( '--- PWD not right.' ) ;
@@ -634,28 +635,40 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function( req,
 
 // (8) logoff de un usuari
 
-app.post( '/logoff_user', function( req, res ){
+app.post( '/logoff_user', function ( req, res ) {
 	
-	console.log( ">>> POST un LOGOFF(). Nom (%s).", req.session.nomsoci ) ;
-	
-	delete req.session.nomsoci  ; // remove session field
-	
-	res.status( 200 ) ; // OK
-	var szMsg_Logoff_OK = "+++ logoff at server OK."
-	res.send( szMsg_Logoff_OK ) ; 
+	var Avui = (new Date).yyyymmdd() ;
+	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.nomsoci ) ;
+
+	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
+
+	Get_Ocupacio ( req.session.nomsoci, Avui, function ( err, szOcupacio ) {
+		console.log( '*** acaba GETOCUPACIO logoff.' ) ;
+		if ( err ) {
+			console.log( '--- logoff get_ocupacio trouble.' ) ;
+			res.send( 500,'--- internal error at get_ocupacio logoff.' ) ;
+		} else {
+			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}. "
+			szMsg_Logoff_OK += szOcupacio ;								
+			res.send( 200, szMsg_Logoff_OK ) ;
+		} ; // error dins get ocupacio
+		
+		delete req.session.nomsoci ; // remove session field when async function ends
+
+	} ) ; // own async function : get_ocupacio (uses mongo)
 	
 }); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
 
 
 // (9) dump all users (called from HELP page)
 
-app.get( '/dump_all_users', function( req, res ){
+app.get( '/dump_all_users', function ( req, res ) {
 	
 	console.log( ">>> GET ALL users : veure fins a 20 usuaris de tots els dies." ) ;
 	var CollectionName = app.get( 'userscolname' ) ;   // get "users" collection name
     var MyCollection = db.get( CollectionName ) ;      // get the collection
 
-	MyCollection.find( {  }, { limit: 20 }, function( err, docs ){ // empty filter
+	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
 	    if ( err ) { 
             console.log( "--- Dump all users. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
@@ -672,7 +685,7 @@ app.get( '/dump_all_users', function( req, res ){
 
 // create our http server and launch it
 
-// http.createServer( app ).listen( app.get( 'port' ), function() {
+// http.createServer( app ).listen( app.get( 'port' ), function () {
 //     console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
 // } ) ; // create server
 
