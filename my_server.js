@@ -93,6 +93,7 @@
 // 5.1.f - 20150313 - display actual reservas when logon()
 // 5.1.g - 20150314 - display actual reservas when logoff()
 // 5.1.h - 20150316 - link to logon() in INITIAL.HTM
+// 5.1.i - 20150318 - get_ocupacio only future days
 //
 
 
@@ -232,7 +233,10 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
    	var MyCollection = db.get( CollectionName ) ; // get the collection
 	console.log( ">>> GET ocupacio - soci (%s) - veure fins a 20 reserves a partir del dia (%s) ", Param_NomSoci, Param_Avui ) ;
 	
-	MyCollection.find ( { rnom: Param_NomSoci }, { limit: 20 }, function ( err, docs ) { 
+//	MyCollection.find ( { rnom: Param_NomSoci }, { limit: 20 }, function ( err, docs ) { 
+	
+	var Avui_getOcupacio = (new Date).yyyymmdd() ;
+	MyCollection.find ( { rnom: Param_NomSoci,  rdata: { $gte: Avui_getOcupacio } }, { limit: 20 }, function ( err, docs ) { // http://docs.mongodb.org/manual/reference/operator/query/gte/
 
 		szTxt = "" ;
 		if ( err ) {

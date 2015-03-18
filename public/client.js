@@ -19,7 +19,23 @@ Date.prototype.hhmmss = function () {
 	return myHHMMSS ;
 } ; // hhmmss
 
-   
+// Quan es pica el link de "INICI", demanem al servidor una pagina i la posem on indica "#content".
+// Es crida desde 2 llocs :
+//  a) index_ready()
+//  b) initial_ready() - per assignar el codi a u nlink que hi ha dins INITIAL.HTM
+function fClickLogon() { 
+	console.log( '+++ establir codi a executar en picar Logon().' ) ;
+ 	$( ".clkLogon" ).click( function() {
+		console.log( '*** you did click on LOGON() link in INITIAL.HTM.' ) ;
+		$.get( '/logon.htm', function( page ) {
+			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(logon)
+	}) ; // clkLogon
+
+} ; // fClkLogon()
+ 
+ 
 // exemple d'us:   
 //    ferReserva( $(this).serialize(), "#content" ) ; // reserva.htm
 //    ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // consulta.htm
@@ -56,7 +72,7 @@ function esborrarReserva( myDades, myContent ) {
 }; // esborrarReserva()
 
 
-function index_Ready() {              // DOM ready for index.htm
+function index_ready() {              // DOM ready for index.htm
 
 	console.log( '*** index DOM ready.' ) ;
 	
@@ -97,13 +113,16 @@ function index_Ready() {              // DOM ready for index.htm
 
 // Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
 // compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()
-	$( ".clkLogon" ).click( function() {
+
+/* 	$( ".clkLogon" ).click( function() {
 		$.get( '/logon.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
 	}) ; // clkLogon
+ */
 
+	fClickLogon() ; //
 	
 	$( ".clkFerReserva" ).click( function() {
 		
@@ -516,19 +535,22 @@ function initial_ready() {
 
 // Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
 // compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()
-	$( ".clkLogon" ).click( function() {
-		console.log( '*** you did click on LOGON() link in INITAL.HTM.' ) ;
+
+/* 	$( ".clkLogonInitial" ).click( function() {
+		console.log( '*** you did click on LOGON() link in INITIAL.HTM.' ) ;
 		$.get( '/logon.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
 	}) ; // clkLogon
-	
+*/
+	 fClickLogon() ;
+	 
 } ; // initial_ready()
 
 
 $( function() {
 	
-    index_Ready(); // DOM ready event
+    index_ready(); // DOM ready event
   
 } ) ; // DOM ready
