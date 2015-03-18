@@ -194,8 +194,36 @@ c:\sebas\JavaScript\wCDT\sslcert>dir
 ===
 .
  start node-inspector
- browser ( http://127.0.0.1:8080/debug?port=5858
+ browser http://127.0.0.1:8080/debug?port=5858
  node  --debug-brk  my_server.js
   o
  node  --debug      my_server.js
+.
+ =============================================
+.
+Failed to load resource: 
+	net::ERR_INTERNET_DISCONNECTED      
+	https://code.jquery.com/ui/1.11.3/jquery-ui.min.js 
+	Failed to load resource: net::ERR_INTERNET_DISCONNECTED
+
+fes logon - > click on the TEXT !
+.
+ entorn desarrollo eclipse + ENIDE  ->->->->   entorn prod (bluemix)
+
+ 0) cuenta en Bluemix (IBM id)
+ 1) logon ibm id
+ 2) get github 
+ 3) 
+.
+manifest.yml - descriptor despliegue aplicacion
+.
+bluemix españa (FRM) - ej explic node & despliegue
+.
+cmd crear BBDD vacias !
+.
+dubtes bluemix
+
+ 0) com instalar mongoDB
+ a) on es la consola del node.js ? per veure els errors de node.js
+ b) on es la consola de la VM ? per crear usuaris de la BBDD
 .

@@ -5,7 +5,19 @@ Date.prototype.yyyymmdd = function() {
 	var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
 	var dd   = this.getDate().toString();
 	return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-};  
+} ; // yyyymmss
+
+Date.prototype.hhmmss = function () {
+	function fixTime(i) {
+        return (i < 10) ? "0" + i : i;
+    }
+	var today = new Date(),
+	    hh = fixTime( today.getHours() ),
+		mm = fixTime( today.getMinutes() ),
+		ss = fixTime( today.getSeconds() ) ;
+	var myHHMMSS = hh + ':' + mm + ':' + ss ;
+	return myHHMMSS ;
+} ; // hhmmss
 
    
 // exemple d'us:   
@@ -59,11 +71,14 @@ function index_Ready() {              // DOM ready for index.htm
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
 
 // posem el calendari del mes actual
-
 	$.get( '/mes_actual.htm', function( page ) {
 		console.log( '*** index - demanem al server la sub-pagina MES_ACTUAL.' ) ;
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(actual month html code)
+
+// posar la data actual a baix a l'esquerra
+	var szAra = '<center>Ara son les [' + (new Date).hhmmss() + ']</center>' ;
+	$( "#my_date" ).html( szAra ) ; // show actual date
 
 // posem al CONTENT (we are a SPA) the INITAL.HTML
 	$.get( '/initial.htm', function( page ) {
@@ -77,16 +92,17 @@ function index_Ready() {              // DOM ready for index.htm
 			console.log( '*** index - demanem al server la sub-pagina INITIAL.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
-	}) ; // logon
+	}) ; // clkInici
 
 
 // Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
+// compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()
 	$( ".clkLogon" ).click( function() {
 		$.get( '/logon.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(logon)
-	}) ; // logon
+	}) ; // clkLogon
 
 	
 	$( ".clkFerReserva" ).click( function() {
@@ -347,7 +363,6 @@ function esborra_ready() {
 function logon_ready() {
 
 	console.log( '*** logon DOM ready.' ) ;
-
 	
  	$( "#myFormReqLogon" ).submit( function(event) {
 		
@@ -414,10 +429,6 @@ function help_ready() {
 
 	console.log( '*** help DOM ready.' ) ;
 	
-// posar la data actual a baix a l'esquerra
-//	var szAvui = '<center>Avui es {' + window.session.avui + '}</center>' ;
-//	$( "#my_date" ).html( szAvui ) ; // show actual date
-
     $("#clkConsultaAllReserves").click(function () {
         $.get('/dump_all_reserves', function ( page ) {
             console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}", page ) ;
@@ -498,7 +509,24 @@ function help_ready() {
 	
 } ; // help_ready()
 
- 
+
+function initial_ready() {
+	
+	console.log( '*** initial DOM ready v2.' ) ;
+
+// Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
+// compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()
+	$( ".clkLogon" ).click( function() {
+		console.log( '*** you did click on LOGON() link in INITAL.HTM.' ) ;
+		$.get( '/logon.htm', function( page ) {
+			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(logon)
+	}) ; // clkLogon
+	
+} ; // initial_ready()
+
+
 $( function() {
 	
     index_Ready(); // DOM ready event

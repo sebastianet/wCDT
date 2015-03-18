@@ -1,14 +1,14 @@
 
 //
 // Pere & Sebas, 2014 i 2015
-// Projecte "WCDT" - servidor de reserves de pistes per al CDT
+// Projecte "WCDT" - servidor web per reservar les pistes del CDT
 //
 // Repositori : github : https://github.com/sebastianet/wCDT
 //
 // Sequencia d'engegada :
 //    1) engegar el MongoDB
 //    2) "node my_server.js" (veure "package.json")
-//    3) finalment, cal obrir el client a la URL https://localhost/index.htm {compte amb HTTPS des la verios 5.0}
+//    3) finalment, cal obrir el client a la URL https://localhost:/ {compte amb HTTPS des la verios 5.0}
 
 // Project files and folders structure :
 //
@@ -41,12 +41,14 @@
 //        }
 //
 //    Usuaris :
+//
 //				uAlias        : "sebas", 
 //				uPwd          : "sebastia2015", 
 //              uRole         : "Administrator" / "Guest User"
 //				uNom          : "Sebastia Altemir",
 //				uEmail        : "sebastiasebas@gmail.com",
 //				uLastLogin    : "2015/01/01",
+//              uEstat        : actiu / bloquejat / iniciantse
 //				uNumReserves  : "3",
 //				uMisc         : "-" 
 //
@@ -90,6 +92,7 @@
 // 5.1.e - 20150312 - verify date is in the future (in fer reserva and also delete reserva)
 // 5.1.f - 20150313 - display actual reservas when logon()
 // 5.1.g - 20150314 - display actual reservas when logoff()
+// 5.1.h - 20150316 - link to logon() in INITIAL.HTM
 //
 
 
@@ -110,6 +113,12 @@
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 
 // Pending :
+// (*) display actual time in initial page so diferent accesses are diferentiated
+// (*) access the application from a mobile client
+// (+) acces a mongo no ha de set LOCALHOST - get environment variable !
+// (+) remove old dates when evaluating ocupacio (logon or logoff)
+// (*) estat del usuari = "iniciat-se" si li hem enviat el email pero no ha clikat al link d'activacio
+// (*) transaction log = empty database + re-evaluate(transaction log) => actual database
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
@@ -138,7 +147,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.g" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.h" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -162,11 +171,11 @@
  
 // +++ app.configure( function () {
 
-	app.set( 'port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
+	app.set( 'my_port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
 	app.set( 'Title', 'My Koltrane Site' ) ;
-                                                  // This is only place we specify the collection name(s) : 
-	app.set( 'rcolname', "reserves_pistes" ) ;    // reservation data := "reserves_pistes" ;
-	app.set( 'userscolname', "wCDT_users" ) ;     // collection name := "wCDT_users" ;
+                                                     // This is only place we specify the collection name(s) : 
+	app.set( 'rcolname', "reserves_pistes" ) ;       // reservation data := "reserves_pistes" ;
+	app.set( 'userscolname', "wCDT_users" ) ;        // collection name := "wCDT_users" ;
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
@@ -618,7 +627,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 					} ; // both passwords are the same ?
 
 				} else {
-					console.log( '--- USER NOT FOUND.' ) ;
+					console.log( '--- USER ('+ Logon_NomSoci +') NOT FOUND.' ) ;
 					res.send( 401,'user ('+ Logon_NomSoci + ') not found.' ) ;
 				} ;
 			} else {
@@ -690,5 +699,5 @@ app.get( '/dump_all_users', function ( req, res ) {
 // } ) ; // create server
 
 	var httpsServer = https.createServer( credentials, app ) ;
-	httpsServer.listen( app.get( 'port' ) ) ;
-	console.log( 'Express server ' + myVersio + ' listening on port [' + app.get( 'port' ) + '].' ) ;
+	httpsServer.listen( app.get( 'my_port' ) ) ;
+	console.log( 'Express server ' + myVersio + ' listening on port [' + app.get( 'my_port' ) + '].' ) ;
