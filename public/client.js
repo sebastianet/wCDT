@@ -1,11 +1,11 @@
 
 // nova funció yyyyymmdd de Date() - at client
-Date.prototype.yyyymmdd = function() {                            
+Date.prototype.yyyymmdd = function () {                            
 	var yyyy = this.getFullYear().toString();                                    
 	var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
 	var dd   = this.getDate().toString();
 	return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-} ; // yyyymmss
+} ; // yyyymmd
 
 Date.prototype.hhmmss = function () {
 	function fixTime(i) {
@@ -93,7 +93,7 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // get(actual month html code)
 
 // posar la data actual a baix a l'esquerra
-	var szAra = '<center>Ara son les [' + (new Date).hhmmss() + ']</center>' ;
+	var szAra = '<center>Now is [' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
 	$( "#my_date" ).html( szAra ) ; // show actual date
 
 // posem al CONTENT (we are a SPA) the INITAL.HTML
@@ -531,7 +531,7 @@ function help_ready() {
 
 function initial_ready() {
 	
-	console.log( '*** initial DOM ready v2.' ) ;
+	console.log( '*** initial DOM ready.' ) ;
 
 // Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
 // compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()

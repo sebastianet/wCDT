@@ -227,3 +227,15 @@ dubtes bluemix
  a) on es la consola del node.js ? per veure els errors de node.js
  b) on es la consola de la VM ? per crear usuaris de la BBDD
 .
+
+
+
+if (usertype=="admin") {  
+  $(".siusuari").removeClass("amagat")
+ } else {
+   $(".siusuari").addClass("amagat")
+ }
+
+ però m'agrada molt més
+
+ $sisuaris.toggleClass("amagat",!(usertype=="admin));  

@@ -114,7 +114,7 @@
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 
 // Pending :
-// (*) display actual time in initial page so diferent accesses are diferentiated
+// (*) remove "uNumReserves" from reservas ddbb
 // (*) access the application from a mobile client
 // (+) acces a mongo no ha de set LOCALHOST - get environment variable !
 // (+) remove old dates when evaluating ocupacio (logon or logoff)
@@ -183,8 +183,8 @@
 
 	app.use( logger( "dev" ) ) ;                  // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
 
-	app.use( cookieParser('secretSebas') ) ;                                               // pwd to encrypt all cookies 
-	app.use( session( {secret:'secretsebas', resave:false, saveUninitialized:false} ) ) ;  // encrypt session contents, allow "req.session."
+	app.use( cookieParser('secretSebas') ) ;                                                 // pwd to encrypt all cookies 
+	app.use( session( { secret:'secretsebas', resave:false, saveUninitialized:false } ) ) ;  // encrypt session contents, allow "req.session."
 
 // parse application/json and application/x-www-form-urlencoded
    app.use( bodyParser.json() ) ;
@@ -265,6 +265,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 
 // Lets set some routes for express() :
+// =====================================
 
 
 // (1) if customers asks for a "ping", we send actual date and a link back to main page :
@@ -607,6 +608,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio
 						var mSg = new Date() ;                      // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
 						req.session.lastlogon = mSg.toISOString() ; // 
+						req.session.instant_inicial = Date.now() ;  // 
 						
 						console.log( '*** cridem GETOCUPACIO logon.' ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, szOcupacio ) {
@@ -661,7 +663,11 @@ app.post( '/logoff_user', function ( req, res ) {
 			console.log( '--- logoff get_ocupacio trouble.' ) ;
 			res.send( 500,'--- internal error at get_ocupacio logoff.' ) ;
 		} else {
-			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}. "
+			var iPeriode = Date.now() ;
+			console.log( 'logof.now is ('+ iPeriode +')' ) ;
+			console.log( 'logof.old is ('+ req.session.instant_inicial +')' ) ;
+			iPeriode = iPeriode - req.session.instant_inicial ;
+			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}, logged on at {"+ req.session.lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 			szMsg_Logoff_OK += szOcupacio ;								
 			res.send( 200, szMsg_Logoff_OK ) ;
 		} ; // error dins get ocupacio
