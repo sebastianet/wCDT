@@ -24,7 +24,6 @@
 			uNom          : "Sebastia Altemir",
 			uEmail        : "sebastiasebas@gmail.com",
 			uLastLogin    : "2015/01/01",
-			uNumReserves  : "3",
 			uMisc         : "-" 
 		} ;
 
@@ -36,7 +35,6 @@
 			uNom          : "Pere Albert Labal",
 			uEmail        : "palbcn@yahoo.com",
 			uLastLogin    : "2015/01/01",
-			uNumReserves  : "3",
 			uMisc         : "-" 
 		} ;
 
@@ -44,15 +42,14 @@
 		{ 				
 			uAlias        : "guest", 
 			uPwd          : "guest2015", 
-			uRole         : "Guest User",
+			uRole         : "Guest",
 			uNom          : "Usuari General",
 			uEmail        : "nope@yahoo.com",
 			uLastLogin    : "2015/01/01",
-			uNumReserves  : "0",
 			uMisc         : "-" 
 		} ;
 		
-	var My_User_To_Add = My_User_To_Add_sebas ;
+	var My_User_To_Add = My_User_To_Add_guest ;
 	
 // +++ mode code comes here
 

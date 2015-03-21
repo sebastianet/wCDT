@@ -1,5 +1,5 @@
 
-<h2> <i class="fa fa-bus"></i> &nbsp; Admin BBDD del wCDT &nbsp; <i class="fa fa-bus"></i> &nbsp; {ADMIN.HTM} </h2>
+<h2> <i class="fa fa-wrench"></i> &nbsp; Admin BBDD del wCDT &nbsp; <i class="fa fa-wrench"></i> &nbsp; {ADMIN.HTM} </h2>
 
 <hr>
 
@@ -13,11 +13,14 @@ Omple el nom del usuari i clau de pas, i prem "Alta User".
 
 <form id="myFormReqAltaUser">
 <table class="tlog_dyb"> <tr> <td>
-	<label for="nomAltaUser">Nom de usuari &nbsp; </label>
+	<label for="AltaUserNom">Nom de usuari &nbsp; </label>
 	<input type="text" autofocus value="joan" name="nom_Alta" /> 
 	<br>
-	<label for="pwdAltaUser">Clau de pas &nbsp; &nbsp;</label>
+	<label for="AltaUserPwd">Clau de pas &nbsp; &nbsp;</label>
 	<input type="password"  value="perepocapor" name="pwd_Alta" /> 
+	<br>
+	<label for="AltaUserType">Tipus de usuari &nbsp; &nbsp;</label>
+	<input type="text"  value="Guest" name="tipus_Alta" /> 
 <td>
 	<p> &nbsp;
 	<input type="submit" value=" Alta User ">
@@ -63,14 +66,14 @@ Omple les dades i prem "Modify User".
 
 <form id="myFormReqModifyUser">
 <table class="tlog_dyb"> <tr> <td>
-	<label for="nomModifyUser">Nom de usuari &nbsp; </label>
+	<label for="ModifyUserNom">Nom de usuari &nbsp; </label>
 	<input type="text" autofocus value="joan" name="nom_Modify" /> 
 	<br>
-	<label for="pwdModifyOldUser">Clau de pas vella &nbsp; &nbsp;</label>
-	<input type="password"  value="perepocapor" name="pwd_Modify_Old" /> 
+	<label for="ModifyUserPwd">Clau de pas vella &nbsp; &nbsp;</label>
+	<input type="password"  value="perepocapor" name="pwd_Modify" /> 
 	<br>
-	<label for="pwdModifyNewUser">Clau de pas nova &nbsp; &nbsp;</label>
-	<input type="password"  value="perepocapor" name="pwd_Modify_New" /> 
+	<label for="ModifyUserType">Tipus de usuari &nbsp; &nbsp;</label>
+	<input type="text"  value="Guest" name="type_Modify" /> 
 <td>
 	<p> &nbsp;
 	<input type="submit" value=" Modify User ">

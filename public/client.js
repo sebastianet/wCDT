@@ -569,21 +569,24 @@ function admin_ready() {
 			lng = page.length ;
 			console.log( '+++ Llargada (%s).', lng ) ;
 			
-			var texte = '<p class="pkon">Dump all data in <i>users</i> DDBB. ';
+			var texte = '<p class="pkon">Dump all data in <i>users</i> DDBB. ' ;
 			if ( lng > 0 ) {
-				texte += "Hi ha (" + lng + ") usuaris. <br>";
+				texte += "Hi ha (" + lng + ") usuaris. <br>" ;
 				var i = 0;
 				while ( i < lng ) {
-					texte += "("+i+") user (" + page[i].uAlias + ")";
-					texte += " - ID [" + page[i]._id + "]" ;
-					texte += " <br>" ;
-					i++;
+					texte += "("+ i +") " ;
+					texte += "user (" + page[i].uAlias + ") " ;
+					texte += "pwd (" + page[i].uPwd + ") " ;
+					texte += "role (" + page[i].uRole + ") " ;
+//					texte += "ID [" + page[i]._id + "] " ;
+					texte += "<br>" ;
+					i++ ;
 				} // while
 			} else { 
-				texte += "No users defined yet.";
+				texte += "No users defined yet." ;
 			} ; // lng = 0
-			texte += "</p>"
-			$('#content').html(texte);  // or "text"
+			texte += "</p>" ;
+			$( '#content' ).html( texte ) ;  // or "text"
 		} ) ; // get(dump_all_users@admin)
 
 	} ) ; // click List Users from Admin menu

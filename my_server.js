@@ -8,7 +8,7 @@
 // Sequencia d'engegada :
 //    1) engegar el MongoDB
 //    2) "node my_server.js" (veure "package.json")
-//    3) finalment, cal obrir el client a la URL https://localhost:/ {compte amb HTTPS des la verios 5.0}
+//    3) finalment, cal obrir el client a la URL https://localhost:/ {compte - hem de fer servir HTTPS des la versio 5.0}
 
 // Project files and folders structure :
 //
@@ -44,12 +44,11 @@
 //
 //				uAlias        : "sebas", 
 //				uPwd          : "sebastia2015", 
-//              uRole         : "Administrator" / "Guest User"
+//              uRole         : "Administrator" / "Guest"
 //				uNom          : "Sebastia Altemir",
 //				uEmail        : "sebastiasebas@gmail.com",
 //				uLastLogin    : "2015/01/01",
 //              uEstat        : actiu / bloquejat / iniciantse
-//				uNumReserves  : "3",                                       <<< removed version 5.1.k
 //				uMisc         : "-" 
 //
 
@@ -96,7 +95,8 @@
 // 5.1.i - 20150318 - get_ocupacio only future days
 // 5.1.j - 20150321 - CSS i JS de index.htm en local - "mixed content" problem
 // 5.1.k - 20150321 - remove "uNumReserves" from "users" database
-// 5.1.l - 20150321 - list user from ADMIN()
+// 5.1.l - 20150321 - list users DDBB from ADMIN menu
+// 5.1.m - 20150322 - local CSS and JS
 //
 
 // Package install :
@@ -145,7 +145,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.l" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.m" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
