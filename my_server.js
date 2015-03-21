@@ -49,7 +49,7 @@
 //				uEmail        : "sebastiasebas@gmail.com",
 //				uLastLogin    : "2015/01/01",
 //              uEstat        : actiu / bloquejat / iniciantse
-//				uNumReserves  : "3",
+//				uNumReserves  : "3",                                       <<< removed version 5.1.k
 //				uMisc         : "-" 
 //
 
@@ -94,8 +94,10 @@
 // 5.1.g - 20150314 - display actual reservas when logoff()
 // 5.1.h - 20150316 - link to logon() in INITIAL.HTM
 // 5.1.i - 20150318 - get_ocupacio only future days
+// 5.1.j - 20150321 - CSS i JS de index.htm en local - "mixed content" problem
+// 5.1.k - 20150321 - remove "uNumReserves" from "users" database
+// 5.1.l - 20150321 - list user from ADMIN()
 //
-
 
 // Package install :
 //   npm install morgan           --save
@@ -114,10 +116,8 @@
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 
 // Pending :
-// (*) remove "uNumReserves" from reservas ddbb
 // (*) access the application from a mobile client
 // (+) acces a mongo no ha de set LOCALHOST - get environment variable !
-// (+) remove old dates when evaluating ocupacio (logon or logoff)
 // (*) estat del usuari = "iniciat-se" si li hem enviat el email pero no ha clikat al link d'activacio
 // (*) transaction log = empty database + re-evaluate(transaction log) => actual database
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
@@ -131,9 +131,6 @@
 // (*) RoboMongo - no ensenya les dades
 // (*) node-inspector session
 // (*) package.json : com sap com engegar : "start": "node my_server.js" - de quan hem fet "npm init" i hem contestat preguntes
-// (*) fer reserva nomes dies futurs
-// (*) fer delete nomes dies futurs
-// (*) fer delete nomes same user
 // (*) enviar texte del server amb en nom del usuari
 // (*) tenir la PWD al mongo "hashed"
 
@@ -148,7 +145,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.h" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.l" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -225,8 +222,7 @@ function Fecha_En_El_Passat( Param_Dia ) {
 //	return true ;
 } ; // Fecha_En_El_Passat
 
-// falta posar-hi la data actual en el filtre del mongo,
-// per a que no compti els dies passats
+// Mira quantes reserves te un soci, de avui en endevant i en retorna un texte i un integer
 function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
@@ -257,7 +253,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 			} ;
 		} ; // if Error
 
-		CB ( err, szTxt ) ; // dintre de la funcio del find() !
+		CB ( err, i, szTxt ) ; // dintre de la funcio del find() !
 		
 	}) ; // find()
 
@@ -285,7 +281,7 @@ app.get( '/ping', function ( req, res ) {
 	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
 	res.write( texte ) ;
 	res.end( ) ;
-}) ; // get '/ping'
+} ) ; // get '/ping'
 
  
 // (2) populate ddbb (called from HELP page)
@@ -294,7 +290,7 @@ app.get( '/populate', function ( req, res ) {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+req.session.nomsoci+"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.nomsoci +"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
 //    MyCollection.drop( function(e) {              // drop old database and wait completion
 
@@ -318,7 +314,7 @@ app.get( '/populate', function ( req, res ) {
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
                 res.status( 200 ) ; // OK
-	            res.send( "+++ {"+req.session.nomsoci+"} ddbb [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
+	            res.send( "+++ {"+ req.session.nomsoci +"} ddbb [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
 
@@ -347,7 +343,7 @@ app.get( '/dump_all_reserves', function ( req, res ) {
 		} ;
 	}) ; // find()
 
-}); // get '/dump_all_reserves'
+} ) ; // get '/dump_all_reserves'
 
 
 // (4) mostrar les reserves que hi ha per un dia donat
@@ -375,7 +371,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 
 	}) ; // find()
 
-}); // get '/qui_te_reserves/data_Reserva=:dia_consultat'
+} ) ; // get '/qui_te_reserves/data_Reserva=:dia_consultat'
 
 
 // (5) fer una reserva nova
@@ -392,7 +388,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 	if ( hiHaSociEnSessio( req.session ) )
 	{
-		console.log( ">>> ["+req.session.nomsoci+"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
+		console.log( ">>> ["+ req.session.nomsoci +"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
 		var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 		var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -453,7 +449,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 							} else {
 								console.log( '++++ Success: insert went ok.' ) ;
 								res.status( 200 ) ; // OK
-								res.send( "+++ fer reserva OK. User("+Reserva_NomSoci+"), pista("+Reserva_Pista+"), dia("+Reserva_Dia+"), hora("+Reserva_Hora+")." ) ; // else, indicate OK.
+								res.send( "+++ fer reserva OK. User("+ Reserva_NomSoci +"), pista("+ Reserva_Pista +"), dia("+ Reserva_Dia +"), hora("+ Reserva_Hora +")." ) ; // else, indicate OK.
 							} ; // if Error
 						} ) ; // insert
 				
@@ -463,7 +459,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 						if ( i == 1 ) {
 							QuiEs = docs[0].rnom ;
 						} ;
-						szResultat = "--- Error Reserva - ("+i+") slot Pista("+Reserva_Pista+") Dia("+Reserva_Dia+") Hora("+Reserva_Hora+") ocupat per en (" + QuiEs + ")." ;
+						szResultat = "--- Error Reserva - ("+i+") slot Pista("+ Reserva_Pista +") Dia("+ Reserva_Dia +") Hora("+ Reserva_Hora +") ocupat per en (" + QuiEs + ")." ;
 						res.status( 200 ) ;      // OK as HTTP rc, but
 						res.send( szResultat ) ; // else, indicate no OK.
 				
@@ -478,12 +474,12 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		} ; // iTotOK
 		
 	} else {
-		console.log( "--- CANT do a new reserva - soci ["+req.session.nomsoci+"] not logged in."  ) ;
+		console.log( "--- CANT do a new reserva - soci ["+ req.session.nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant do reserva if not logged." ) ; 
 	} ; // not logged in - cant do new reserva
 
-}); // get '/fer_una_reserva/<parametres>'
+} ) ; // get '/fer_una_reserva/<parametres>'
 
 
 // (6) esborrar una reserva 
@@ -510,7 +506,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 		} else {
 
-			console.log( ">>> ["+req.session.nomsoci+"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
+			console.log( ">>> ["+ req.session.nomsoci +"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
 
 			var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 			var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -534,7 +530,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 					if ( i < 1 ) { // si no esta ocupat, es un error
 				
-							szResultat = "--- Error esborrant reserva - ("+i+") slot lliure." ;
+							szResultat = '--- Error esborrant reserva - ('+ i +') slot lliure o no es teu. Nom ('+ Esborra_Reserva_NomSoci +'), pista ('+ Esborra_Reserva_Pista +'), dia ('+ Esborra_Reserva_Dia +'), hora ('+ Esborra_Reserva_Hora +').' ;
 							res.status( 200 ) ;      // OK as HTTP rc, but
 							res.send( szResultat ) ; // else, indicate no OK.
 
@@ -551,7 +547,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 							} else {
 								console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
 								res.status( 200 ) ; // OK
-								res.send( "+++ esborrar reserva OK. User("+UsuariPerEsborrar+"), pista("+Esborra_Reserva_Pista+"), dia("+Esborra_Reserva_Dia+"), hora("+Esborra_Reserva_Hora+")." ) ; // else, indicate OK.
+								res.send( "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ) ; // else, indicate OK.
 							} ; // if Error
 
 						} ) ; // remove
@@ -563,12 +559,12 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		} ; // la data requerida no es en el passat
 		
 	} else {
-		console.log( "--- CANT delete an old reserva - soci ["+req.session.nomsoci+"] not logged in."  ) ;
+		console.log( "--- CANT delete an old reserva - soci ["+ req.session.nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant delete old reserva if not logged." ) ; 
 	} ; // not logged in - cant delete old reserva
 
-}); // get '/esborrar_una_reserva/<parametres>'
+} ) ; // get '/esborrar_una_reserva/<parametres>'
 
 
 // (7) fer logon() de un usuari
@@ -605,14 +601,15 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
-						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio
+						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio      [sess]
+						req.session.tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
 						var mSg = new Date() ;                      // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
 						req.session.lastlogon = mSg.toISOString() ; // 
 						req.session.instant_inicial = Date.now() ;  // 
 						
 						console.log( '*** cridem GETOCUPACIO logon.' ) ;
-						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, szOcupacio ) {
-							console.log( '*** acaba GETOCUPACIO logon.' ) ;
+						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
+							console.log( '*** acaba GETOCUPACIO logon (%s).', iOcupacio ) ;
 							if ( err ) {
 								console.log( '--- logon get_ocupacio trouble.' ) ;
 								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
@@ -620,7 +617,10 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 
 								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
-								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+//								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+								if ( iOcupacio > 0 ) {
+									szMsg_Logon_OK += '<p>*** Compte : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors. ' ;
+								} ;
 								szMsg_Logon_OK += szOcupacio ;
 								
 								res.send( 200, szMsg_Logon_OK ) ;
@@ -645,7 +645,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 
 	}) ; // find()
 	
-}); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
+} ) ; // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
 
 
 // (8) logoff de un usuari
@@ -656,9 +656,8 @@ app.post( '/logoff_user', function ( req, res ) {
 	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.nomsoci ) ;
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
-
-	Get_Ocupacio ( req.session.nomsoci, Avui, function ( err, szOcupacio ) {
-		console.log( '*** acaba GETOCUPACIO logoff.' ) ;
+	Get_Ocupacio ( req.session.nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
+		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
 		if ( err ) {
 			console.log( '--- logoff get_ocupacio trouble.' ) ;
 			res.send( 500,'--- internal error at get_ocupacio logoff.' ) ;
@@ -672,11 +671,12 @@ app.post( '/logoff_user', function ( req, res ) {
 			res.send( 200, szMsg_Logoff_OK ) ;
 		} ; // error dins get ocupacio
 		
-		delete req.session.nomsoci ; // remove session field when async function ends
+		delete req.session.nomsoci ;   // remove session field when async function ends - see [sess]
+		delete req.session.tipussoci ; // remove session field when async function ends - see [sess]
 
 	} ) ; // own async function : get_ocupacio (uses mongo)
 	
-}); // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
+} ) ; // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
 
 
 // (9) dump all users (called from HELP page)
@@ -699,7 +699,24 @@ app.get( '/dump_all_users', function ( req, res ) {
 		} ;
 	}) ; // find()
 
-}); // get '/dump_all_users'
+} ) ; // get '/dump_all_users'
+
+
+// (10) users database admin - called from HELP.HTM
+
+app.get( '/admin', function ( req, res ) {
+	console.log( ">>> admin pages, only for admin users." ) ;
+	var szMsg_Admin_Rsp = '' ;
+	if ( hiHaSociEnSessio( req.session ) ) {
+		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.tipussoci ) ;
+		szMsg_Admin_Rsp = 'Tenim soci' ;
+		res.send( 200, szMsg_Admin_Rsp ) ;
+	} else {
+		console.log( "--- (admin) no hi ha soci." ) ;
+		szMsg_Admin_Rsp = 'No hi ha soci' ;
+		res.send( 401, szMsg_Admin_Rsp ) ;
+	} ;
+} ) ; // get '/admin'
 
 
 // create our http server and launch it

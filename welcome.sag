@@ -1,5 +1,4 @@
-
- start with
+start with
 
  node  my_server.js
 .
@@ -239,3 +238,17 @@ if (usertype=="admin") {
  però m'agrada molt més
 
  $sisuaris.toggleClass("amagat",!(usertype=="admin));  
+
+...
+
+Mixed Content: The page at 'https://localhost/index.htm#' was loaded over HTTPS, but requested an insecure stylesheet 'http://code.jquery.com/ui/1.11.3/themes/flick/jquery-ui.css'. This request has been blocked; the content must be served over HTTPS.
+index.htm:1 
+
+Mixed Content: The page at 'https://localhost/index.htm#' was loaded over HTTPS, but requested an insecure script 'http://code.jquery.com/jquery-2.1.1.min.js'. This request has been blocked; the content must be served over HTTPS.
+index.htm:1 
+
+Mixed Content: The page at 'https://localhost/index.htm#' was loaded over HTTPS, but requested an insecure script 'http://code.jquery.com/ui/1.11.3/jquery-ui.min.js'. This request has been blocked; the content must be served over HTTPS.
+client.js:552 
+
+Uncaught ReferenceError: $ is not defined
+client.js:552 (anonymous function)

@@ -54,7 +54,7 @@ function ferReserva( myDades, myContent ) {
 
 //	return false ; // stop processing !!!
 		
-}; // ferReserva()
+} ; // ferReserva()
 
 
 function esborrarReserva( myDades, myContent ) {
@@ -67,9 +67,9 @@ function esborrarReserva( myDades, myContent ) {
 		
 		$( myContent ).html( dades );  // or "text" - set server data onto actual page
 
-	}); // post(esborrar reserva)
+	} ) ; // post(esborrar reserva)
 
-}; // esborrarReserva()
+} ; // esborrarReserva()
 
 
 function index_ready() {              // DOM ready for index.htm
@@ -107,7 +107,7 @@ function index_ready() {              // DOM ready for index.htm
 		$.get( '/initial.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina INITIAL.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(logon)
+		}) ; // get(initial)
 	}) ; // clkInici
 
 
@@ -179,22 +179,23 @@ function consulta_ready() {
 
 	console.log( '*** consulta DOM ready.' ) ;
 	
-	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( {dateFormat: "yy/mm/dd"});
-	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() );
+	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( { dateFormat: "yy/mm/dd" } ) ;
+	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() ) ;
 
-	$( "#myFormReqDades1Dia" ).submit( function(event) {
+	$( "#myFormReqDades1Dia" ).submit( function( event ) {
 	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server
 
 		console.log( '[+] boto CONSULTA polsat - get ocupacio de un dia.' ) ;
 		
 // 1 - get table HTML
 
-		var myDate = $( this ).serialize() ;  // save user entry of this form : [data_Reserva=2014%2F11%2F10]
-		var szJustDate = myDate.substring(13) ; // just after the "="
+		var myDate = $( this ).serialize() ;              // save user entry of this form : [data_Reserva=2014%2F11%2F10]
+		var szJustDate = myDate.substring(13) ;           // just after the "="
 		szJustDate = decodeURIComponent ( szJustDate ) ;  // change %2F into "/"
 
-		$.get( '/tbl1day.htm', function( page ) {
-			console.log( '**** Demanem al server la taula on posar la ocupacio del dia ['+szJustDate+'].' ) ;
+		$.get( '/tbl1day.htm', function( page ) {         // get empty table
+
+			console.log( '**** Demanem al server la taula on posar la ocupacio del dia ['+ szJustDate +'].' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 
 // 2 - get "dades" for the table
@@ -202,7 +203,7 @@ function consulta_ready() {
 			console.log( '*** consulta - demanem al server la llista de reserves per un dia. Data (%s)', myDate ) ; // output is "data_Reserva=2014/12/06"
 
 // debugger;
-			$.get( "/qui_te_reserves/" + myDate, function( dades ) {
+			$.get( '/qui_te_reserves/' + myDate, function( dades ) {
 
 				console.log( ">>> consulta - server response : ", dades ); // show whole JSON object
 				
@@ -233,11 +234,11 @@ function consulta_ready() {
 
 // +++ codi per associar el event "click" a una cella de la taula
 
-	$('td.lliure').on('click',function(ev){
+	$( 'td.lliure' ).on( 'click', function( ev ) {
 		//dia i hora i soci i pista construir serial...
 	
 		var targetID = $(this).attr('id') ;
-		console.log( 'consulta - onclick td.lliure - el seu ID es {'+targetID+'}' ) ;
+		console.log( 'consulta - onclick td.lliure - el seu ID es {'+ targetID +'}' ) ;
 		  
 		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
 		var clkPista  = targetID.substring(6,7) ; // tdh10p3
@@ -249,8 +250,8 @@ function consulta_ready() {
 			var soci = window.session.user.nom ;
 			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
 
-			console.log( 'consulta - fer reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
-			ferReserva( "Nom_Soci="+soci+"&Pista_Reserva="+clkPista+"&Dia_Reserva="+avui+"&Hora_Reserva="+clkHora, "#content" ) ; // client.js
+			console.log( 'consulta - fer reserva - pfx('+ clkPrefix +') - pista '+ clkPista +', hora '+ clkHora +', soci '+ soci +', data '+ avui ) ;
+			ferReserva( "Nom_Soci="+ soci +"&Pista_Reserva="+ clkPista +"&Dia_Reserva="+ avui +"&Hora_Reserva="+ clkHora, "#content" ) ; // client.js
 
 		} else { // wrong prefix
 		} ;
@@ -259,13 +260,13 @@ function consulta_ready() {
     }); // OnClick - codi a executar quan piquem TD.LLIURE
 
 
-	$('td.ocupada').on('click',function(ev){
+	$( 'td.ocupada' ).on( 'click', function( ev ){
 
 		var targetID = $(this).attr('id') ;
-		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+targetID+'}' ) ;
+		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+ targetID +'}' ) ;
 
 		var targetUser = $(this).text() ;
-		console.log( 'consulta - onclick td.ocupada - el seu USER es {'+targetUser+'}' ) ;
+		console.log( 'consulta - onclick td.ocupada - el seu USER es {'+ targetUser +'}' ) ;
 
 		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
 		var clkPista  = targetID.substring(6,7) ; // tdh10p3
@@ -277,7 +278,7 @@ function consulta_ready() {
 			var soci = window.session.user.nom ;
 			avui = encodeURIComponent(avui) ; // convert "/" into "%2F"
 
-			console.log( 'consulta - esborrar reserva - pfx('+clkPrefix+') - pista '+clkPista+', hora '+clkHora+', soci '+soci+', data '+avui ) ;
+			console.log( 'consulta - esborrar reserva - pfx('+ clkPrefix +') - pista '+ clkPista +', hora '+ clkHora +', soci '+ soci +', data '+ avui ) ;
 
 			// create a msg as "GET /esborrar_una_reserva/Nom_Soci_Esborrar=Ivan&Pista_Reserva_Esborrar=3&Dia_Reserva_Esborrar=2015%2F02%2F19&Hora_Reserva_Esborrar=10"
 			var szEsborrarReserva = "Nom_Soci_Esborrar=" + soci ;
@@ -306,6 +307,7 @@ function consulta_ready() {
 			}); // get(dades)
 		
 		}) ; // get(table HTML)
+
 		return false ; // stop processing !!!
 		
 	}); // click "myFormReqDades1Dia" submit
@@ -332,7 +334,7 @@ function reserva_ready() {
 	$( "#myFormFerReserva input[name='Nom_Soci']" ).val( window.session.user.nom );
 
 // injectem comportament de submit
-	$( "#myFormFerReserva" ).submit( function(event) {
+	$( "#myFormFerReserva" ).submit( function( event ) {
 	// will produce a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
 		console.log( '[+] boto RESERVA polsat - fer una reserva.' ) ;
@@ -367,11 +369,12 @@ function esborra_ready() {
 	$( "#myFormEsborrarReserva input[name='Dia_Reserva_Esborrar']").val( (new Date).yyyymmdd() );
 	$( "#myFormEsborrarReserva input[name='Nom_Soci_Esborrar']" ).val( window.session.user.nom );
 	
-	$( "#myFormEsborrarReserva" ).submit( function(event) {
+	$( "#myFormEsborrarReserva" ).submit( function( event ) {
 	// will produce a msg as "GET /esborrar_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 
 		console.log( '[+] boto ESBORRAR polsat - anular una reserva.' ) ;
 		esborrarReserva( $(this).serialize(), "#content" ) ; // client.js - common code with "erase reservation from "consulta"
+
 		return false ; // stop processing !!!
 
 	}); // click "myFormEsborrarReserva" submit
@@ -383,28 +386,28 @@ function logon_ready() {
 
 	console.log( '*** logon DOM ready.' ) ;
 	
- 	$( "#myFormReqLogon" ).submit( function(event) {
+ 	$( "#myFormReqLogon" ).submit( function( event ) {
 		
 		var myLogon = $( this ).serialize() ;  // get user entry and display it
 		
-		console.log( '[+] boto LOGON polsat - logon ('+myLogon+').' ) ; // logon(nom_Logon=Ivan&pwd_Logon=Grozniy).
+		console.log( '[+] boto LOGON polsat - logon ('+ myLogon +').' ) ; // logon(nom_Logon=Ivan&pwd_Logon=Grozniy).
 		var i = myLogon.indexOf("&") ;
 //		console.log( '[+] boto polsat - AMP at ('+i+').' ) ;
 		var logonUser = myLogon.substring( 10, i ) ;
-		console.log( '[+] boto LOGON polsat - USR is ('+logonUser+').' ) ;
+		console.log( '[+] boto LOGON polsat - USR is ('+ logonUser +').' ) ;
 		var j = myLogon.length ;
 //		console.log( '[+] boto polsat - PAR at ('+j+').' ) ;
 		var logonPwd = myLogon.substring( i+11, j ) ;
-		console.log( '[+] boto LOGON polsat - PWD is ('+logonPwd+').' ) ;
+		console.log( '[+] boto LOGON polsat - PWD is ('+ logonPwd +').' ) ;
 
-//		$.get( '/logonuser/'+myLogon, function( page ) {
+//		$.get( '/logonuser/' + myLogon, function( page ) {
 //			console.log( '**** Demanem al server de fer LOGON() de un usuari.' ) ;
 //			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 //		}) ; // get(logon)
 
 		event.preventDefault(); // what is it for ?
  		$.ajax( {
-			url: '/logonuser/'+myLogon,
+			url: '/logonuser/' + myLogon,
 			success : function( page ) { 
 				$( "#content" ).html( page ) ;
 				
@@ -416,14 +419,14 @@ function logon_ready() {
 				404: function() { $( "#content" ).html( '<p>Logon() unavailable   </p>' ) },
 				500: function() { $( "#content" ).html( '<p>Logon() server error  </p>' ) }
 			} 
-		} ) ; // get(logon)
+		} ) ; // get(admin)
 		
 		return false ; // stop processing !!!
 	
 	}); // click "myFormReqLogon" submit
 
 	
- 	$( "#myFormReqLogoff" ).submit( function(event) {
+ 	$( "#myFormReqLogoff" ).submit( function( event ) {
 
 		$.post( "/logoff_user", function( dades ) {
 		
@@ -448,8 +451,9 @@ function help_ready() {
 
 	console.log( '*** help DOM ready.' ) ;
 	
-    $("#clkConsultaAllReserves").click(function () {
-        $.get('/dump_all_reserves', function ( page ) {
+    $( "#clkConsultaAllReserves" ).click( function () {
+
+		$.get( '/dump_all_reserves', function ( page ) {
             console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}", page ) ;
             var lng = 0 ;
             lng = page.length ;
@@ -471,7 +475,7 @@ function help_ready() {
 			} ;
 			texte += "</p>"
             $('#content').html(texte);  // or "text"
-        }); // get()  
+        }); // get(dump all reserves)
     }); // consulta all reserves
 
 
@@ -490,6 +494,34 @@ function help_ready() {
 		}) ; // get(ping)
 	}) ; // ping
 
+	
+	$( "#clkAdmin" ).click( function() {
+		
+//		$.get( '/admin', function( page ) {
+//			console.log( '**** HELP.HTM - Demanem al server de fer ADMIN.' ) ;
+//			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+//		}) ; // get(admin)
+
+		event.preventDefault(); // what is it for ?
+ 		$.ajax( {
+			url: '/admin',
+			success : function( page ) { 
+
+				$.get( '/admin.htm', function( page ) {
+					console.log( '**** HELP.HTM - Demanem al server la pagina ADMIN.HTM.' ) ;
+					$( "#content" ).html( page ) ; // show received HTML at specific <div>
+				}) ; // get(admin.htm)
+			
+			},
+			statusCode: {
+				401: function() { $( "#content" ).html( '<p>Admin() not authorized</p>' ) },
+			} 
+		} ) ; // get(admin)
+		
+		return false ; // stop processing !!!
+
+	}) ; // admin
+
 
 	$( "#clkLinks" ).click( function() {
 		$.get( '/links.htm', function( page ) {
@@ -497,33 +529,6 @@ function help_ready() {
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(links)
 	}) ; // links
-
-	
-    $("#clkConsultaAllUsers").click(function () {
-        $.get('/dump_all_users', function ( page ) {
-            console.log( "*** HELP.HTM - Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
-            var lng = 0 ;
-            lng = page.length ;
-            console.log( '+++ Llargada (%s).', lng ) ;
-			
-            var texte = '<p class="pkon">Dump all data in <i>users</i> DDBB. ';
-            if ( lng > 0 ) {
-                texte += "Hi ha (" + lng + ") usuaris. <br>";
-                var i = 0;
-                while ( i < lng ) {
-                    texte += "("+i+") user (" + page[i].uAlias + ")";
-					texte += " te (" + page[i].uNumReserves + ") reserves fetes" ;
-					texte += " - ID [" + page[i]._id + "]" ;
-					texte += " <br>" ;
-                    i++;
-                } // while
-            } else { 
-				texte += "No users defined yet.";
-			} ; // lng = 0
-			texte += "</p>"
-            $('#content').html(texte);  // or "text"
-        }); // get()  
-    }); // consulta all reserves
 
 	
 } ; // help_ready()
@@ -547,6 +552,43 @@ function initial_ready() {
 	 fClickLogon() ;
 	 
 } ; // initial_ready()
+
+
+function admin_ready() {
+	
+	console.log( '*** admin DOM ready.' ) ;
+
+	$( "#clkAdminListUsers" ).click( function () {
+		
+		console.log( "*** ADMIN.HTM - lets list all users." ) ;
+
+		$.get( '/dump_all_users', function ( page ) {
+
+			console.log( "*** ADMIN.HTM - Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
+			var lng = 0 ;
+			lng = page.length ;
+			console.log( '+++ Llargada (%s).', lng ) ;
+			
+			var texte = '<p class="pkon">Dump all data in <i>users</i> DDBB. ';
+			if ( lng > 0 ) {
+				texte += "Hi ha (" + lng + ") usuaris. <br>";
+				var i = 0;
+				while ( i < lng ) {
+					texte += "("+i+") user (" + page[i].uAlias + ")";
+					texte += " - ID [" + page[i]._id + "]" ;
+					texte += " <br>" ;
+					i++;
+				} // while
+			} else { 
+				texte += "No users defined yet.";
+			} ; // lng = 0
+			texte += "</p>"
+			$('#content').html(texte);  // or "text"
+		} ) ; // get(dump_all_users@admin)
+
+	} ) ; // click List Users from Admin menu
+	
+} ; // admin_ready()
 
 
 $( function() {
