@@ -1,0 +1,105 @@
+
+<h2> <i class="fa fa-bus"></i> &nbsp; Admin BBDD del wCDT &nbsp; <i class="fa fa-bus"></i> &nbsp; {ADMIN.HTM} </h2>
+
+<hr>
+
+<table class="usrAlta">
+<tr> <td>
+<h3> Alta d'un usuari (crear BBDD) </h3>
+<p>
+Omple el nom del usuari i clau de pas, i prem "Alta User".
+</p>
+<td>
+
+<form id="myFormReqAltaUser">
+<table class="tlog_dyb"> <tr> <td>
+	<label for="nomAltaUser">Nom de usuari &nbsp; </label>
+	<input type="text" autofocus value="joan" name="nom_Alta" /> 
+	<br>
+	<label for="pwdAltaUser">Clau de pas &nbsp; &nbsp;</label>
+	<input type="password"  value="perepocapor" name="pwd_Alta" /> 
+<td>
+	<p> &nbsp;
+	<input type="submit" value=" Alta User ">
+</table>
+</form>
+
+</table>
+
+<hr>
+
+<table class="usrBaixa">
+<tr> <td>
+<h3> Baixa d'un usuari </h3>
+<p>
+Omple el nom del usuari i clau de pas, i prem "Baixa User".
+</p>
+<td>
+
+<form id="myFormReqBaixaUser">
+<table class="tlog_dyb"> <tr> <td>
+	<label for="nomBaixaUser">Nom de usuari &nbsp; </label>
+	<input type="text" autofocus value="joan" name="nom_Baixa" /> 
+	<br>
+	<label for="pwdBiaxaUser">Clau de pas &nbsp; &nbsp;</label>
+	<input type="password"  value="perepocapor" name="pwd_Baixa" /> 
+<td>
+	<p> &nbsp;
+	<input type="submit" value=" Baixa User ">
+</table>
+</form>
+
+</table>
+
+<hr>
+
+<table class="usrModificacio">
+<tr> <td>
+<h3> Modificaci&oacute; d'un usuari </h3>
+<p>
+Omple les dades i prem "Modify User".
+</p>
+<td>
+
+<form id="myFormReqModifyUser">
+<table class="tlog_dyb"> <tr> <td>
+	<label for="nomModifyUser">Nom de usuari &nbsp; </label>
+	<input type="text" autofocus value="joan" name="nom_Modify" /> 
+	<br>
+	<label for="pwdModifyOldUser">Clau de pas vella &nbsp; &nbsp;</label>
+	<input type="password"  value="perepocapor" name="pwd_Modify_Old" /> 
+	<br>
+	<label for="pwdModifyNewUser">Clau de pas nova &nbsp; &nbsp;</label>
+	<input type="password"  value="perepocapor" name="pwd_Modify_New" /> 
+<td>
+	<p> &nbsp;
+	<input type="submit" value=" Modify User ">
+</table>
+</form>
+
+</table>
+
+
+<hr>
+
+<h3>Llistar tots els usuaris</h3>
+
+<p>
+Vols 
+<a href="#" id="clkAdminListUsers">veure tots els usuaris definits a wCDT</a>
+?
+
+<hr>
+
+<h3> Esborrar BBDD usuaris </h3>
+
+<p>
+Vols esborrar la BBDD de usuaris ?
+
+<hr>
+
+<script>
+$( function() {
+    admin_ready() ;  // see client.js file
+} ) ; // DOM ready for ADMIN.HTM
+</script>
