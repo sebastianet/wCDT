@@ -164,13 +164,37 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // esborrar reserva
 
 
-
 	$( "#clkHelp" ).click( function() {
 		$.get( '/help.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina HELP.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(help)
 	}) ; // help
+
+	
+	$( "#clkListCollections" ).click( function() {
+		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
+		$.get( '/list_collections', function( page ) {
+			var lng = page.length ;
+			console.log( '*** index - rebem del server la llista de collections. Lng(%s).', lng ) ;
+			var szTxt = '<p>Collections:</p>' ;
+			var i = 0 ;
+			while ( i < lng ) {
+				szTxt += '('+i+') ' ;
+				szTxt += '['+ page[i].name +'] <p>' ;
+				i++ ;
+			} ;
+			$( "#content" ).html( szTxt ) ; // show calculated HTML at specific <div>
+		} ) ; // get(list collections)
+	}) ; // list collections
+
+	
+	$( "#clkCreateUsersDatabase" ).click( function() {
+		$.get( '/create_users_ddbb', function( page ) {
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		} ) ; // get(ceate users database)
+	}) ; // clkCreateUsersDatabase
+		
 	
 } ; // DOM ready for INDEX.HTM
 
@@ -464,11 +488,12 @@ function help_ready() {
                 texte += "Dump all data in <i>reserves</i> DDBB. Hi ha (" + lng + ") reserves. <br>";
                 var i = 0;
                 while ( i < lng ) {
-                    texte += "("+i+") la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores";
-					texte += " la te reservada en (" + page[i].rnom + ") - " ;
-					texte += "ID [" + page[i]._id + "]" ;
+                    texte += "("+i+") " ;
+					texte += "en (" + page[i].rnom + ") " ;
+					texte += "te reservada la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores" ;
+//					texte += " - ID [" + page[i]._id + "]" ;
 					texte += " <br>" ;
-                    i++;
+                    i++ ;
                 } // while
             } else {  // lng = 0
 				texte += "Dump all data in <i>reserves</i> DDBB. No hi ha reserves. <br>";
@@ -590,6 +615,19 @@ function admin_ready() {
 		} ) ; // get(dump_all_users@admin)
 
 	} ) ; // click List Users from Admin menu
+
+
+	$( "#clkAdminEsborrarBBddUsers" ).click( function () {
+
+		console.log( "*** ADMIN.HTM - delete bbdd users." ) ;
+
+		$.get( '/delete_bbdd_users', function( page ) {
+			console.log( '**** ADMIN.HTM - Demanem al server drop() bbdd users.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(delete bbddd users)
+
+	} ) ; // click Esborrar bbdd Users from Admin menu
+
 	
 } ; // admin_ready()
 

@@ -49,7 +49,7 @@
 			uMisc         : "-" 
 		} ;
 		
-	var My_User_To_Add = My_User_To_Add_guest ;
+	var My_User_To_Add = My_User_To_Add_pere ;
 	
 // +++ mode code comes here
 

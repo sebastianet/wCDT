@@ -97,6 +97,7 @@
 // 5.1.k - 20150321 - remove "uNumReserves" from "users" database
 // 5.1.l - 20150321 - list users DDBB from ADMIN menu
 // 5.1.m - 20150322 - local CSS and JS
+// 5.1.n - 20150322 - "admin" menu - list users and drop users ddbb. new menu, as llist collections
 //
 
 // Package install :
@@ -104,6 +105,7 @@
 //   npm install body-parser      --save
 //   npm install express-session  --save
 //   npm install cookie-parser    --save
+//   npm install mongodb          --save
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
 
@@ -145,7 +147,7 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.m" ;                    // mind 2 places in /public/INDEX.HTM
+ var myVersio   = "v 5.1.n" ;                    // mind 2 places in /public/INDEX.HTM
 
  var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -158,14 +160,16 @@
  var bodyParser = require( 'body-parser' ) ;     // parser
 
  var fs         = require( 'fs' ) ;              // r/w files
- var monk       = require( 'monk' ) ;            // access to mongo
+ var mongo      = require( 'mongodb' ) ;         // connect to mongodb
+ var monk       = require( 'monk' ) ;            // access to mongodb
 
  var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
  var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
  var credentials = { key: privateKey, cert: certificate } ;
 
  var app = express() ;                           // instantiate Express and assign our app variable to it
- var db  = monk( 'localhost:27017/cdt' ) ;       // BBDD := "cdt" ; unic lloc on s'escriu el nom de la base de dades
+ var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+ var db  = monk( szDB ) ;                        // 
  
 // +++ app.configure( function () {
 
@@ -238,7 +242,8 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 		if ( err ) {
 			console.log( '--- Get ocupacio. Error mongodb is (' + err.message + ').' ) ;
 			szTxt +=  '<p>--- Get ocupacio. Error mongodb is (' + err.message + ').' ;
-		} else {	
+		} else {
+			
 			var  i = docs.length ;
 			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
 
@@ -255,7 +260,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 		CB ( err, i, szTxt ) ; // dintre de la funcio del find() !
 		
-	}) ; // find()
+	} ) ; // find()
 
 } ; // Get_Ocupacio ( Param_NomSoci, Param_Avui ) 
 
@@ -267,6 +272,7 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 // (1) if customers asks for a "ping", we send actual date and a link back to main page :
 
 app.get( '/ping', function ( req, res ) {
+
 	var currentdate = new Date();
 	var datetime = "Last Sync: " + currentdate.getDate() + "/"
 				+ (currentdate.getMonth()+1)  + "/"
@@ -281,6 +287,7 @@ app.get( '/ping', function ( req, res ) {
 	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
 	res.write( texte ) ;
 	res.end( ) ;
+
 } ) ; // get '/ping'
 
  
@@ -309,7 +316,7 @@ app.get( '/populate', function ( req, res ) {
 		
 		MyCollection.insert ( My_Initial_Reserves, { safe:true }, function ( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
-				console.log( "--- Populate reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+				console.log( "--- Populate reservas. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
                 res.status( 500 ) ; // Internal Error
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
@@ -333,7 +340,7 @@ app.get( '/dump_all_reserves', function ( req, res ) {
 
 	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
 	    if ( err ) { 
-            console.log( "--- Dump all reservas. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+            console.log( "--- Dump all reservas. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
             res.send( {'error':'dump all reserves DDBB error.'} ) ;
         } else {
@@ -429,7 +436,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 			MyCollection.find ( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
-					console.log( "--- Fer Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+					console.log( "--- Fer Reserva. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
 					res.status( 500 ) ; // internal error
 					res.send( {'error': 'fer reserva DDBB error.'} ) ;
 				} else {
@@ -520,7 +527,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 			MyCollection.find ( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
-					console.log( "--- Esborrar Reserva. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+					console.log( "--- Esborrar Reserva. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
 					res.status( 500 ) ; // internal error
 					res.send( {'error': 'fer reserva DDBB error.'} ) ;
 				} else {
@@ -572,7 +579,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req, res ) {
 
-	var Logon_NomSoci = req.params.log_nom_soci ; // instaead of req.query.log_nom_soci
+	var Logon_NomSoci = req.params.log_nom_soci ; // instead of req.query.log_nom_soci
 	var Logon_PwdUser = req.params.log_pwd ;
 
 	var Avui = (new Date).yyyymmdd() ;
@@ -592,6 +599,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 			res.status( 500 ) ; // internal error
 			res.send( {'error':'mongodb error has occurred'} ) ;
 		} else { // no ERR
+		
 			if ( docs ) {
 				if ( i > 0 ) {
 					console.log( '+++ user (%s) found. Lets see its PWD.', Logon_NomSoci ) ;
@@ -685,11 +693,14 @@ app.get( '/dump_all_users', function ( req, res ) {
 	
 	console.log( ">>> GET ALL users : veure fins a 20 usuaris de tots els dies." ) ;
 	var CollectionName = app.get( 'userscolname' ) ;   // get "users" collection name
+	db.collection( CollectionName, { strict:true }, function( err, collection ) { // Notice the {strict:true} option. This option will make the driver check if the collection exists and issue an error if it does not.
+	} ) ; // http://mongodb.github.io/node-mongodb-native/api-articles/nodekoarticle1.html
+	
     var MyCollection = db.get( CollectionName ) ;      // get the collection
 
 	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
 	    if ( err ) { 
-            console.log( "--- Dump all users. Error accessing DDBB (%s). Error is (%s).", CollectionName, err.message ) ;
+            console.log( "--- Dump all users. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
             res.send( {'error':'dump all users DDBB error.'} ) ;
         } else {
@@ -705,7 +716,9 @@ app.get( '/dump_all_users', function ( req, res ) {
 // (10) users database admin - called from HELP.HTM
 
 app.get( '/admin', function ( req, res ) {
+
 	console.log( ">>> admin pages, only for admin users." ) ;
+
 	var szMsg_Admin_Rsp = '' ;
 	if ( hiHaSociEnSessio( req.session ) ) {
 		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.tipussoci ) ;
@@ -717,6 +730,73 @@ app.get( '/admin', function ( req, res ) {
 		res.send( 401, szMsg_Admin_Rsp ) ;
 	} ;
 } ) ; // get '/admin'
+
+
+// (11) /delete_bbdd_users - called from ADMIN.HTM
+
+app.get( '/delete_bbdd_users', function ( req, res ) {
+
+	console.log( ">>> admin menu, delete bbdd ususris." ) ;
+
+	var CollectionName = app.get( 'userscolname' ) ; // get "users" collection name
+    var MyCollection = db.get( CollectionName ) ;    // get the collection
+	console.log( ">>> {"+ req.session.nomsoci +"} wants to DELETE ddbb (" + MyCollection.name + ")." ) ;
+
+    MyCollection.drop( function( err ) {             // drop old database and wait completion
+		if ( err ) {
+			console.log( "--- Delete bbdd users. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+			res.send( 500, {'error':'delete bbdd users error ['+ err.message +']'} ) ;
+		} else {
+			console.log( '+++ Esborrar BBDD users went ok.' ) ;
+			res.send( 200, "+++ esborrar bbdd users OK." ) ; 
+		} ; // if error
+	} ) ; // drop()
+
+} ) ; // get '/delete_bbdd_users'
+
+
+// (12) /list_collections - called from INDEX.HTM
+app.get( '/list_collections', function ( req, res ) {
+
+	console.log( '+++ llistar les taules conegudes.' ) ;
+	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
+
+	var szMongoDB = 'mongodb://' + szDB ;
+	console.log( '+++ connect DB (%s).', szMongoDB ) ; // mongodb://user:pass@host:port/dbname
+	
+	MongoClient.connect( szMongoDB, function( err, db ) {
+		if ( err ) throw err ; // where goes control?
+		db.collectionNames( function( err, collections ) {
+			if ( err ) {
+				console.log( "--- List collections. Error accessing DDBB. Error is (%s).", err.message ) ;
+			} else {
+				var  i = collections.length ;
+				console.log( "+++ List collections. DDBB has (%s) tables/collections.", i ) ;
+				console.log( collections ) ;
+				res.json( collections ) ; // send JSON object
+			} ; // error
+		} ) ; // names
+	} ) ; // connect
+
+} ) ; // get '/list_collections'
+
+
+// (13) /create_users_ddbb - called from INDEX.HTM
+app.get( '/create_users_ddbb', function ( req, res ) {
+
+	var szMsg_Create = '' ;
+	var CollectionName = app.get( 'userscolname' ) ;                     // get "users" collection name
+/* 	boolean bCollectionExists = db.collectionExists( CollectionName ) ;
+    if ( bCollectionExists == false ) {
+		db.createCollection( CollectionName, null ) ;
+		szMsg_Create = '+++ Collection created.' ;
+	} else {
+		szMsg_Create = '--- Collection already exists.' ;
+    } ;
+ */	
+	res.send( 200, szMsg_Create ) ;
+
+} ) ; // get '/create_users_ddbb'
 
 
 // create our http server and launch it
