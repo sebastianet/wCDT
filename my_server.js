@@ -97,7 +97,9 @@
 // 5.1.k - 20150321 - remove "uNumReserves" from "users" database
 // 5.1.l - 20150321 - list users DDBB from ADMIN menu
 // 5.1.m - 20150322 - local CSS and JS
-// 5.1.n - 20150322 - "admin" menu - list users and drop users ddbb. new menu, as llist collections
+// 5.1.n - 20150322 - "admin" menu - list users and drop users ddbb. new menu, as list collections. 
+// 5.1.o - 20150223 - use "err.errno"
+// 5.1.p - 20150223 - DB create/list/delete, COL(users/reserves) create/list/delete. Enter admin if ENV.FOO is properly set.
 //
 
 // Package install :
@@ -116,6 +118,7 @@
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 //  *) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
+//  *) HTTPS + "mixed content" - local jQuery.js and others
 
 // Pending :
 // (*) access the application from a mobile client
@@ -147,29 +150,32 @@
 
 // Let's go :
 
- var myVersio   = "v 5.1.n" ;                    // mind 2 places in /public/INDEX.HTM
+	var myVersio   = "v 5.1.p" ;                    // mind 2 places in /public/INDEX.HTM
 
- var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
+	var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
- var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
- var cookieParser = require( 'cookie-parser' ) ;      // data cookies
+	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
+	var cookieParser = require( 'cookie-parser' ) ;      // data cookies
 
- var http       = require( 'http' ) ;
- var https      = require( 'https' ) ;
- var logger     = require( 'morgan' ) ;          // logging middleware
- var bodyParser = require( 'body-parser' ) ;     // parser
+	var http       = require( 'http' ) ;
+	var https      = require( 'https' ) ;
+	var logger     = require( 'morgan' ) ;          // logging middleware
+	var bodyParser = require( 'body-parser' ) ;     // parser
 
- var fs         = require( 'fs' ) ;              // r/w files
- var mongo      = require( 'mongodb' ) ;         // connect to mongodb
- var monk       = require( 'monk' ) ;            // access to mongodb
+	var fs         = require( 'fs' ) ;              // r/w files
+	var monk       = require( 'monk' ) ;            // access to mongodb
+	var mongo      = require( 'mongodb' ) ;         // connect to mongodb
 
- var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
- var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
- var credentials = { key: privateKey, cert: certificate } ;
+	var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
+	var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
+	var credentials = { key: privateKey, cert: certificate } ;
 
- var app = express() ;                           // instantiate Express and assign our app variable to it
- var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
- var db  = monk( szDB ) ;                        // 
+	var app = express() ;                           // instantiate Express and assign our app variable to it
+	var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+	var db  = monk( szDB ) ;                        // 
+	var szMongoDB = 'mongodb://' + szDB ;           // used at connect()
+	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
+
  
 // +++ app.configure( function () {
 
@@ -198,7 +204,13 @@
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
-   
+	var foo = process.env.FOO ;
+	myVersioLong = myVersio ;
+	if (typeof(foo) !== 'undefined') {
+	  // FOO environment variables exists -> doSomethingWith(foo);
+	  myVersioLong += ' - {'+ foo +'}' ;
+	} ;
+
 // Let write some subroutines
 
 // nova funció yyyyymmdd de Date() - at server
@@ -240,8 +252,8 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 		szTxt = "" ;
 		if ( err ) {
-			console.log( '--- Get ocupacio. Error mongodb is (' + err.message + ').' ) ;
-			szTxt +=  '<p>--- Get ocupacio. Error mongodb is (' + err.message + ').' ;
+			console.log( '--- Get ocupacio. Error (%s) mongodb is (' + err.message + ').', err.errno ) ;
+			szTxt +=  '<p>--- Get ocupacio. Error ('+ err.errno +') mongodb is (' + err.message + ').' ;
 		} else {
 			
 			var  i = docs.length ;
@@ -316,7 +328,7 @@ app.get( '/populate', function ( req, res ) {
 		
 		MyCollection.insert ( My_Initial_Reserves, { safe:true }, function ( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
-				console.log( "--- Populate reservas. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+				console.log( "--- Populate reservas. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
                 res.status( 500 ) ; // Internal Error
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
@@ -339,8 +351,9 @@ app.get( '/dump_all_reserves', function ( req, res ) {
     var MyCollection = db.get( CollectionName ) ;    // get the collection
 
 	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
-	    if ( err ) { 
-            console.log( "--- Dump all reservas. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+
+		if ( err ) { 
+            console.log( "--- Dump all reservas. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
             res.status( 500 ) ; // internal error
             res.send( {'error':'dump all reserves DDBB error.'} ) ;
         } else {
@@ -367,7 +380,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 	MyCollection.find ( { rdata: DiaConsultat }, { limit: 20 }, function ( err, docs ) { 
 
 		if ( err ) {
-			console.log( '--- Veure reserves. Error mongodb is (' + err.message + ').' ) ;
+			console.log( '--- Veure reserves. Error (%s) mongodb is (' + err.message + ').', err.errno ) ;
 			res.status( 500 ) ; // internal error
 			res.send( {'error':'mongodb error has occurred'} ) ;
 		} else {	
@@ -436,7 +449,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 			MyCollection.find ( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
-					console.log( "--- Fer Reserva. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+					console.log( "--- Fer Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
 					res.status( 500 ) ; // internal error
 					res.send( {'error': 'fer reserva DDBB error.'} ) ;
 				} else {
@@ -450,7 +463,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 					
 						MyCollection.insert ( MyReserva, { safe:true }, function ( err, result ) {
 							if ( err ) {
-								console.log( '---- Could not insert reservation into MongoDB.' ) ;
+								console.log( '---- Could not insert reservation into MongoDB. Error (%s) meaning (%s).', err.errno, err.message ) ;
 								res.status( 500 ) ; // internal error
 								res.send( {'error':'An error has occurred'} ) ;
 							} else {
@@ -527,7 +540,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 			MyCollection.find ( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
-					console.log( "--- Esborrar Reserva. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+					console.log( "--- Esborrar Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
 					res.status( 500 ) ; // internal error
 					res.send( {'error': 'fer reserva DDBB error.'} ) ;
 				} else {
@@ -548,7 +561,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 						console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
 						MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
 							if ( err ) {
-								console.log( '--- Could not remove reservation from MongoDB. Error is (%s).', err.message ) ;
+								console.log( '--- Could not remove reservation from MongoDB. Error (%s) is (%s).', err.errno, err.message ) ;
 								res.status( 500 ) ; // internal error
 								res.send( {'error':'An error has occurred'} ) ;
 							} else {
@@ -595,7 +608,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 		console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
 
 		if ( err ) {
-			console.log( '--- Logon MongoDB error. Error is (%s)', err.message ) ;
+			console.log( '--- Logon MongoDB error. Error (%s) is (%s)', err.errno, err.message ) ;
 			res.status( 500 ) ; // internal error
 			res.send( {'error':'mongodb error has occurred'} ) ;
 		} else { // no ERR
@@ -619,7 +632,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 							console.log( '*** acaba GETOCUPACIO logon (%s).', iOcupacio ) ;
 							if ( err ) {
-								console.log( '--- logon get_ocupacio trouble.' ) ;
+								console.log( '--- logon get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message  ) ;
 								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
 							} else {
 
@@ -665,9 +678,10 @@ app.post( '/logoff_user', function ( req, res ) {
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
 	Get_Ocupacio ( req.session.nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
+
 		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
 		if ( err ) {
-			console.log( '--- logoff get_ocupacio trouble.' ) ;
+			console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
 			res.send( 500,'--- internal error at get_ocupacio logoff.' ) ;
 		} else {
 			var iPeriode = Date.now() ;
@@ -691,16 +705,36 @@ app.post( '/logoff_user', function ( req, res ) {
 
 app.get( '/dump_all_users', function ( req, res ) {
 	
-	console.log( ">>> GET ALL users : veure fins a 20 usuaris de tots els dies." ) ;
 	var CollectionName = app.get( 'userscolname' ) ;   // get "users" collection name
-	db.collection( CollectionName, { strict:true }, function( err, collection ) { // Notice the {strict:true} option. This option will make the driver check if the collection exists and issue an error if it does not.
-	} ) ; // http://mongodb.github.io/node-mongodb-native/api-articles/nodekoarticle1.html
+	console.log( ">>> GET ALL users collection (%s) : veure fins a 20 usuaris de tots els dies.", CollectionName ) ;
+
+// (a) if collection does not exists, create it
+	
+	MongoClient.connect( szMongoDB, function( err, db ) {
+
+		if ( err ) { 
+            console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
+        } else {
+
+			db.collection( CollectionName, { strict:true }, function( err, collection ) { // Notice the {strict:true} option. This option will make the driver check if the collection exists and issue an error if it does not.
+				if ( err ) {
+					console.log( "--- Dump all users, connection(). Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
+				} else {
+					console.log( "+++ Dump all users, connection COL (%s).", CollectionName ) ;
+				} ;
+			} ) ; // http://mongodb.github.io/node-mongodb-native/api-articles/nodekoarticle1.html
+
+		} ; // connect() error
+	} ) ; // connect()
+
+// (b) list all its users
 	
     var MyCollection = db.get( CollectionName ) ;      // get the collection
 
 	MyCollection.find ( {  }, { limit: 20 }, function ( err, docs ) { // empty filter
+	
 	    if ( err ) { 
-            console.log( "--- Dump all users. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
+            console.log( "--- Dump all users, find(). Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
             res.status( 500 ) ; // internal error
             res.send( {'error':'dump all users DDBB error.'} ) ;
         } else {
@@ -720,12 +754,14 @@ app.get( '/admin', function ( req, res ) {
 	console.log( ">>> admin pages, only for admin users." ) ;
 
 	var szMsg_Admin_Rsp = '' ;
-	if ( hiHaSociEnSessio( req.session ) ) {
+
+	if ( ( foo == 'pepeta' ) || ( hiHaSociEnSessio( req.session ) ) ) {
+
 		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.tipussoci ) ;
 		szMsg_Admin_Rsp = 'Tenim soci' ;
 		res.send( 200, szMsg_Admin_Rsp ) ;
 	} else {
-		console.log( "--- (admin) no hi ha soci." ) ;
+		console.log( "--- (admin) no hi ha soci - tinc (%s/%s).", foo, hiHaSociEnSessio( req.session ) ) ;
 		szMsg_Admin_Rsp = 'No hi ha soci' ;
 		res.send( 401, szMsg_Admin_Rsp ) ;
 	} ;
@@ -734,21 +770,22 @@ app.get( '/admin', function ( req, res ) {
 
 // (11) /delete_bbdd_users - called from ADMIN.HTM
 
-app.get( '/delete_bbdd_users', function ( req, res ) {
+app.get( '/delete_col_users', function ( req, res ) {
 
-	console.log( ">>> admin menu, delete bbdd ususris." ) ;
+	console.log( ">>> admin menu, delete taula usuaris." ) ;
 
 	var CollectionName = app.get( 'userscolname' ) ; // get "users" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+ req.session.nomsoci +"} wants to DELETE ddbb (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
 
-    MyCollection.drop( function( err ) {             // drop old database and wait completion
+    MyCollection.drop( function( err ) {             // drop old collection and wait completion
+	
 		if ( err ) {
-			console.log( "--- Delete bbdd users. Error accessing COLLECTION (%s). Error is (%s).", CollectionName, err.message ) ;
-			res.send( 500, {'error':'delete bbdd users error ['+ err.message +']'} ) ;
+			console.log( "--- Delete col users. Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
+			res.send( 500, {'error':'delete users collection error ['+ err.message +']'} ) ;
 		} else {
-			console.log( '+++ Esborrar BBDD users went ok.' ) ;
-			res.send( 200, "+++ esborrar bbdd users OK." ) ; 
+			console.log( '+++ Esborrar users taula/collection went ok.' ) ;
+			res.send( 200, "+++ delete users collection went OK." ) ; 
 		} ; // if error
 	} ) ; // drop()
 
@@ -759,43 +796,81 @@ app.get( '/delete_bbdd_users', function ( req, res ) {
 app.get( '/list_collections', function ( req, res ) {
 
 	console.log( '+++ llistar les taules conegudes.' ) ;
-	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
-
-	var szMongoDB = 'mongodb://' + szDB ;
-	console.log( '+++ connect DB (%s).', szMongoDB ) ; // mongodb://user:pass@host:port/dbname
+	console.log( '+++ (a) connect DB (%s).', szMongoDB ) ; // mongodb://user:pass@host:port/dbname
 	
 	MongoClient.connect( szMongoDB, function( err, db ) {
-		if ( err ) throw err ; // where goes control?
-		db.collectionNames( function( err, collections ) {
-			if ( err ) {
-				console.log( "--- List collections. Error accessing DDBB. Error is (%s).", err.message ) ;
-			} else {
-				var  i = collections.length ;
-				console.log( "+++ List collections. DDBB has (%s) tables/collections.", i ) ;
-				console.log( collections ) ;
-				res.json( collections ) ; // send JSON object
-			} ; // error
-		} ) ; // names
+
+		if ( err ) { 
+            console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
+        } else {
+
+			db.collectionNames( function( err, collections ) {
+				if ( err ) {
+					console.log( "--- List collections. Error accessing DDBB. Error (%s) is (%s).", err.errno, err.message ) ;
+				} else {
+					var  i = collections.length ;
+					console.log( "+++ (b) List collections. DDBB has (%s) tables/collections.", i ) ;
+					console.log( collections ) ;
+					res.json( collections ) ; // send JSON object
+				} ; // error
+			} ) ; // names
+		
+		} ; // connect() error
 	} ) ; // connect
 
 } ) ; // get '/list_collections'
 
 
-// (13) /create_users_ddbb - called from INDEX.HTM
-app.get( '/create_users_ddbb', function ( req, res ) {
+// (13) /create_users_col - called from INDEX.HTM
+app.get( '/create_users_col', function ( req, res ) {
 
 	var szMsg_Create = '' ;
-	var CollectionName = app.get( 'userscolname' ) ;                     // get "users" collection name
-/* 	boolean bCollectionExists = db.collectionExists( CollectionName ) ;
-    if ( bCollectionExists == false ) {
-		db.createCollection( CollectionName, null ) ;
-		szMsg_Create = '+++ Collection created.' ;
-	} else {
-		szMsg_Create = '--- Collection already exists.' ;
-    } ;
- */	
-	res.send( 200, szMsg_Create ) ;
+	var CollectionName = app.get( 'userscolname' ) ;  // get "users" collection name	
+	var MyCollection = db.get( CollectionName ) ;     // get the collection
 
+	console.log( '+++ crear coleccio usuaris.' ) ;
+	console.log( '+++ (a) connect DB (%s).', szMongoDB ) ;
+
+	MongoClient.connect( szMongoDB, function( err, db ) {
+
+		if ( err ) {
+			console.log( "--- populate ddbb.connect() (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+		} else {
+
+			console.log( '+++ (b) create collection (%s).', CollectionName ) ;
+			
+			db.createCollection( CollectionName, {strict:true}, function( err, collection ) { // create the collection on the Mongo DB database before returning the collection object. If the collection already exists it will ignore the creation of the collection.
+
+				if ( err ) {
+					szMsg_Create = '--- Error creating collection ('+ CollectionName +'). Error ('+ err.errno +') is ('+ err.message +').' ;
+				} else {
+					szMsg_Create = '+++ Collection ' + CollectionName + ' created.' ; // but empty
+
+						var My_User_To_Add_pere = 
+			{ 	
+				uAlias        : "pere", 
+				uPwd          : "pere2015", 
+				uRole         : "Administrator",
+				uNom          : "Pere Albert Labal",
+				uEmail        : "palbcn@yahoo.com",
+				uLastLogin    : "2015/01/01",
+				uMisc         : "-" 
+			} ;
+
+					MyCollection.insert( My_User_To_Add_pere, { safe:true }, function( err, result ) {
+						if ( err ) { 
+							console.log( "--- populate ddbb (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+						} else { 
+							console.log( "+++ populate ddbb (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add_pere.uAlias ) ;
+						} ; // else
+	//					db.close(); // allow the program to exit
+					} ) ; // insert
+				} ; // error create collection
+				res.send( 200, szMsg_Create ) ;
+			} ) ; // createCollection
+		} ; // connect() error
+	} ) ; // connect
+	
 } ) ; // get '/create_users_ddbb'
 
 
@@ -807,4 +882,4 @@ app.get( '/create_users_ddbb', function ( req, res ) {
 
 	var httpsServer = https.createServer( credentials, app ) ;
 	httpsServer.listen( app.get( 'my_port' ) ) ;
-	console.log( 'Express server ' + myVersio + ' listening on port [' + app.get( 'my_port' ) + '].' ) ;
+	console.log( 'Express server ' + myVersioLong + ' listening on port [' + app.get( 'my_port' ) + '].' ) ;

@@ -170,30 +170,6 @@ function index_ready() {              // DOM ready for index.htm
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(help)
 	}) ; // help
-
-	
-	$( "#clkListCollections" ).click( function() {
-		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
-		$.get( '/list_collections', function( page ) {
-			var lng = page.length ;
-			console.log( '*** index - rebem del server la llista de collections. Lng(%s).', lng ) ;
-			var szTxt = '<p>Collections:</p>' ;
-			var i = 0 ;
-			while ( i < lng ) {
-				szTxt += '('+i+') ' ;
-				szTxt += '['+ page[i].name +'] <p>' ;
-				i++ ;
-			} ;
-			$( "#content" ).html( szTxt ) ; // show calculated HTML at specific <div>
-		} ) ; // get(list collections)
-	}) ; // list collections
-
-	
-	$( "#clkCreateUsersDatabase" ).click( function() {
-		$.get( '/create_users_ddbb', function( page ) {
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		} ) ; // get(ceate users database)
-	}) ; // clkCreateUsersDatabase
 		
 	
 } ; // DOM ready for INDEX.HTM
@@ -474,6 +450,24 @@ function logon_ready() {
 function help_ready() {
 
 	console.log( '*** help DOM ready.' ) ;
+
+
+	$( "#clkListCollections" ).click( function() {
+		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
+		$.get( '/list_collections', function( page ) {
+			var lng = page.length ;
+			console.log( '*** index - rebem del server la llista de collections. Length (%s).', lng ) ;
+			var szTxt = '<p>Collections we have right now in database :</p>' ;
+			var i = 0 ;
+			while ( i < lng ) {
+				szTxt += '('+i+') ' ;
+				szTxt += '['+ page[i].name +'] <p>' ;
+				i++ ;
+			} ;
+			$( "#content" ).html( szTxt ) ; // show calculated HTML at specific <div>
+		} ) ; // get(list collections)
+	}) ; // list collections
+
 	
     $( "#clkConsultaAllReserves" ).click( function () {
 
@@ -617,16 +611,23 @@ function admin_ready() {
 	} ) ; // click List Users from Admin menu
 
 
-	$( "#clkAdminEsborrarBBddUsers" ).click( function () {
+	$( "#clkAdminEsborrarTaulaUsers" ).click( function () {
 
-		console.log( "*** ADMIN.HTM - delete bbdd users." ) ;
+		console.log( "*** ADMIN.HTM - delete taula users." ) ;
 
-		$.get( '/delete_bbdd_users', function( page ) {
-			console.log( '**** ADMIN.HTM - Demanem al server drop() bbdd users.' ) ;
+		$.get( '/delete_col_users', function( page ) {
+			console.log( '**** ADMIN.HTM - Demanem al server drop() COL users.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(delete bbddd users)
+		}) ; // get(delete taula users)
 
-	} ) ; // click Esborrar bbdd Users from Admin menu
+	} ) ; // click Esborrar taula Users from Admin menu
+
+
+	$( "#clkAdminCreateUsersCollection" ).click( function() {
+		$.get( '/create_users_col', function( page ) {
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		} ) ; // get(ceate users collection)
+	}) ; // clkCreateUsersCollection
 
 	
 } ; // admin_ready()
