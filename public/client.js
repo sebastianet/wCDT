@@ -83,7 +83,7 @@ function index_ready() {              // DOM ready for index.htm
 	delete window.session.user.nom ;  // same at logoff() time !
 
 // amagar link "admin" - will be visible after logon(admin) and hidden at logoff
-	$( '#clkAdmin' ).hide() ;         // http://api.jquery.com/hide/
+	$( '#clkAdmin' ).show() ;         // http://api.jquery.com/hide/
 
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;

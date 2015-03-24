@@ -186,11 +186,21 @@
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
-			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;
+//			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB
+			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ; // mind URL if MONGODB-2.4
 		}
 		catch ( err ) {
 		} ;
 	} ; // (bmx-1)
+
+// display some initial info about our port and out mongo connection.
+
+	myVersioLong = myVersio + ' - mongo ['+ szDB +'] ' ;
+	
+	var foo = process.env.FOO ;
+	if ( typeof( foo ) !== 'undefined' ) { // FOO environment variables exists -> doSomethingWith(foo);
+		myVersioLong += ' - env {'+ foo +'}' ;
+	} ;
 
 	var db  = monk( szDB ) ;                        // 
 	var szMongoDB = 'mongodb://' + szDB ;           // used at connect() - compte a Bluemix !
@@ -232,14 +242,6 @@
    var staticOptions = { index: 'index.htm' };  // provide "index.htm" instead of the default "index.html"
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
-
-// display some initial info about our port and out mongo connection.
-
-	myVersioLong = myVersio + ' - mongo ['+ szDB +'] ' ;
-	var foo = process.env.FOO ;
-	if ( typeof(foo) !== 'undefined' ) { // FOO environment variables exists -> doSomethingWith(foo);
-	  myVersioLong += ' - env {'+ foo +'}' ;
-	} ;
 
 // lets redirect the http traffic to https (bmx-3) 
 
