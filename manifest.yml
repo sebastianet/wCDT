@@ -1,0 +1,10 @@
+applications:
+- services:
+  - mongodb-i5
+  disk_quota: 1024M
+  host: bcdt
+  name: bCDT
+  path: .
+  domain: eu-gb.mybluemix.net
+  instances: 1
+  memory: 256M

@@ -82,6 +82,9 @@ function index_ready() {              // DOM ready for index.htm
 // ---	window.session.avui = (new Date).yyyymmdd() ;
 	delete window.session.user.nom ;  // same at logoff() time !
 
+// amagar link "admin" - will be visible after logon(admin) and hidden at logoff
+	$( '#clkAdmin' ).hide() ;         // http://api.jquery.com/hide/
+
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
 //	$( "#watermark" ).html( '<p>Current user is ... PAU' ) ; // show received HTML at specific <div>
@@ -92,7 +95,7 @@ function index_ready() {              // DOM ready for index.htm
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(actual month html code)
 
-// posar la data actual a baix a l'esquerra
+// posar la data actual a baix a l'esquerra - aixi diferenciem re-loads
 	var szAra = '<center>Now is [' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
 	$( "#my_date" ).html( szAra ) ; // show actual date
 
@@ -170,7 +173,43 @@ function index_ready() {              // DOM ready for index.htm
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(help)
 	}) ; // help
+
+	
+	$( "#clkAdmin" ).click( function() {
 		
+//		$.get( '/admin', function( page ) {
+//			console.log( '**** HELP.HTM - Demanem al server de fer ADMIN.' ) ;
+//			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+//		}) ; // get(admin)
+
+		event.preventDefault(); // what is it for ?
+ 		$.ajax( {
+			url: '/admin',
+			success : function( page ) { 
+
+				$.get( '/admin.htm', function( page ) {
+					console.log( '**** HELP.HTM - Demanem al server la pagina ADMIN.HTM.' ) ;
+					$( "#content" ).html( page ) ; // show received HTML at specific <div>
+				}) ; // get(admin.htm)
+			
+			},
+			statusCode: {
+				401: function() { $( "#content" ).html( '<p>Admin() not authorized</p>' ) },
+			} 
+		} ) ; // get(admin)
+		
+		return false ; // stop processing !!!
+
+	}) ; // admin
+
+
+	$( "#clkLinks" ).click( function() {
+		$.get( '/links.htm', function( page ) {
+			console.log( '**** HELP.HTM - Demanem al server la sub-pagina LINKS.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(links)
+	}) ; // links
+
 	
 } ; // DOM ready for INDEX.HTM
 
@@ -408,10 +447,15 @@ function logon_ready() {
 		event.preventDefault(); // what is it for ?
  		$.ajax( {
 			url: '/logonuser/' + myLogon,
+			
 			success : function( page ) { 
 				$( "#content" ).html( page ) ;
 				
 				window.session.user.nom = logonUser ;
+
+// here we have to make ADMIN LINK visible if user us a ADMIN one !
+				$( '#clkAdmin' ).show() ;
+				
 				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 			},
 			statusCode: {
@@ -436,6 +480,8 @@ function logon_ready() {
 //			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
 			
 			delete window.session.user.nom ;
+			$( '#clkAdmin' ).hide() ;
+			
 			$( "#watermark" ).html( '<p>Logged off.' ) ;
 
 		}); // post( logoff )
@@ -443,7 +489,8 @@ function logon_ready() {
 		return false ; // stop processing !!!
 		
 	}); // click "myFormReqLogoff" submit
-		
+
+	
 } ; // logon_ready()
 
 
@@ -512,42 +559,6 @@ function help_ready() {
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 		}) ; // get(ping)
 	}) ; // ping
-
-	
-	$( "#clkAdmin" ).click( function() {
-		
-//		$.get( '/admin', function( page ) {
-//			console.log( '**** HELP.HTM - Demanem al server de fer ADMIN.' ) ;
-//			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-//		}) ; // get(admin)
-
-		event.preventDefault(); // what is it for ?
- 		$.ajax( {
-			url: '/admin',
-			success : function( page ) { 
-
-				$.get( '/admin.htm', function( page ) {
-					console.log( '**** HELP.HTM - Demanem al server la pagina ADMIN.HTM.' ) ;
-					$( "#content" ).html( page ) ; // show received HTML at specific <div>
-				}) ; // get(admin.htm)
-			
-			},
-			statusCode: {
-				401: function() { $( "#content" ).html( '<p>Admin() not authorized</p>' ) },
-			} 
-		} ) ; // get(admin)
-		
-		return false ; // stop processing !!!
-
-	}) ; // admin
-
-
-	$( "#clkLinks" ).click( function() {
-		$.get( '/links.htm', function( page ) {
-			console.log( '**** HELP.HTM - Demanem al server la sub-pagina LINKS.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(links)
-	}) ; // links
 
 	
 } ; // help_ready()

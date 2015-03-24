@@ -98,8 +98,18 @@
 // 5.1.l - 20150321 - list users DDBB from ADMIN menu
 // 5.1.m - 20150322 - local CSS and JS
 // 5.1.n - 20150322 - "admin" menu - list users and drop users ddbb. new menu, as list collections. 
-// 5.1.o - 20150223 - use "err.errno"
-// 5.1.p - 20150223 - DB create/list/delete, COL(users/reserves) create/list/delete. Enter admin if ENV.FOO is properly set.
+// 5.1.o - 20150323 - use "err.errno"
+// 5.1.p - 20150323 - DB create/list/delete, COL(users/reserves) create/list/delete. Enter admin if ENV.FOO is properly set.
+// 5.2.a - 20150324 - prepare for bluemix - mongo now is remote and external -> no console (?)
+//                        (bmx-1) mongo
+//                        (bmx-2) port
+//                        (bmx-3) redirect
+//                        (bmx-4) 2 servers in local, one in bluemix
+// 5.2.b - 20150324 - read DOCS length only if no ERROR.
+//
+
+// Bluemix :
+// (*) cf api https://api.eu-gb.bluemix.net
 //
 
 // Package install :
@@ -150,7 +160,7 @@
 
 // Let's go :
 
-	var myVersio   = "v 5.1.p" ;                    // mind 2 places in /public/INDEX.HTM
+	var myVersio   = "v 5.2.b" ;                    // mind 2 places in /public/INDEX.HTM
 
 	var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
 
@@ -171,15 +181,34 @@
 	var credentials = { key: privateKey, cert: certificate } ;
 
 	var app = express() ;                           // instantiate Express and assign our app variable to it
+
 	var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+
+	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
+		try {
+			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;
+		}
+		catch ( err ) {
+		} ;
+	} ; // (bmx-1)
+
 	var db  = monk( szDB ) ;                        // 
-	var szMongoDB = 'mongodb://' + szDB ;           // used at connect()
+	var szMongoDB = 'mongodb://' + szDB ;           // used at connect() - compte a Bluemix !
 	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
 
  
 // +++ app.configure( function () {
 
-	app.set( 'my_port', process.env.PORT || 443 ) ;  // https. 80 : mind Apache !
+//	app.set( 'my_port', process.env.VCAP_APP_PORT || process.env.PORT || 443 ) ;  // (bmx-2)
+
+// The IP address of the Cloud Foundry DEA (Droplet Execution Agent) that hosts this application:
+	var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
+
+// The port on the DEA for communication with the application:
+	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;
+	var portS = ( process.env.VCAP_APP_PORT || 443 ) ;
+
+	
 	app.set( 'Title', 'My Koltrane Site' ) ;
                                                      // This is only place we specify the collection name(s) : 
 	app.set( 'rcolname', "reserves_pistes" ) ;       // reservation data := "reserves_pistes" ;
@@ -204,12 +233,53 @@
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
+// display some initial info about our port and out mongo connection.
+
+	myVersioLong = myVersio + ' - mongo ['+ szDB +'] ' ;
 	var foo = process.env.FOO ;
-	myVersioLong = myVersio ;
-	if (typeof(foo) !== 'undefined') {
-	  // FOO environment variables exists -> doSomethingWith(foo);
-	  myVersioLong += ' - {'+ foo +'}' ;
+	if ( typeof(foo) !== 'undefined' ) { // FOO environment variables exists -> doSomethingWith(foo);
+	  myVersioLong += ' - env {'+ foo +'}' ;
 	} ;
+
+// lets redirect the http traffic to https (bmx-3) 
+
+var forcehttps = function () {
+	
+	console.log ( '### (1) force HTTPS.' ) ;
+	
+	return function ( req, res, next ) {
+
+		console.log ( '>>> (2) force HTTPS.' ) ;
+		console.log ( '>>> req.headers[x-forwarded-proto] = [%s].', req.headers['x-forwarded-proto'] ) ;
+		console.log ( '>>> req.secure = [%s].', req.secure ) ;
+		
+//		console.dir( req.headers ) ;
+//		console.dir( req ) ;
+
+//		if ( ( ! req.secure ) || ( req.get ( 'x-forwarded-proto' ) != 'https' ) ) { // detect not a HTTPS - http://stackoverflow.com/questions/10183291/how-to-get-the-full-url-in-express-js
+
+		if ( ! req.secure ) {
+
+			if ( req.get ( 'x-forwarded-proto' ) != 'https' ) { 			
+				console.log ( '+++ (3) force HTTPS.' ) ;
+				return res.redirect ( 'https://' + req.headers.host + req.url ) ; // res.redirect requires "express" : http://expressjs.com/api.html#res.redirect
+			} else {
+				console.log ( '+++ (5) dont force HTTPS - has HTTPS (bluemix).' ) ;
+				return next() ;
+			} ;
+
+		} else {
+			console.log ( '+++ (4) dont force HTTPS - is SECURE (node).' ) ;
+			return next() ;
+		} ;
+	} ;
+} ; // forcehttps()
+
+
+// abans de app.get() !
+	
+	app.use ( forcehttps() ) ; // redirect HTTP traffic onto a HTTPS protocol	
+
 
 // Let write some subroutines
 
@@ -237,6 +307,7 @@ function Fecha_En_El_Passat( Param_Dia ) {
 	return ( ComEs ) ;
 //	return true ;
 } ; // Fecha_En_El_Passat
+
 
 // Mira quantes reserves te un soci, de avui en endevant i en retorna un texte i un integer
 function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
@@ -293,7 +364,7 @@ app.get( '/ping', function ( req, res ) {
 				+ currentdate.getMinutes() + ":"
 				+ currentdate.getSeconds() ;
 
-	var texte = "Hello from Koltrane " + myVersio ;
+	var texte = "Hello from Koltrane " + myVersioLong ;
 	texte += "<p>(" + datetime + ")<p<<hr>" ;
 
 	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
@@ -600,18 +671,18 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
-	console.log( ">>> Using USERS ddbb (" + MyUsersCollection.name + ")." ) ;
+	console.log( ">>> Using USERS table/collection (" + MyUsersCollection.name + ")." ) ;
 
 	MyUsersCollection.find( { uAlias: Logon_NomSoci }, { limit: 20 }, function ( err, docs ) { 
 	
-		var  i = docs.length ;
-		console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
-
 		if ( err ) {
 			console.log( '--- Logon MongoDB error. Error (%s) is (%s)', err.errno, err.message ) ;
 			res.status( 500 ) ; // internal error
 			res.send( {'error':'mongodb error has occurred'} ) ;
 		} else { // no ERR
+
+			var  i = docs.length ;
+			console.log( "+++ the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Logon_NomSoci, i ) ;
 		
 			if ( docs ) {
 				if ( i > 0 ) {
@@ -877,9 +948,25 @@ app.get( '/create_users_col', function ( req, res ) {
 // create our http server and launch it
 
 // http.createServer( app ).listen( app.get( 'port' ), function () {
-//     console.log( 'Express server '+myVersio+' listening on port ' + app.get( 'port' ) ) ;
+//     console.log( 'Express server '+ myVersioLong +' listening on port ' + app.get( 'port' ) ) ;
 // } ) ; // create server
 
-	var httpsServer = https.createServer( credentials, app ) ;
-	httpsServer.listen( app.get( 'my_port' ) ) ;
-	console.log( 'Express server ' + myVersioLong + ' listening on port [' + app.get( 'my_port' ) + '].' ) ;
+//	var httpsServer = https.createServer( credentials, app ) ;
+//	httpsServer.listen( app.get( 'my_port' ) ) ;
+//	console.log( 'Express server ' + myVersioLong + ' listening on port [' + app.get( 'my_port' ) + '].' ) ;
+
+// lets go (bmx-4)
+
+	if ( process.env.VCAP_SERVICES ) {	// som a Bluemix
+
+		http.createServer ( app ).listen( port, host );	
+		console.log ( 'bluemix - our HTTP server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ port +'). URL = http://'+host+':'+port+'/ ' ) ;
+
+	} else { // local
+		
+		http.createServer ( app ).listen( port, host );	
+		console.log ( 'local - our HTTP server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ port +'). URL = http://'+host+':'+ port +'/ ' ) ;
+		https.createServer ( credentials, app ).listen ( portS , host ) ;
+		console.log ( 'local - our HTTPS server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ portS +'). URL = https://'+host+':'+ portS +'/ ' ) ;
+
+	} ; // start 2 servers in local, one in bluemix
