@@ -276,7 +276,7 @@ function consulta_ready() {
 	$( 'td.lliure' ).on( 'click', function( ev ) {
 		//dia i hora i soci i pista construir serial...
 	
-		var targetID = $(this).attr('id') ;
+		var targetID = $(this).attr( 'id' ) ;
 		console.log( 'consulta - onclick td.lliure - el seu ID es {'+ targetID +'}' ) ;
 		  
 		var clkPrefix = targetID.substring(0,3) ; // tdh10p3
@@ -301,7 +301,7 @@ function consulta_ready() {
 
 	$( 'td.ocupada' ).on( 'click', function( ev ){
 
-		var targetID = $(this).attr('id') ;
+		var targetID = $(this).attr( 'id' ) ;
 		console.log( 'consulta - onclick td.ocupada - el seu ID es {'+ targetID +'}' ) ;
 
 		var targetUser = $(this).text() ;

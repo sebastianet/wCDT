@@ -106,11 +106,21 @@
 //                        (bmx-3) redirect
 //                        (bmx-4) 2 servers in local, one in bluemix
 // 5.2.b - 20150324 - read DOCS length only if no ERROR.
+// 5.2.c - 20150324 - details on how server stores data in SESSION.REQ
 //
 
 // Bluemix :
 // (*) cf api https://api.eu-gb.bluemix.net
 //
+
+// Server own variables :
+//    req.session.wcdt.nomsoci
+//    req.session.wcdt.tipussoci
+//    req.session.wcdt.instant_inicial
+//    req.session.wcdt.lastlogon
+//
+//  Client own variables :
+//    window.session.user.nom
 
 // Package install :
 //   npm install morgan           --save
@@ -154,27 +164,27 @@
 //
 
 // Missatges numerats :
-// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
-// "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}. "
+// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt.lastlogon + "}. "
+// "+++ WCDT0002 - logoff user {"+ req.session.wcdt.nomsoci + "}. "
 
 
 // Let's go :
 
-	var myVersio   = "v 5.2.b" ;                    // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.c" ;                       // mind 2 places in /public/INDEX.HTM
 
-	var express    = require( 'express' ) ;         // http://expressjs.com/api.html#app.configure
+	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
 	var cookieParser = require( 'cookie-parser' ) ;      // data cookies
 
-	var http       = require( 'http' ) ;
-	var https      = require( 'https' ) ;
-	var logger     = require( 'morgan' ) ;          // logging middleware
-	var bodyParser = require( 'body-parser' ) ;     // parser
+	var http         = require( 'http' ) ;
+	var https        = require( 'https' ) ;
+	var logger       = require( 'morgan' ) ;          // logging middleware
+	var bodyParser   = require( 'body-parser' ) ;     // parser
 
-	var fs         = require( 'fs' ) ;              // r/w files
-	var monk       = require( 'monk' ) ;            // access to mongodb
-	var mongo      = require( 'mongodb' ) ;         // connect to mongodb
+	var fs           = require( 'fs' ) ;              // r/w files
+	var monk         = require( 'monk' ) ;            // access to mongodb
+	var mongo        = require( 'mongodb' ) ;         // connect to mongodb
 
 	var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
 	var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
@@ -215,8 +225,8 @@
 	var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
 
 // The port on the DEA for communication with the application:
-	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;
-	var portS = ( process.env.VCAP_APP_PORT || 443 ) ;
+	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;   // port used by HTTP
+	var portS = ( process.env.VCAP_APP_PORT || 443 ) ;  // port used by HTTPS
 
 	
 	app.set( 'Title', 'My Koltrane Site' ) ;
@@ -230,7 +240,7 @@
 	app.use( logger( "dev" ) ) ;                  // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
 
 	app.use( cookieParser('secretSebas') ) ;                                                 // pwd to encrypt all cookies 
-	app.use( session( { secret:'secretsebas', resave:false, saveUninitialized:false } ) ) ;  // encrypt session contents, allow "req.session."
+	app.use( session( { secret:'secretsebas', resave:false, saveUninitialized:false } ) ) ;  // encrypt session contents, allow "req.session.*" header
 
 // parse application/json and application/x-www-form-urlencoded
    app.use( bodyParser.json() ) ;
@@ -382,7 +392,7 @@ app.get( '/populate', function ( req, res ) {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+ req.session.nomsoci +"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.wcdt.nomsoci +"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
 
 //    MyCollection.drop( function(e) {              // drop old database and wait completion
 
@@ -406,7 +416,7 @@ app.get( '/populate', function ( req, res ) {
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
                 res.status( 200 ) ; // OK
-	            res.send( "+++ {"+ req.session.nomsoci +"} ddbb [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
+	            res.send( "+++ {"+ req.session.wcdt.nomsoci +"} COL [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
 
@@ -481,7 +491,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 	if ( hiHaSociEnSessio( req.session ) )
 	{
-		console.log( ">>> ["+ req.session.nomsoci +"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
+		console.log( ">>> ["+ req.session.wcdt.nomsoci +"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
 		var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 		var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -567,7 +577,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		} ; // iTotOK
 		
 	} else {
-		console.log( "--- CANT do a new reserva - soci ["+ req.session.nomsoci +"] not logged in."  ) ;
+		console.log( "--- CANT do a new reserva - soci ["+ req.session.wcdt.nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant do reserva if not logged." ) ; 
 	} ; // not logged in - cant do new reserva
@@ -599,7 +609,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 		} else {
 
-			console.log( ">>> ["+ req.session.nomsoci +"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
+			console.log( ">>> ["+ req.session.wcdt.nomsoci +"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
 
 			var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 			var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -652,7 +662,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		} ; // la data requerida no es en el passat
 		
 	} else {
-		console.log( "--- CANT delete an old reserva - soci ["+ req.session.nomsoci +"] not logged in."  ) ;
+		console.log( "--- CANT delete an old reserva - soci ["+ req.session.wcdt.nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant delete old reserva if not logged." ) ; 
 	} ; // not logged in - cant delete old reserva
@@ -695,11 +705,11 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
-						req.session.nomsoci = Logon_NomSoci ; 		// guardar nom soci en la sessio      [sess]
-						req.session.tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
-						var mSg = new Date() ;                      // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
-						req.session.lastlogon = mSg.toISOString() ; // 
-						req.session.instant_inicial = Date.now() ;  // 
+						req.session.wcdt.nomsoci   = Logon_NomSoci ; 	 // guardar nom soci en la sessio      [sess]
+						req.session.wcdt.tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
+						var mSg = new Date() ;                           // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
+						req.session.wcdt.lastlogon = mSg.toISOString() ; // 
+						req.session.wcdt.instant_inicial = Date.now() ;  // 
 						
 						console.log( '*** cridem GETOCUPACIO logon.' ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
@@ -709,7 +719,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
 							} else {
 
-								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.lastlogon + "}. "
+								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt.lastlogon + "}. "
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
 //								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
 								if ( iOcupacio > 0 ) {
@@ -747,10 +757,10 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 app.post( '/logoff_user', function ( req, res ) {
 	
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.nomsoci ) ;
+	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.wcdt.nomsoci ) ;
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
-	Get_Ocupacio ( req.session.nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
+	Get_Ocupacio ( req.session.wcdt.nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 
 		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
 		if ( err ) {
@@ -759,15 +769,15 @@ app.post( '/logoff_user', function ( req, res ) {
 		} else {
 			var iPeriode = Date.now() ;
 			console.log( 'logof.now is ('+ iPeriode +')' ) ;
-			console.log( 'logof.old is ('+ req.session.instant_inicial +')' ) ;
-			iPeriode = iPeriode - req.session.instant_inicial ;
-			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.nomsoci + "}, logged on at {"+ req.session.lastlogon +"}, duracio ["+ iPeriode +"] msg. "
+			console.log( 'logof.old is ('+ req.session.wcdt.instant_inicial +')' ) ;
+			iPeriode = iPeriode - req.session.wcdt.instant_inicial ;
+			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt.nomsoci + "}, logged on at {"+ req.session.wcdt.lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 			szMsg_Logoff_OK += szOcupacio ;								
 			res.send( 200, szMsg_Logoff_OK ) ;
 		} ; // error dins get ocupacio
 		
-		delete req.session.nomsoci ;   // remove session field when async function ends - see [sess]
-		delete req.session.tipussoci ; // remove session field when async function ends - see [sess]
+		delete req.session.wcdt.nomsoci ;   // remove session field when async function ends - see [sess]
+		delete req.session.wcdt.tipussoci ; // remove session field when async function ends - see [sess]
 
 	} ) ; // own async function : get_ocupacio (uses mongo)
 	
@@ -830,7 +840,7 @@ app.get( '/admin', function ( req, res ) {
 
 	if ( ( foo == 'pepeta' ) || ( hiHaSociEnSessio( req.session ) ) ) {
 
-		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.tipussoci ) ;
+		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.wcdt.tipussoci ) ;
 		szMsg_Admin_Rsp = 'Tenim soci' ;
 		res.send( 200, szMsg_Admin_Rsp ) ;
 	} else {
@@ -849,7 +859,7 @@ app.get( '/delete_col_users', function ( req, res ) {
 
 	var CollectionName = app.get( 'userscolname' ) ; // get "users" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+ req.session.nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.wcdt.nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
 
     MyCollection.drop( function( err ) {             // drop old collection and wait completion
 	
