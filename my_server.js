@@ -99,37 +99,64 @@
 // 5.1.m - 20150322 - local CSS and JS
 // 5.1.n - 20150322 - "admin" menu - list users and drop users ddbb. new menu, as list collections. 
 // 5.1.o - 20150323 - use "err.errno"
-// 5.1.p - 20150323 - DB create/list/delete, COL(users/reserves) create/list/delete. Enter admin if ENV.FOO is properly set.
-// 5.2.a - 20150324 - prepare for bluemix - mongo now is remote and external -> no console (?)
+// 5.1.p - 20150323 - DB create/list/delete, COL(users/reserves) create/list/delete. Enter admin if ENV.wcdtFOO is properly set.
+// 5.2.a - 20150324 - prepare for bluemix - mongo now is remote and external
 //                        (bmx-1) mongo
 //                        (bmx-2) port
 //                        (bmx-3) redirect
 //                        (bmx-4) 2 servers in local, one in bluemix
 // 5.2.b - 20150324 - read DOCS length only if no ERROR.
 // 5.2.c - 20150324 - details on how server stores data in SESSION.REQ
+// 5.2.d - 20150325 - all possible modules installed global, so bluemix upload is shorter
+// 5.2.e - 20150325 - use config.js and dont use app.set; create users collection if no existent at server startup - pwd from ENV.wcdtFOO
 //
 
 // Bluemix :
-// (*) cf api https://api.eu-gb.bluemix.net
+// (1) cf api https://api.eu-gb.bluemix.net
+// (2) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
+// (3) cf logs bCDT
+// (4) cf push bCDT
+// (5) http://bcdt.eu-gb.mybluemix.net/
 //
 
 // Server own variables :
-//    req.session.wcdt.nomsoci
-//    req.session.wcdt.tipussoci
-//    req.session.wcdt.instant_inicial
-//    req.session.wcdt.lastlogon
+//    req.session.wcdt_nomsoci
+//    req.session.wcdt_tipussoci
+//    req.session.wcdt_instant_inicial
+//    req.session.wcdt_lastlogon
 //
 //  Client own variables :
 //    window.session.user.nom
 
+// Local modules :
+//   express
+//   express-session
+//   mongodb
+//   monk
+
 // Package install :
-//   npm install morgan           --save
-//   npm install body-parser      --save
-//   npm install express-session  --save
-//   npm install cookie-parser    --save
-//   npm install mongodb          --save
+//   npm install body-parser      -g --save  + npm link body-parser
+//   npm install cookie-parser    -g --save  + npm link cookie-parser
+//   npm install express             --save
+//   npm install express-session     --save
+//   npm install mongodb             --save
+//   npm install monk                --save
+//   npm install morgan           -g --save  + npm link morgan
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
+// The main page (index.htm) is loaded only once.
+// The rest of the changes are created changing the subpage indicated by "#content" tag, where the following subpages are loaded:
+//     consulta.htm
+//     reserva.htm
+//     esborra.htm
+//     logon.htm
+//     help.htm
+//     initial.htm
+//     admin.htm
+//     (links.htm)
+//
+// All of them have a "DOM ready" event coded in a common "client.js" file, loaded in index.htm so the code is available to debugger.
+//     
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
@@ -142,7 +169,6 @@
 
 // Pending :
 // (*) access the application from a mobile client
-// (+) acces a mongo no ha de set LOCALHOST - get environment variable !
 // (*) estat del usuari = "iniciat-se" si li hem enviat el email pero no ha clikat al link d'activacio
 // (*) transaction log = empty database + re-evaluate(transaction log) => actual database
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
@@ -164,13 +190,13 @@
 //
 
 // Missatges numerats :
-// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt.lastlogon + "}. "
-// "+++ WCDT0002 - logoff user {"+ req.session.wcdt.nomsoci + "}. "
+// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt_lastlogon + "}. "
+// "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}. "
 
 
 // Let's go :
 
-	var myVersio     = "v 5.2.c" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.e" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 
@@ -180,7 +206,7 @@
 	var http         = require( 'http' ) ;
 	var https        = require( 'https' ) ;
 	var logger       = require( 'morgan' ) ;          // logging middleware
-	var bodyParser   = require( 'body-parser' ) ;     // parser
+ 	var bodyParser   = require( 'body-parser' ) ;     // parser
 
 	var fs           = require( 'fs' ) ;              // r/w files
 	var monk         = require( 'monk' ) ;            // access to mongodb
@@ -191,6 +217,7 @@
 	var credentials = { key: privateKey, cert: certificate } ;
 
 	var app = express() ;                           // instantiate Express and assign our app variable to it
+	var config = require ( './config.js' ) ;        // read configuration file
 
 	var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
 
@@ -203,36 +230,37 @@
 		} ;
 	} ; // (bmx-1)
 
+
 // display some initial info about our port and out mongo connection.
 
 	myVersioLong = myVersio + ' - mongo ['+ szDB +'] ' ;
 	
-	var foo = process.env.FOO ;
-	if ( typeof( foo ) !== 'undefined' ) { // FOO environment variables exists -> doSomethingWith(foo);
+	var foo = process.env.wcdtFOO ;             // envir var to allow initial setup using /admin
+	if ( typeof( foo ) !== 'undefined' ) {      // FOO environment variables exists -> doSomethingWith(foo);
 		myVersioLong += ' - env {'+ foo +'}' ;
-	} ;
+	} ; // 
 
 	var db  = monk( szDB ) ;                        // 
 	var szMongoDB = 'mongodb://' + szDB ;           // used at connect() - compte a Bluemix !
 	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
 
- 
-// +++ app.configure( function () {
 
-//	app.set( 'my_port', process.env.VCAP_APP_PORT || process.env.PORT || 443 ) ;  // (bmx-2)
+// +++ app.configure( function () {
 
 // The IP address of the Cloud Foundry DEA (Droplet Execution Agent) that hosts this application:
 	var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
 
 // The port on the DEA for communication with the application:
-	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;   // port used by HTTP
-	var portS = ( process.env.VCAP_APP_PORT || 443 ) ;  // port used by HTTPS
+	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;                           // port used by HTTP
+	var portS = ( process.env.VCAP_APP_PORT || process.env.WCDTPORT || 443 ) ;  // port used by HTTPS (bmx-2)
 
 	
-	app.set( 'Title', 'My Koltrane Site' ) ;
+	app.set( 'Title', config.titol ) ;
                                                      // This is only place we specify the collection name(s) : 
-	app.set( 'rcolname', "reserves_pistes" ) ;       // reservation data := "reserves_pistes" ;
-	app.set( 'userscolname', "wCDT_users" ) ;        // collection name := "wCDT_users" ;
+	app.set( 'rcolname', config.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
+	app.set( 'userscolname', config.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
+
+	Create_Users_Collection () ;                     // create users collection if not existent
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
@@ -252,6 +280,7 @@
    var staticOptions = { index: 'index.htm' };  // provide "index.htm" instead of the default "index.html"
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
+
 
 // lets redirect the http traffic to https (bmx-3) 
 
@@ -305,7 +334,7 @@ Date.prototype.yyyymmdd = function ( ) {
 
 // funcio per determinar si hi ha un soci logonejat
 function hiHaSociEnSessio( ParamSessio ) {
-	return ( typeof ParamSessio === 'object' && typeof ParamSessio.nomsoci === 'string' ) ;
+	return ( typeof ParamSessio === 'object' && typeof ParamSessio.wcdt_nomsoci === 'string' ) ;
 } ; // hiHaSociEnSessio()
 
 // funcio per determinar si la data indicada esta 
@@ -376,8 +405,8 @@ app.get( '/ping', function ( req, res ) {
 				+ currentdate.getMinutes() + ":"
 				+ currentdate.getSeconds() ;
 
-	var texte = "Hello from Koltrane " + myVersioLong ;
-	texte += "<p>(" + datetime + ")<p<<hr>" ;
+	var texte = "Hello from Koltrane, " + myVersioLong ;
+	texte += "<p>(" + datetime + ")<p><hr>" ;
 
 	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
 	res.write( texte ) ;
@@ -386,19 +415,19 @@ app.get( '/ping', function ( req, res ) {
 } ) ; // get '/ping'
 
  
-// (2) populate ddbb (called from HELP page)
+// (2) populate col (called from HELP page)
 
 app.get( '/populate', function ( req, res ) {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+ req.session.wcdt.nomsoci +"} wants to POPULATE ddbb (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.wcdt_nomsoci +"} wants to POPULATE uCol (" + MyCollection.name + ")." ) ;
 
 //    MyCollection.drop( function(e) {              // drop old database and wait completion
 
 		var My_Initial_Reserves = [ // see wines.js
 			{ rdata: "2014/11/09", rhora: "09", rpista: "3", rnom: "sebas" },
-			{ rdata: "2014/11/10", rhora: "11", rpista: "4", rnom: "perea" },
+			{ rdata: "2014/11/10", rhora: "11", rpista: "4", rnom: "pere" },
 			{ rdata: "2014/11/10", rhora: "13", rpista: "4", rnom: "enric" },
 			{ rdata: "2014/11/10", rhora: "13", rpista: "5", rnom: "anton" }
 		] ;
@@ -416,7 +445,7 @@ app.get( '/populate', function ( req, res ) {
 	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
 	        } else { 
                 res.status( 200 ) ; // OK
-	            res.send( "+++ {"+ req.session.wcdt.nomsoci +"} COL [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
+	            res.send( "+++ {"+ req.session.wcdt_nomsoci +"} COL [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
 
@@ -491,7 +520,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 	if ( hiHaSociEnSessio( req.session ) )
 	{
-		console.log( ">>> ["+ req.session.wcdt.nomsoci +"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
+		console.log( ">>> ["+ req.session.wcdt_nomsoci +"] POST fer una nova reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Reserva_NomSoci, Reserva_Pista, Reserva_Dia, Reserva_Hora ) ;
 		
 		var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 		var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -577,7 +606,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		} ; // iTotOK
 		
 	} else {
-		console.log( "--- CANT do a new reserva - soci ["+ req.session.wcdt.nomsoci +"] not logged in."  ) ;
+		console.log( "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant do reserva if not logged." ) ; 
 	} ; // not logged in - cant do new reserva
@@ -609,7 +638,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 		} else {
 
-			console.log( ">>> ["+ req.session.wcdt.nomsoci +"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
+			console.log( ">>> ["+ req.session.wcdt_nomsoci +"] POST esborrar una reserva. Nom (%s), pista (%s), dia (%s), hora (%s).", Esborra_Reserva_NomSoci, Esborra_Reserva_Pista, Esborra_Reserva_Dia, Esborra_Reserva_Hora ) ;
 
 			var CollectionName = app.get( 'rcolname' ) ;  // get collection name
 			var MyCollection = db.get( CollectionName ) ; // get the collection
@@ -662,7 +691,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		} ; // la data requerida no es en el passat
 		
 	} else {
-		console.log( "--- CANT delete an old reserva - soci ["+ req.session.wcdt.nomsoci +"] not logged in."  ) ;
+		console.log( "--- CANT delete an old reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
 		res.status( 200 ) ; // 404 does not display attached text
 		res.send( "--- Error Reserva - cant delete old reserva if not logged." ) ; 
 	} ; // not logged in - cant delete old reserva
@@ -705,11 +734,11 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
-						req.session.wcdt.nomsoci   = Logon_NomSoci ; 	 // guardar nom soci en la sessio      [sess]
-						req.session.wcdt.tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
+						req.session.wcdt_nomsoci   = Logon_NomSoci ; 	 // guardar nom soci en la sessio      [sess]
+						req.session.wcdt_tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
 						var mSg = new Date() ;                           // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
-						req.session.wcdt.lastlogon = mSg.toISOString() ; // 
-						req.session.wcdt.instant_inicial = Date.now() ;  // 
+						req.session.wcdt_lastlogon = mSg.toISOString() ; // 
+						req.session.wcdt_instant_inicial = Date.now() ;  // 
 						
 						console.log( '*** cridem GETOCUPACIO logon.' ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
@@ -719,7 +748,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
 							} else {
 
-								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt.lastlogon + "}. "
+								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt_lastlogon + "}. "
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
 //								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
 								if ( iOcupacio > 0 ) {
@@ -757,10 +786,10 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 app.post( '/logoff_user', function ( req, res ) {
 	
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.wcdt.nomsoci ) ;
+	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.wcdt_nomsoci ) ;
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
-	Get_Ocupacio ( req.session.wcdt.nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
+	Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 
 		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
 		if ( err ) {
@@ -769,15 +798,15 @@ app.post( '/logoff_user', function ( req, res ) {
 		} else {
 			var iPeriode = Date.now() ;
 			console.log( 'logof.now is ('+ iPeriode +')' ) ;
-			console.log( 'logof.old is ('+ req.session.wcdt.instant_inicial +')' ) ;
-			iPeriode = iPeriode - req.session.wcdt.instant_inicial ;
-			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt.nomsoci + "}, logged on at {"+ req.session.wcdt.lastlogon +"}, duracio ["+ iPeriode +"] msg. "
+			console.log( 'logof.old is ('+ req.session.wcdt_instant_inicial +')' ) ;
+			iPeriode = iPeriode - req.session.wcdt_instant_inicial ;
+			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 			szMsg_Logoff_OK += szOcupacio ;								
 			res.send( 200, szMsg_Logoff_OK ) ;
 		} ; // error dins get ocupacio
 		
-		delete req.session.wcdt.nomsoci ;   // remove session field when async function ends - see [sess]
-		delete req.session.wcdt.tipussoci ; // remove session field when async function ends - see [sess]
+		delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
+		delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
 
 	} ) ; // own async function : get_ocupacio (uses mongo)
 	
@@ -838,9 +867,8 @@ app.get( '/admin', function ( req, res ) {
 
 	var szMsg_Admin_Rsp = '' ;
 
-	if ( ( foo == 'pepeta' ) || ( hiHaSociEnSessio( req.session ) ) ) {
-
-		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.wcdt.tipussoci ) ;
+	if ( hiHaSociEnSessio( req.session ) ) {
+		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.wcdt_tipussoci ) ;
 		szMsg_Admin_Rsp = 'Tenim soci' ;
 		res.send( 200, szMsg_Admin_Rsp ) ;
 	} else {
@@ -859,7 +887,7 @@ app.get( '/delete_col_users', function ( req, res ) {
 
 	var CollectionName = app.get( 'userscolname' ) ; // get "users" collection name
     var MyCollection = db.get( CollectionName ) ;    // get the collection
-	console.log( ">>> {"+ req.session.wcdt.nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
+	console.log( ">>> {"+ req.session.wcdt_nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
 
     MyCollection.drop( function( err ) {             // drop old collection and wait completion
 	
@@ -889,7 +917,7 @@ app.get( '/list_collections', function ( req, res ) {
 
 			db.collectionNames( function( err, collections ) {
 				if ( err ) {
-					console.log( "--- List collections. Error accessing DDBB. Error (%s) is (%s).", err.errno, err.message ) ;
+					console.log( "--- List collections DDBB error - num (%s) is (%s).", err.errno, err.message ) ;
 				} else {
 					var  i = collections.length ;
 					console.log( "+++ (b) List collections. DDBB has (%s) tables/collections.", i ) ;
@@ -905,9 +933,10 @@ app.get( '/list_collections', function ( req, res ) {
 
 
 // (13) /create_users_col - called from INDEX.HTM
-app.get( '/create_users_col', function ( req, res ) {
+// app.get( '/create_users_col', function ( req, res ) {
 
-	var szMsg_Create = '' ;
+function Create_Users_Collection () {
+	
 	var CollectionName = app.get( 'userscolname' ) ;  // get "users" collection name	
 	var MyCollection = db.get( CollectionName ) ;     // get the collection
 
@@ -917,7 +946,7 @@ app.get( '/create_users_col', function ( req, res ) {
 	MongoClient.connect( szMongoDB, function( err, db ) {
 
 		if ( err ) {
-			console.log( "--- populate ddbb.connect() (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+			console.log( "--- create uCol.connect() (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
 		} else {
 
 			console.log( '+++ (b) create collection (%s).', CollectionName ) ;
@@ -925,36 +954,34 @@ app.get( '/create_users_col', function ( req, res ) {
 			db.createCollection( CollectionName, {strict:true}, function( err, collection ) { // create the collection on the Mongo DB database before returning the collection object. If the collection already exists it will ignore the creation of the collection.
 
 				if ( err ) {
-					szMsg_Create = '--- Error creating collection ('+ CollectionName +'). Error ('+ err.errno +') is ('+ err.message +').' ;
+					console.log( '--- Error creating collection ('+ CollectionName +'). Error ('+ err.errno +') is ('+ err.message +').' ) ;
 				} else {
-					szMsg_Create = '+++ Collection ' + CollectionName + ' created.' ; // but empty
+					console.log( '+++ Collection ' + CollectionName + ' created.' ) ; // but empty
 
-						var My_User_To_Add_pere = 
-			{ 	
-				uAlias        : "pere", 
-				uPwd          : "pere2015", 
-				uRole         : "Administrator",
-				uNom          : "Pere Albert Labal",
-				uEmail        : "palbcn@yahoo.com",
-				uLastLogin    : "2015/01/01",
-				uMisc         : "-" 
-			} ;
+					var My_User_To_Add_pere = 
+					{ 	
+						uAlias        : "pere", 
+						uPwd          : "pere2015",             // use ENV.wcdtFOO ?
+						uRole         : "Administrator",
+						uNom          : "Pere Albert Labal",
+						uEmail        : "palbcn@yahoo.com",
+						uLastLogin    : "2015/01/01",
+						uMisc         : "-" 
+					} ;
 
 					MyCollection.insert( My_User_To_Add_pere, { safe:true }, function( err, result ) {
 						if ( err ) { 
-							console.log( "--- populate ddbb (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+							console.log( "--- create uCol (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
 						} else { 
-							console.log( "+++ populate ddbb (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add_pere.uAlias ) ;
+							console.log( "+++ create uCol (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add_pere.uAlias ) ;
 						} ; // else
-	//					db.close(); // allow the program to exit
 					} ) ; // insert
 				} ; // error create collection
-				res.send( 200, szMsg_Create ) ;
 			} ) ; // createCollection
 		} ; // connect() error
 	} ) ; // connect
 	
-} ) ; // get '/create_users_ddbb'
+} ; // '/create_users_col'
 
 
 // create our http server and launch it
@@ -976,8 +1003,18 @@ app.get( '/create_users_col', function ( req, res ) {
 
 	} else { // local
 		
-		http.createServer ( app ).listen( port, host );	
-		console.log ( 'local - our HTTP server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ port +'). URL = http://'+host+':'+ port +'/ ' ) ;
+//		http.createServer ( app ).listen( port, host );	
+		app.listen( port, host, function() {
+			console.log ( 'local - our HTTP server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ port +'). URL = http://'+host+':'+ port +'/ ' ) ;
+		} ).on( 'error', function( err ) {
+			if ( err.errno === 'EADDRINUSE' ) { // catch port in use error
+				console.log( '--- listen() error : port busy' ); 
+			} else { 
+				console.log( '--- listen() error : ', err ) ; 
+			} ;
+		} ) ; // try to catch EA
+		
+
 		https.createServer ( credentials, app ).listen ( portS , host ) ;
 		console.log ( 'local - our HTTPS server ('+ myVersioLong +') is running at host ('+ host +'), port ('+ portS +'). URL = https://'+host+':'+ portS +'/ ' ) ;
 

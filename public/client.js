@@ -1,4 +1,4 @@
-
+﻿
 // nova funció yyyyymmdd de Date() - at client
 Date.prototype.yyyymmdd = function () {                            
 	var yyyy = this.getFullYear().toString();                                    
@@ -72,18 +72,21 @@ function esborrarReserva( myDades, myContent ) {
 } ; // esborrarReserva()
 
 
+
 function index_ready() {              // DOM ready for index.htm
 
 	console.log( '*** index DOM ready.' ) ;
 	
 	window.session = {} ;             // unique global var for all the client application !
 	window.session.user = {} ;        // set "no user" at begin
-//	window.session.user.nom = '-' ;   // set "no user name" at begin
+
+	//	window.session.user.nom = '-' ;   // set "no user name" at begin
 // ---	window.session.avui = (new Date).yyyymmdd() ;
-	delete window.session.user.nom ;  // same at logoff() time !
+
+	delete window.session.user.nom ;      // same at logoff() time !
 
 // amagar link "admin" - will be visible after logon(admin) and hidden at logoff
-	$( '#clkAdmin' ).show() ;         // http://api.jquery.com/hide/
+		$( '#clkAdmin' ).hide() ;         // http://api.jquery.com/hide/
 
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
@@ -99,7 +102,7 @@ function index_ready() {              // DOM ready for index.htm
 	var szAra = '<center>Now is [' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
 	$( "#my_date" ).html( szAra ) ; // show actual date
 
-// posem al CONTENT (we are a SPA) the INITAL.HTML
+// posem al CONTENT (we are a SPA) la sub-pagina INITAL.HTML
 	$.get( '/initial.htm', function( page ) {
 		console.log( '*** Demanem al server INITIAL.HTM, initial SPA text.' ) ;
 		$( "#content" ).html( page ) ; // show received HTML at specific <div>
@@ -211,7 +214,8 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // links
 
 	
-} ; // DOM ready for INDEX.HTM
+} ; // index_ready(), DOM ready for INDEX.HTM
+
 
 
 function consulta_ready() {
@@ -354,6 +358,7 @@ function consulta_ready() {
 } ; // consulta_ready()
 
 
+
 function reserva_ready() {
 	
 	console.log( '*** reserva DOM ready.' ) ;
@@ -400,6 +405,7 @@ function reserva_ready() {
 } ; // reserva_ready()
 
 
+
 function esborra_ready() {
 
 	console.log( '*** reserva DOM ready.' ) ;
@@ -419,6 +425,7 @@ function esborra_ready() {
 	}); // click "myFormEsborrarReserva" submit
 		
 } ; // esborra_ready()
+
 
 
 function logon_ready() {
@@ -452,6 +459,7 @@ function logon_ready() {
 				$( "#content" ).html( page ) ;
 				
 				window.session.user.nom = logonUser ;
+				document.title = "Web CDT - user (" + logonUser + ")" ;
 
 // here we have to make ADMIN LINK visible if user us a ADMIN one !
 				$( '#clkAdmin' ).show() ;
@@ -492,6 +500,7 @@ function logon_ready() {
 
 	
 } ; // logon_ready()
+
 
 
 function help_ready() {
@@ -564,6 +573,7 @@ function help_ready() {
 } ; // help_ready()
 
 
+
 function initial_ready() {
 	
 	console.log( '*** initial DOM ready.' ) ;
@@ -582,6 +592,7 @@ function initial_ready() {
 	 fClickLogon() ;
 	 
 } ; // initial_ready()
+
 
 
 function admin_ready() {
@@ -642,6 +653,7 @@ function admin_ready() {
 
 	
 } ; // admin_ready()
+
 
 
 $( function() {

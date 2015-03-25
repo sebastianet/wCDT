@@ -1,2 +1,2 @@
-set FOO=pepeta
+set wcdtFOO=pepeta
 node  my_server.js
