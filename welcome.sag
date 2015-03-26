@@ -63,12 +63,13 @@ b) per dies
 .
  ===================================================================================================================
 .
- per veure el contingut de les BBDD, fer :   	mongo < wCDT_veure_BBDD.mongo
- per veure la BBDD de usuaris, fer :            node wCDT_veure_BBDD.js
+ per veure el contingut de les 2 BBDD, fer :   	mongo < wCDT_veure_BBDDs.mongo
 .
- per afegir a la BBDD un usuari :               node  wCDT_create_users_ddbb.js
+ per veure la BBDD de usuaris, fer :            node wCDT_veure_BBDD_users.js
+ per afegir un usuari a la BBDD :               node wCDT_create_users_ddbb.js
 .
- per esborrar la BBDD de reserves :             mongo < wCDT_drop_BBDD.mongo
+ per esborrar la BBDD de reserves :             mongo < wCDT_drop_BBDD_reserves.mongo
+ per esborrar la BBDD de usuaris :              mongo < wCDT_drop_BBDD_users.mongo
 .
  per depurar amb node-inspector:                1) start node-inspector
                                                 2) open Chrome at http://127.0.0.1:8080/debug?port=5858

@@ -1,10 +1,10 @@
 applications:
 - services:
-  - mongodb-i5
+  - MongoLab-jt
   disk_quota: 1024M
-  host: bcdt
-  name: bCDT
+  host: usacdt
+  name: usaCDT
   path: .
-  domain: eu-gb.mybluemix.net
+  domain: mybluemix.net
   instances: 1
   memory: 256M

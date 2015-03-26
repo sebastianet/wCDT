@@ -12,16 +12,27 @@ Omple el nom del usuari i clau de pas, i prem "Alta User".
 <td>
 
 <form id="myFormReqAltaUser">
-<table class="tlog_dyb"> <tr> <td>
+<table class="tlog_dyb"> 
+	<tr> <td>
 	<label for="AltaUserNom">Nom de usuari &nbsp; </label>
-	<input type="text" autofocus value="joan" name="nom_Alta" /> 
-	<br>
+	<td>
+	<input type="text" autofocus value="joan" name="Alta_User_Nom" /> 
+	
+	<tr> <td>
 	<label for="AltaUserPwd">Clau de pas &nbsp; &nbsp;</label>
-	<input type="password"  value="perepocapor" name="pwd_Alta" /> 
-	<br>
+	<td>
+	<input type="password"  value="perepocapor" name="Alta_User_Pwd" /> 
+
+	<tr> <td>
+	<label for="AltaUserEmail">Emilio &nbsp; &nbsp;</label>
+	<td>
+	<input type="text"  value="a@b.com" name="Alta_User_Email" /> 
+	
+	<tr> <td>
 	<label for="AltaUserType">Tipus de usuari &nbsp; &nbsp;</label>
-	<input type="text"  value="Guest" name="tipus_Alta" /> 
-<td>
+	<td>
+	<input type="text"  value="Guest" name="Alta_User_Type" /> 
+	<td>
 	<p> &nbsp;
 	<input type="submit" value=" Alta User ">
 </table>
@@ -40,13 +51,12 @@ Omple el nom del usuari i clau de pas, i prem "Baixa User".
 <td>
 
 <form id="myFormReqBaixaUser">
-<table class="tlog_dyb"> <tr> <td>
-	<label for="nomBaixaUser">Nom de usuari &nbsp; </label>
+<table class="tlog_dyb"> 
+	<tr> <td>
+	<label for="BaixaUserNom">Nom de usuari &nbsp; </label>
+	<td>
 	<input type="text" autofocus value="joan" name="nom_Baixa" /> 
-	<br>
-	<label for="pwdBiaxaUser">Clau de pas &nbsp; &nbsp;</label>
-	<input type="password"  value="perepocapor" name="pwd_Baixa" /> 
-<td>
+	<td>
 	<p> &nbsp;
 	<input type="submit" value=" Baixa User ">
 </table>
@@ -56,39 +66,10 @@ Omple el nom del usuari i clau de pas, i prem "Baixa User".
 
 <hr>
 
-<table class="usrModificacio">
-<tr> <td>
-<h3> Modificaci&oacute; d'un usuari </h3>
-<p>
-Omple les dades i prem "Modify User".
-</p>
-<td>
-
-<form id="myFormReqModifyUser">
-<table class="tlog_dyb"> <tr> <td>
-	<label for="ModifyUserNom">Nom de usuari &nbsp; </label>
-	<input type="text" autofocus value="joan" name="nom_Modify" /> 
-	<br>
-	<label for="ModifyUserPwd">Clau de pas vella &nbsp; &nbsp;</label>
-	<input type="password"  value="perepocapor" name="pwd_Modify" /> 
-	<br>
-	<label for="ModifyUserType">Tipus de usuari &nbsp; &nbsp;</label>
-	<input type="text"  value="Guest" name="type_Modify" /> 
-<td>
-	<p> &nbsp;
-	<input type="submit" value=" Modify User ">
-</table>
-</form>
-
-</table>
-
-
-<hr>
-
-<h3> Taula/colleccio usuaris [wCDT_users] </h3>
+<h3> Taula/collecci&oacute; usuaris [wCDT_users] </h3>
 
 <p>
-<a href="#" id="clkAdminCreateUsersCollection">Create users collection</a>.
+Create users collection (auto).
 
 <a href="#" id="clkAdminListUsers">List all users defined into wCDT</a>.
 

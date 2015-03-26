@@ -34,7 +34,7 @@ function fClickLogon() {
 	}) ; // clkLogon
 
 } ; // fClkLogon()
- 
+
  
 // exemple d'us:   
 //    ferReserva( $(this).serialize(), "#content" ) ; // reserva.htm
@@ -46,7 +46,7 @@ function ferReserva( myDades, myContent ) {
 	
 		var lng = 0 ;
 		lng = dades.length ;
-		console.log( ">>> Fer reserva - server response (%s) : ", lng, dades ); // show whole JSON object
+		console.log( ">>> Fer reserva - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
 		
 		$( myContent ).html( dades );  // or "text" - set server data onto actual page
 
@@ -63,7 +63,7 @@ function esborrarReserva( myDades, myContent ) {
 	
 		var lng = 0 ;
 		lng = dades.length ;
-		console.log( ">>> Esborrar reserva - server response (%s) : ", lng, dades ); // show whole JSON object
+		console.log( ">>> Esborrar reserva - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
 		
 		$( myContent ).html( dades );  // or "text" - set server data onto actual page
 
@@ -117,18 +117,8 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // clkInici
 
 
-// Quan es pica el link de "LOGON", demanem al servidor una pagina i la posem on indica "#content".
-// compte : es troba 2 cops - (a) index_ready() + (b) initial_ready()
+	fClickLogon() ; 
 
-/* 	$( ".clkLogon" ).click( function() {
-		$.get( '/logon.htm', function( page ) {
-			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(logon)
-	}) ; // clkLogon
- */
-
-	fClickLogon() ; //
 	
 	$( ".clkFerReserva" ).click( function() {
 		
@@ -177,7 +167,7 @@ function index_ready() {              // DOM ready for index.htm
 		}) ; // get(help)
 	}) ; // help
 
-	
+
 	$( "#clkAdmin" ).click( function() {
 		
 //		$.get( '/admin', function( page ) {
@@ -204,8 +194,8 @@ function index_ready() {              // DOM ready for index.htm
 		return false ; // stop processing !!!
 
 	}) ; // admin
-
-
+	
+	
 	$( "#clkLinks" ).click( function() {
 		$.get( '/links.htm', function( page ) {
 			console.log( '**** HELP.HTM - Demanem al server la sub-pagina LINKS.' ) ;
@@ -248,7 +238,7 @@ function consulta_ready() {
 // debugger;
 			$.get( '/qui_te_reserves/' + myDate, function( dades ) {
 
-				console.log( ">>> consulta - server response : ", dades ); // show whole JSON object
+				console.log( ">>> consulta - server response : {%s}.", dades ); // show whole JSON object
 				
 				var lng = 0 ;
 				lng = dades.length ;
@@ -391,7 +381,7 @@ function reserva_ready() {
 					$.post( "/fer_una_reserva/" + myDades, function( dades ) {
 						var lng = 0 ;
 						lng = dades.length ;
-						console.log( ">>> Server response (%s) : ", lng, dades ); // show whole JSON object
+						console.log( ">>> Server response (%s) : {%s}.", lng, dades ); // show whole JSON object
 						
 						$('#content').html( dades );  // or "text"
 
@@ -458,11 +448,20 @@ function logon_ready() {
 			success : function( page ) { 
 				$( "#content" ).html( page ) ;
 				
+				var lng = page.length ;
+				var idx = page.indexOf( "Tens poders" ) ;
+//				console.log( '+++ logon() success, rcvd PAGE of size ('+ lng + '), index POWERS : {' + idx + '}.' ) ;
+				
 				window.session.user.nom = logonUser ;
-				document.title = "Web CDT - user (" + logonUser + ")" ;
+				document.title = "Web CDT, user (" + logonUser + ")" ;
 
-// here we have to make ADMIN LINK visible if user us a ADMIN one !
-				$( '#clkAdmin' ).show() ;
+// here we have to make ADMIN LINK visible if user is an ADMIN one !
+				
+				if ( idx > 0 ) { // if ( logonUser == 'pere' ) {
+					$( '#clkAdmin' ).show() ;
+				} else {
+					$( '#clkAdmin' ).hide() ;
+				} ;
 				
 				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 			},
@@ -476,13 +475,13 @@ function logon_ready() {
 		return false ; // stop processing !!!
 	
 	}); // click "myFormReqLogon" submit
-
+	
 	
  	$( "#myFormReqLogoff" ).submit( function( event ) {
 
 		$.post( "/logoff_user", function( dades ) {
 		
-			console.log( ">>> Request logoff - server response (%s) : ", dades ); // show whole JSON object
+			console.log( ">>> Request logoff - server response (%s) : {%s}.", dades ); // show whole JSON object
 			
 			$( "#content" ).html( dades );  // or "text" - set server data onto actual page
 //			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
@@ -502,15 +501,17 @@ function logon_ready() {
 } ; // logon_ready()
 
 
-
 function help_ready() {
 
 	console.log( '*** help DOM ready.' ) ;
 
 
 	$( "#clkListCollections" ).click( function() {
+		
 		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
+
 		$.get( '/list_collections', function( page ) {
+			
 			var lng = page.length ;
 			console.log( '*** index - rebem del server la llista de collections. Length (%s).', lng ) ;
 			var szTxt = '<p>Collections we have right now in database :</p>' ;
@@ -528,7 +529,8 @@ function help_ready() {
     $( "#clkConsultaAllReserves" ).click( function () {
 
 		$.get( '/dump_all_reserves', function ( page ) {
-            console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}", page ) ;
+			
+            console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}.", page ) ;
             var lng = 0 ;
             lng = page.length ;
             console.log( '+++ Llargada (%s).', lng ) ;
@@ -605,7 +607,7 @@ function admin_ready() {
 
 		$.get( '/dump_all_users', function ( page ) {
 
-			console.log( "*** ADMIN.HTM - Demanem la llista de tots els usuaris. Server response {%s}", page ) ;
+			console.log( "*** ADMIN.HTM - Demanem la llista de tots els usuaris. Server response {%s}.", page ) ;
 			var lng = 0 ;
 			lng = page.length ;
 			console.log( '+++ Llargada (%s).', lng ) ;
@@ -645,11 +647,56 @@ function admin_ready() {
 	} ) ; // click Esborrar taula Users from Admin menu
 
 
-	$( "#clkAdminCreateUsersCollection" ).click( function() {
-		$.get( '/create_users_col', function( page ) {
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		} ) ; // get(ceate users collection)
-	}) ; // clkCreateUsersCollection
+// create database containing known users - done at powerOn time, if it does not exist
+//	$( "#clkAdminCreateUsersCollection" ).click( function() {
+//		$.get( '/create_users_col', function( page ) {
+//			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+//		} ) ; // get(ceate users collection)
+//	}) ; // clkCreateUsersCollection
+
+
+// injectem comportament(s) de submit
+	$( "#myFormReqAltaUser" ).submit( function( event ) {
+	// will produce a msg as "GET /fer_alta_usuari/AltaUserNom=joan&AltaUserPwd=pere&AltaUserEmail=a@b.c&AltaUserType=Guest"
+
+		console.log( '[+] boto ALTA USER polsat - crear usuari.' ) ;
+		
+		var myDades = $( this ).serialize() ;  // save user entry
+		
+		$.get( "/fer_alta_usuari/" + myDades, function( dades ) {
+			
+			var lng = 0 ;
+			lng = dades.length ;
+			console.log( ">>> Alta User - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
+			
+			$('#content').html( dades );  // or "text"
+
+		}); // get(/alta) 
+					
+		return false ; // stop processing !!!
+		
+	}); // click "myFormReqAltaUser" submit
+
+
+	$( "#myFormReqBaixaUser" ).submit( function( event ) {
+	// will produce a msg as "GET /fer_una_baixa_usuari/BaixaUserNom=joan"
+
+		console.log( '[+] boto BAIXA USER polsat - esborrar usuari.' ) ;
+		
+		var myDades = $( this ).serialize() ;  // save user entry
+		
+		$.post( "/fer_una_baixa_usuari/" + myDades, function( dades ) {
+			var lng = 0 ;
+			lng = dades.length ;
+			console.log( ">>> Baixa user - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
+			
+			$('#content').html( dades );  // or "text"
+
+		}); // get(/baixa) 
+					
+		return false ; // stop processing !!!
+		
+	}); // click "myFormReqBaixaUser" submit
 
 	
 } ; // admin_ready()

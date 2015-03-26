@@ -108,7 +108,9 @@
 // 5.2.b - 20150324 - read DOCS length only if no ERROR.
 // 5.2.c - 20150324 - details on how server stores data in SESSION.REQ
 // 5.2.d - 20150325 - all possible modules installed global, so bluemix upload is shorter
-// 5.2.e - 20150325 - use config.js and dont use app.set; create users collection if no existent at server startup - pwd from ENV.wcdtFOO
+// 5.2.e - 20150325 - use config.js and dont use app.set; create users collection if no existent at server startup - pwd from ENV.wcdtFOO (not used yet)
+// 5.2.f - 20150326 - display /admin link if user "has powers"
+// 5.2.g - 20150326 - alta de usuario desde /admin
 //
 
 // Bluemix :
@@ -166,6 +168,10 @@
 //  *) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 //  *) HTTPS + "mixed content" - local jQuery.js and others
+//  *) XMLHttpRequest cannot load https://bcdt.eu-gb.mybluemix.net/logonuser/nom_Logon=pere&pwd_Logon=pere2015. 
+//         No 'Access-Control-Allow-Origin' header is present on the requested resource. 
+//         Origin 'http://bcdt.eu-gb.mybluemix.net' is therefore not allowed access. The response had HTTP status code 401.
+
 
 // Pending :
 // (*) access the application from a mobile client
@@ -190,24 +196,22 @@
 //
 
 // Missatges numerats :
-// "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt_lastlogon + "}. "
+// "+++ WCDT0001 - logon and PWD OK."
 // "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}. "
 
 
 // Let's go :
 
-	var myVersio     = "v 5.2.e" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.g" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
-
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
 	var cookieParser = require( 'cookie-parser' ) ;      // data cookies
+ 	var bodyParser   = require( 'body-parser' ) ;     // parser
 
 	var http         = require( 'http' ) ;
 	var https        = require( 'https' ) ;
 	var logger       = require( 'morgan' ) ;          // logging middleware
- 	var bodyParser   = require( 'body-parser' ) ;     // parser
-
 	var fs           = require( 'fs' ) ;              // r/w files
 	var monk         = require( 'monk' ) ;            // access to mongodb
 	var mongo        = require( 'mongodb' ) ;         // connect to mongodb
@@ -223,12 +227,14 @@
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
-//			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB
-			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ; // mind URL if MONGODB-2.4
+			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB @ US
+//			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ; // mind URL if MONGODB-2.4 @ UK
 		}
 		catch ( err ) {
 		} ;
-	} ; // (bmx-1)
+	} else { // (bmx-1)
+		szDB = 'mongodb://' + szDB ; // bluemix credentials already have the prefix
+	} ;
 
 
 // display some initial info about our port and out mongo connection.
@@ -241,7 +247,7 @@
 	} ; // 
 
 	var db  = monk( szDB ) ;                        // 
-	var szMongoDB = 'mongodb://' + szDB ;           // used at connect() - compte a Bluemix !
+	var szMongoDB = szDB ;                          // used at connect() - compte a Bluemix !
 	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
 
 
@@ -441,11 +447,9 @@ app.get( '/populate', function ( req, res ) {
 		MyCollection.insert ( My_Initial_Reserves, { safe:true }, function ( err, result ) {
 	        if ( err ) { // send a HHTP error ? http://www.w3.org/Protocols/HTTP/HTRESP.html
 				console.log( "--- Populate reservas. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-                res.status( 500 ) ; // Internal Error
-	            res.send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return error
+                res.status( 500 ).send( "--- populate : there was a problem adding the information to the database." ) ; // If it failed, return "internal error"
 	        } else { 
-                res.status( 200 ) ; // OK
-	            res.send( "+++ {"+ req.session.wcdt_nomsoci +"} COL [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
+                res.status( 200 ).send( "+++ {"+ req.session.wcdt_nomsoci +"} COL [" + MyCollection.name + "] populated OK." ) ; // else, indicate OK.
 	        } ; // else
 		} ) ; // insert
 
@@ -466,8 +470,7 @@ app.get( '/dump_all_reserves', function ( req, res ) {
 
 		if ( err ) { 
             console.log( "--- Dump all reservas. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-            res.status( 500 ) ; // internal error
-            res.send( {'error':'dump all reserves DDBB error.'} ) ;
+            res.status( 500 ).send( {'error':'dump all reserves DDBB error.'} ) ; // internal error
         } else {
             var  i = docs.length ;
             console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
@@ -493,8 +496,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 
 		if ( err ) {
 			console.log( '--- Veure reserves. Error (%s) mongodb is (' + err.message + ').', err.errno ) ;
-			res.status( 500 ) ; // internal error
-			res.send( {'error':'mongodb error has occurred'} ) ;
+			res.status( 500 ).send( {'error':'mongodb error has occurred'} ) ; // internal error
 		} else {	
 			var  i = docs.length ;
 			console.log( "+++ the collection (%s) for the date (%s) has (%s) elements.", CollectionName, DiaConsultat, i ) ;
@@ -562,8 +564,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 				if ( err ) { 
 					console.log( "--- Fer Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-					res.status( 500 ) ; // internal error
-					res.send( {'error': 'fer reserva DDBB error.'} ) ;
+					res.status( 500 ).send( {'error': 'fer reserva DDBB error.'} ) ; // internal error
 				} else {
 			
 					var  i = docs.length ;
@@ -576,12 +577,10 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 						MyCollection.insert ( MyReserva, { safe:true }, function ( err, result ) {
 							if ( err ) {
 								console.log( '---- Could not insert reservation into MongoDB. Error (%s) meaning (%s).', err.errno, err.message ) ;
-								res.status( 500 ) ; // internal error
-								res.send( {'error':'An error has occurred'} ) ;
+								res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
 							} else {
 								console.log( '++++ Success: insert went ok.' ) ;
-								res.status( 200 ) ; // OK
-								res.send( "+++ fer reserva OK. User("+ Reserva_NomSoci +"), pista("+ Reserva_Pista +"), dia("+ Reserva_Dia +"), hora("+ Reserva_Hora +")." ) ; // else, indicate OK.
+								res.status( 200 ).send( "+++ fer reserva OK. User("+ Reserva_NomSoci +"), pista("+ Reserva_Pista +"), dia("+ Reserva_Dia +"), hora("+ Reserva_Hora +")." ) ; // else, indicate OK.
 							} ; // if Error
 						} ) ; // insert
 				
@@ -592,23 +591,20 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 							QuiEs = docs[0].rnom ;
 						} ;
 						szResultat = "--- Error Reserva - ("+i+") slot Pista("+ Reserva_Pista +") Dia("+ Reserva_Dia +") Hora("+ Reserva_Hora +") ocupat per en (" + QuiEs + ")." ;
-						res.status( 200 ) ;      // OK as HTTP rc, but
-						res.send( szResultat ) ; // else, indicate no OK.
+						res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
 				
 					} ;  // if did exist
 				} ; // error in find()
 			}) ; // find()
 
 		} else {  // error en algun parametre
-			res.status( 200 ) ; // OK
 			szResultat = "--- Parametre incorrecte : (" + szErrorString + ")." ;
-			res.send( szResultat ) ; // else, indicate no OK.
+			res.status( 200 ).send( szResultat ) ; // else, indicate no OK.
 		} ; // iTotOK
 		
 	} else {
 		console.log( "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
-		res.status( 200 ) ; // 404 does not display attached text
-		res.send( "--- Error Reserva - cant do reserva if not logged." ) ; 
+		res.status( 200 ).send( "--- Error Reserva - cant do reserva if not logged." ) ; // 404 does not display attached text
 	} ; // not logged in - cant do new reserva
 
 } ) ; // get '/fer_una_reserva/<parametres>'
@@ -632,9 +628,9 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	{
 
 		if ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) {
-			res.status( 200 ) ; // OK
+			
 			szResultat = "La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
-			res.send( szResultat ) ; 
+			res.status( 200 ).send( szResultat ) ; // OK
 
 		} else {
 
@@ -653,8 +649,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 				if ( err ) { 
 					console.log( "--- Esborrar Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-					res.status( 500 ) ; // internal error
-					res.send( {'error': 'fer reserva DDBB error.'} ) ;
+					res.status( 500 ).send( {'error': 'fer reserva DDBB error.'} ) ; // internal error
 				} else {
 			
 					var  i = docs.length ;
@@ -663,8 +658,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 					if ( i < 1 ) { // si no esta ocupat, es un error
 				
 							szResultat = '--- Error esborrant reserva - ('+ i +') slot lliure o no es teu. Nom ('+ Esborra_Reserva_NomSoci +'), pista ('+ Esborra_Reserva_Pista +'), dia ('+ Esborra_Reserva_Dia +'), hora ('+ Esborra_Reserva_Hora +').' ;
-							res.status( 200 ) ;      // OK as HTTP rc, but
-							res.send( szResultat ) ; // else, indicate no OK.
+							res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
 
 					} else { // else, the slot is not free so we can remove it
 				
@@ -674,12 +668,11 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 						MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
 							if ( err ) {
 								console.log( '--- Could not remove reservation from MongoDB. Error (%s) is (%s).', err.errno, err.message ) ;
-								res.status( 500 ) ; // internal error
-								res.send( {'error':'An error has occurred'} ) ;
+								res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
 							} else {
 								console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
-								res.status( 200 ) ; // OK
-								res.send( "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ) ; // else, indicate OK.
+								szResultat = "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ;
+								res.status( 200 ).send( szResultat ) ; // else, indicate OK.
 							} ; // if Error
 
 						} ) ; // remove
@@ -692,8 +685,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		
 	} else {
 		console.log( "--- CANT delete an old reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
-		res.status( 200 ) ; // 404 does not display attached text
-		res.send( "--- Error Reserva - cant delete old reserva if not logged." ) ; 
+		res.status( 200 ).send( "--- Error Reserva - cant delete old reserva if not logged." ) ; // 404 does not display attached text
 	} ; // not logged in - cant delete old reserva
 
 } ) ; // get '/esborrar_una_reserva/<parametres>'
@@ -702,7 +694,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 // (7) fer logon() de un usuari
 // rebem GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy
 
-app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req, res ) {
+app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req, res ) {
 
 	var Logon_NomSoci = req.params.log_nom_soci ; // instead of req.query.log_nom_soci
 	var Logon_PwdUser = req.params.log_pwd ;
@@ -718,8 +710,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 	
 		if ( err ) {
 			console.log( '--- Logon MongoDB error. Error (%s) is (%s)', err.errno, err.message ) ;
-			res.status( 500 ) ; // internal error
-			res.send( {'error':'mongodb error has occurred'} ) ;
+			res.status( 500 ).send( {'error':'mongodb error has occurred'} ) ; // internal error
 		} else { // no ERR
 
 			var  i = docs.length ;
@@ -745,34 +736,38 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd', function ( req
 							console.log( '*** acaba GETOCUPACIO logon (%s).', iOcupacio ) ;
 							if ( err ) {
 								console.log( '--- logon get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message  ) ;
-								res.send( 500,'--- internal error at get_ocupacio logon.' ) ;
+								res.status( 500 ).send( '--- internal error at get_ocupacio logon.' ) ;
 							} else {
 
-								var szMsg_Logon_OK = "+++ WCDT0001 - logon and PWD OK. Last logon {"+ req.session.wcdt_lastlogon + "}. "
+								var szMsg_Logon_OK = '+++ WCDT0001 - logon and PWD OK. ' ;
+								szMsg_Logon_OK += '<p>Welcome back, (' + Logon_NomSoci + '). ' ;
+								if ( req.session.wcdt_tipussoci == "Administrator" ) {
+									szMsg_Logon_OK += "Tens poders de'administrador. " ; // mind this text is user in CLIENT.JS to determine if user is Admin or not.
+								} ;
+
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
-//								szMsg_Logon_OK += '<p>Tens per disfrutar [' + docs[0].uNumReserves + '] reserves anteriors. ' ;
+
 								if ( iOcupacio > 0 ) {
 									szMsg_Logon_OK += '<p>*** Compte : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors. ' ;
 								} ;
-								szMsg_Logon_OK += szOcupacio ;
+								szMsg_Logon_OK += szOcupacio ; // mostrar reserves anteriors
 								
-								res.send( 200, szMsg_Logon_OK ) ;
+								res.status( 200 ).send( szMsg_Logon_OK ) ; // deprecated code : res.send( 200, szMsg_Logon_OK ) ;
 							} ; // error dins get ocupacio
 						} ) ; // own async function : get_ocupacio (uses mongo)
 						
 					} else {
 						console.log( '--- PWD not right.' ) ;
-						res.send( 401,'user ('+ Logon_NomSoci + ') incorrect password ('+Logon_PwdUser+').' ) ;
+						res.status( 401 ).send( 'user ('+ Logon_NomSoci + ') incorrect password ('+Logon_PwdUser+').' ) ;
 					} ; // both passwords are the same ?
 
 				} else {
 					console.log( '--- USER ('+ Logon_NomSoci +') NOT FOUND.' ) ;
-					res.send( 401,'user ('+ Logon_NomSoci + ') not found.' ) ;
+					res.status( 401 ).send( 'user ('+ Logon_NomSoci + ') not found.' ) ;
 				} ;
 			} else {
 				console.log( '--- no DOCS returned.' ) ;
-				res.status( 404 ) ; // 404 ?
-				res.send( "--- no DOCS." ) ; 
+				res.status( 404 ).send( "--- no DOCS." ) ; 
 			} ; // if Docs
 		} ; // if Error
 
@@ -794,7 +789,7 @@ app.post( '/logoff_user', function ( req, res ) {
 		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
 		if ( err ) {
 			console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
-			res.send( 500,'--- internal error at get_ocupacio logoff.' ) ;
+			res.status( 500 ).send( '--- internal error at get_ocupacio logoff.' ) ;
 		} else {
 			var iPeriode = Date.now() ;
 			console.log( 'logof.now is ('+ iPeriode +')' ) ;
@@ -802,7 +797,7 @@ app.post( '/logoff_user', function ( req, res ) {
 			iPeriode = iPeriode - req.session.wcdt_instant_inicial ;
 			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 			szMsg_Logoff_OK += szOcupacio ;								
-			res.send( 200, szMsg_Logoff_OK ) ;
+			res.status( 200 ).send( szMsg_Logoff_OK ) ;
 		} ; // error dins get ocupacio
 		
 		delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
@@ -829,6 +824,7 @@ app.get( '/dump_all_users', function ( req, res ) {
         } else {
 
 			db.collection( CollectionName, { strict:true }, function( err, collection ) { // Notice the {strict:true} option. This option will make the driver check if the collection exists and issue an error if it does not.
+			
 				if ( err ) {
 					console.log( "--- Dump all users, connection(). Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
 				} else {
@@ -847,8 +843,7 @@ app.get( '/dump_all_users', function ( req, res ) {
 	
 	    if ( err ) { 
             console.log( "--- Dump all users, find(). Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
-            res.status( 500 ) ; // internal error
-            res.send( {'error':'dump all users DDBB error.'} ) ;
+            res.status( 500 ).send( {'error':'dump all users DDBB error.'} ) ; // internal error
         } else {
             var  i = docs.length ;
             console.log( "+++ the collection (%s) for all dates has (%s) elements.", CollectionName, i ) ;
@@ -870,11 +865,11 @@ app.get( '/admin', function ( req, res ) {
 	if ( hiHaSociEnSessio( req.session ) ) {
 		console.log( "+++ (admin) hi ha soci, tipus (%s).", req.session.wcdt_tipussoci ) ;
 		szMsg_Admin_Rsp = 'Tenim soci' ;
-		res.send( 200, szMsg_Admin_Rsp ) ;
+		res.status( 200 ).send( szMsg_Admin_Rsp ) ;
 	} else {
 		console.log( "--- (admin) no hi ha soci - tinc (%s/%s).", foo, hiHaSociEnSessio( req.session ) ) ;
 		szMsg_Admin_Rsp = 'No hi ha soci' ;
-		res.send( 401, szMsg_Admin_Rsp ) ;
+		res.status( 401 ).send( szMsg_Admin_Rsp ) ;
 	} ;
 } ) ; // get '/admin'
 
@@ -893,10 +888,10 @@ app.get( '/delete_col_users', function ( req, res ) {
 	
 		if ( err ) {
 			console.log( "--- Delete col users. Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
-			res.send( 500, {'error':'delete users collection error ['+ err.message +']'} ) ;
+			res.status( 500 ).send( {'error':'delete users collection error ['+ err.message +']'} ) ;
 		} else {
 			console.log( '+++ Esborrar users taula/collection went ok.' ) ;
-			res.send( 200, "+++ delete users collection went OK." ) ; 
+			res.status( 200 ).send( "+++ delete users collection went OK." ) ; 
 		} ; // if error
 	} ) ; // drop()
 
@@ -916,6 +911,7 @@ app.get( '/list_collections', function ( req, res ) {
         } else {
 
 			db.collectionNames( function( err, collections ) {
+				
 				if ( err ) {
 					console.log( "--- List collections DDBB error - num (%s) is (%s).", err.errno, err.message ) ;
 				} else {
@@ -946,7 +942,7 @@ function Create_Users_Collection () {
 	MongoClient.connect( szMongoDB, function( err, db ) {
 
 		if ( err ) {
-			console.log( "--- create uCol.connect() (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+			console.log( "--- create uCol.connect() database URI (" + szMongoDB + ") error. Error is (%s).", err.message ) ;
 		} else {
 
 			console.log( '+++ (b) create collection (%s).', CollectionName ) ;
@@ -971,9 +967,9 @@ function Create_Users_Collection () {
 
 					MyCollection.insert( My_User_To_Add_pere, { safe:true }, function( err, result ) {
 						if ( err ) { 
-							console.log( "--- create uCol (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
+							console.log( "--- create usr1Col (" + MyCollection.name + ") error. Error is (%s).", err.message ) ;
 						} else { 
-							console.log( "+++ create uCol (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add_pere.uAlias ) ;
+							console.log( "+++ create usr1Col (" + MyCollection.name + ") OK, user (%s).", My_User_To_Add_pere.uAlias ) ;
 						} ; // else
 					} ) ; // insert
 				} ; // error create collection
@@ -984,7 +980,86 @@ function Create_Users_Collection () {
 } ; // '/create_users_col'
 
 
-// create our http server and launch it
+// (14) POST /fer_alta_usuari/nom_Alta=joan&pwd_Alta=perepocapor&tipus_Alta=Guest
+
+app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&Alta_User_Email=:NewUserEmail&Alta_User_Type=:NewUserType', function ( req, res ) {
+
+	var Alta_UserName  = req.params.NewUserName ;
+	var Alta_UserPwd   = req.params.NewUserPwd ;
+	var Alta_UserEmail = req.params.NewUserEmail ;
+	var Alta_UserType  = req.params.NewUserType ;
+
+	var Avui = (new Date).yyyymmdd() ;
+	console.log( ">>> POST una ALTA() de usuari. Data (%s). Nom (%s), pwd (%s), email(%s), type(%s).", Avui, Alta_UserName, Alta_UserPwd, Alta_UserEmail, Alta_UserType ) ;
+
+	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
+	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
+	console.log( ">>> Using USERS table/collection (" + MyUsersCollection.name + ")." ) ;
+
+	MyUsersCollection.find( { uAlias: Alta_UserName }, { limit: 20 }, function ( err, docs ) { 
+
+		if ( err ) {
+			console.log( '--- AltaUser MongoDB error. Error (%s) is (%s)', err.errno, err.message ) ;
+			res.status( 500 ).send( {'error':'mongodb error has occurred'} ) ; // internal error
+		} else { // no ERR
+
+			var  i = docs.length ;
+			console.log( "+++ AltaUser, the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Alta_UserName, i ) ;
+		
+			if ( docs ) {
+				
+				if ( i > 0 ) {
+					console.log( '--- USER ('+ Alta_UserName +') FOUND.' ) ;
+					res.status( 200 ).send( '--- user ('+ Alta_UserName + ') already exists.' ) ;
+				} else { // user does not exist so we can create it
+
+					var My_User_To_Add = 
+					{ 	
+						uAlias        : "uA", 
+						uPwd          : "uP",             // use ENV.wcdtFOO ?
+						uRole         : "Guest",
+						uNom          : "uN",
+						uEmail        : "uE",
+						uLastLogin    : "-",
+						uMisc         : "-" 
+					} ;
+
+					My_User_To_Add.uAlias = Alta_UserName ;
+					My_User_To_Add.uPwd   = Alta_UserPwd ;
+					My_User_To_Add.uEmail = Alta_UserEmail ;
+					My_User_To_Add.uRole  = Alta_UserType ;
+					
+					var szMsg_Alta = "" ;
+					MyUsersCollection.insert( My_User_To_Add, { safe:true }, function( err, result ) {
+						
+						if ( err ) { 
+							szMsg_Alta = "<p> --- create user at collection (" + MyUsersCollection.name + ") error. Error is (+ err.message +)." ;
+							console.log( "--- Create User" ) ;
+						} else { 
+							szMsg_Alta = "<p> +++ create user at collection (" + MyUsersCollection.name + ") OK, user ("+ My_User_To_Add.uAlias +")." ;
+							console.log( "+++ Create User" ) ;
+						} ; // else
+
+					res.status( 200 ).send( szMsg_Alta ) ; 
+//					res.send( 200, szMsg_Alta ) ;
+//	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; 
+//	res.write( texte ) ;
+//	res.end( ) ;
+
+					} ) ; // insert
+				} ; // if user does not exist
+
+			} else {
+				console.log( '--- no DOCS returned.' ) ;
+				res.status( 404 ).send( "--- no DOCS." ) ; 
+			} ; // if Docs
+		} ; // if Error
+	}) ; // find()
+
+} ) ; // get /fer_alta_usuari
+
+
+// *** finally, create our http server and launch it
 
 // http.createServer( app ).listen( app.get( 'port' ), function () {
 //     console.log( 'Express server '+ myVersioLong +' listening on port ' + app.get( 'port' ) ) ;
