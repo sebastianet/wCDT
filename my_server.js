@@ -111,6 +111,7 @@
 // 5.2.e - 20150325 - use config.js and dont use app.set; create users collection if no existent at server startup - pwd from ENV.wcdtFOO (not used yet)
 // 5.2.f - 20150326 - display /admin link if user "has powers"
 // 5.2.g - 20150326 - alta de usuario desde /admin
+// 5.2.h - 20150327 - trace loggod user - bluemix loses it
 //
 
 // Bluemix :
@@ -202,7 +203,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.2.g" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.h" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
@@ -490,7 +491,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
     var DiaConsultat = req.params.dia_consultat ; // if BLANK then 404 ;
 	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
    	var MyCollection = db.get( CollectionName ) ; // get the collection
-	console.log( ">>> GET veure reserves 1 dia - collection (%s) - veure fins a 20 reserves del dia (%s) ", CollectionName, DiaConsultat ) ;
+	console.log( ">>> (%s) GET veure reserves 1 dia - collection (%s) - veure fins a 20 reserves del dia (%s) ", req.session.wcdt_nomsoci, CollectionName, DiaConsultat ) ;
 	
 	MyCollection.find ( { rdata: DiaConsultat }, { limit: 20 }, function ( err, docs ) { 
 
@@ -499,7 +500,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 			res.status( 500 ).send( {'error':'mongodb error has occurred'} ) ; // internal error
 		} else {	
 			var  i = docs.length ;
-			console.log( "+++ the collection (%s) for the date (%s) has (%s) elements.", CollectionName, DiaConsultat, i ) ;
+			console.log( "+++ (%s) - the collection (%s) for the date (%s) has (%s) elements.", req.session.wcdt_nomsoci, CollectionName, DiaConsultat, i ) ;
 			res.json( docs ) ; // send JSON object
 		} ; // if Error
 

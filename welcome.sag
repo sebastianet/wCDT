@@ -253,3 +253,9 @@ client.js:552
 
 Uncaught ReferenceError: $ is not defined
 client.js:552 (anonymous function)
+.
+===
+.
+	.\public> copy c:\sebas\Rexx\cal\calmes.htm
+	modify and rename as mes_actual.htm
+.
