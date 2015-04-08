@@ -9,6 +9,18 @@
 //    1) engegar el MongoDB
 //    2) "node my_server.js" (veure "package.json")
 //    3) finalment, cal obrir el client a la URL https://localhost:/ {compte - hem de fer servir HTTPS des la versio 5.0}
+//
+// Configuracio :
+//
+//    *) s'ha de posar la IP en el lloc de "localhost" en la variable "host" 
+//
+// Emulacio Bluemix :
+//    *) configurar process.env.VCAP_SERVICES
+//        szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;  
+//        var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
+//        var port  = ( process.env.VCAP_APP_PORT || 80 ) ;
+//        var portS = ( process.env.VCAP_APP_PORT || process.env.WCDTPORT || 443 ) ;
+//
 
 // Project files and folders structure :
 //
@@ -23,11 +35,15 @@
 //    .  index.htm
 //    .  links.htm
 //    .  logon.htm
+//    .  admin.htm
 //    .  <css>
 //    .      |
 //    .     sebas.css
 //    <sslcert>
-//      
+//    .  |
+//    .  server.crt
+//    .  server.key
+//
 
 // DataBases structure (2)
 //
@@ -111,7 +127,8 @@
 // 5.2.e - 20150325 - use config.js and dont use app.set; create users collection if no existent at server startup - pwd from ENV.wcdtFOO (not used yet)
 // 5.2.f - 20150326 - display /admin link if user "has powers"
 // 5.2.g - 20150326 - alta de usuario desde /admin
-// 5.2.h - 20150327 - trace loggod user - bluemix loses it
+// 5.2.h - 20150327 - trace logged user - bluemix loses it
+// 5.2.i - 20150408 - esborrar usuari del titol when logoff()
 //
 
 // Bluemix :
@@ -203,7 +220,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.2.h" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.i" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session

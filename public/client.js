@@ -446,14 +446,12 @@ function logon_ready() {
 			url: '/logonuser/' + myLogon,
 			
 			success : function( page ) { 
+
 				$( "#content" ).html( page ) ;
 				
 				var lng = page.length ;
-				var idx = page.indexOf( "Tens poders" ) ;
+				var idx = page.indexOf( "Tens poders" ) ; // no cookie yet (PAL)
 //				console.log( '+++ logon() success, rcvd PAGE of size ('+ lng + '), index POWERS : {' + idx + '}.' ) ;
-				
-				window.session.user.nom = logonUser ;
-				document.title = "Web CDT, user (" + logonUser + ")" ;
 
 // here we have to make ADMIN LINK visible if user is an ADMIN one !
 				
@@ -462,6 +460,9 @@ function logon_ready() {
 				} else {
 					$( '#clkAdmin' ).hide() ;
 				} ;
+				
+				window.session.user.nom = logonUser ;
+				document.title = "Web CDT, user (" + logonUser + ")" ;
 				
 				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 			},
@@ -487,6 +488,7 @@ function logon_ready() {
 //			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
 			
 			delete window.session.user.nom ;
+			document.title = "Web CDT, no user" ;
 			$( '#clkAdmin' ).hide() ;
 			
 			$( "#watermark" ).html( '<p>Logged off.' ) ;
