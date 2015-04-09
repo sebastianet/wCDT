@@ -129,6 +129,7 @@
 // 5.2.g - 20150326 - alta de usuario desde /admin
 // 5.2.h - 20150327 - trace logged user - bluemix loses it
 // 5.2.i - 20150408 - esborrar usuari del titol when logoff()
+// 5.2.j - 20150409 - get HOST (ip) and PORT from Envir
 //
 
 // Bluemix :
@@ -220,7 +221,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.2.i" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.j" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
@@ -272,7 +273,7 @@
 // +++ app.configure( function () {
 
 // The IP address of the Cloud Foundry DEA (Droplet Execution Agent) that hosts this application:
-	var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
+	var host = ( process.env.VCAP_APP_HOST || process.env.WCDTHOST || 'localhost' ) ;
 
 // The port on the DEA for communication with the application:
 	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;                           // port used by HTTP
