@@ -219,7 +219,7 @@ manifest.yml - descriptor despliegue aplicacion
 .
 bluemix españa (FRM) - ej explic node & despliegue
 .
-cmd crear BBDD vacias !
+cmd crear BBDD buides !
 .
 dubtes bluemix
 
@@ -227,8 +227,6 @@ dubtes bluemix
  a) on es la consola del node.js ? per veure els errors de node.js
  b) on es la consola de la VM ? per crear usuaris de la BBDD
 .
-
-
 
 if (usertype=="admin") {  
   $(".siusuari").removeClass("amagat")

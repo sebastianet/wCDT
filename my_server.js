@@ -130,9 +130,11 @@
 // 5.2.h - 20150327 - trace logged user - bluemix loses it
 // 5.2.i - 20150408 - esborrar usuari del titol when logoff()
 // 5.2.j - 20150409 - get HOST (ip) and PORT from Envir
+// 5.2.k - 20150409 - link to our APP in BlueMix at LINKS
 //
 
 // Bluemix :
+// (1) url = https://console.eu-gb.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ;
 // (1) cf api https://api.eu-gb.bluemix.net
 // (2) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
 // (3) cf logs bCDT
@@ -149,19 +151,13 @@
 //  Client own variables :
 //    window.session.user.nom
 
-// Local modules :
-//   express
-//   express-session
-//   mongodb
-//   monk
-
 // Package install :
 //   npm install body-parser      -g --save  + npm link body-parser
 //   npm install cookie-parser    -g --save  + npm link cookie-parser
-//   npm install express             --save
-//   npm install express-session     --save
-//   npm install mongodb             --save
-//   npm install monk                --save
+//   npm install express          -g --save  + npm link
+//   npm install express-session  -g --save  + npm link
+//   npm install mongodb          -g --save  + npm link
+//   npm install monk             -g --save  + npm link
 //   npm install morgan           -g --save  + npm link morgan
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
@@ -184,7 +180,6 @@
 //  *) HOURS must always be 2-digit - ok des consulta, pero reserva pot entrar "9" en lloc de "09".
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
-//  *) he de comprovar en un LOGON() que el senyor no estigui ja logonejat en un altre lloc ?
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
 //  *) HTTPS + "mixed content" - local jQuery.js and others
 //  *) XMLHttpRequest cannot load https://bcdt.eu-gb.mybluemix.net/logonuser/nom_Logon=pere&pwd_Logon=pere2015. 
@@ -193,6 +188,10 @@
 
 
 // Pending :
+// (*) ESP - puc fer una reserva per 20154010 o 32 de Juny
+// (*) ESP - a les 11h puc fer una reserva per les 09h
+// (*) limitar el nombre de reserves pendents
+// (*) en fer logon, comprovar que el usuari no estigui ja logonejat de un altre lloc
 // (*) access the application from a mobile client
 // (*) estat del usuari = "iniciat-se" si li hem enviat el email pero no ha clikat al link d'activacio
 // (*) transaction log = empty database + re-evaluate(transaction log) => actual database
@@ -209,6 +208,7 @@
 // (*) package.json : com sap com engegar : "start": "node my_server.js" - de quan hem fet "npm init" i hem contestat preguntes
 // (*) enviar texte del server amb en nom del usuari
 // (*) tenir la PWD al mongo "hashed"
+// (*) canvi de proporcions en canviar de pantalla (W500 surt malament)
 
 
 // Dubtes :
