@@ -132,6 +132,7 @@
 // 5.2.j - 20150409 - get HOST (ip) and PORT from Envir - "localhost" does now receive remote requests
 // 5.2.k - 20150409 - link to our APP in BlueMix at LINKS
 // 5.2.l - 20150416 - admin user can delete old reservas
+// 5.3.a - 20150416 - can delete reserva if not the owner (except administrators)
 //
 
 // Bluemix :
@@ -225,7 +226,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.2.l" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.3.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
@@ -647,7 +648,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 // Podem esborrar una reserva si :
 //    *) som el seu propietari (o som el Administrador)
-//    *) la data es "futura", es a dir, que no s'ha jugat
+//    *) la data es "futura", es a dir, que no s'ha jugat (o som el Administrador)
 
 
 
@@ -663,7 +664,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 		if ( ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) && ( Usuari_es_Administrador( req.session ) == false ) ) { // funciones.Usuari_Administrador() == false 
 			
-			szResultat = "La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
+			szResultat = "--- La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
 			res.status( 200 ).send( szResultat ) ; // OK
 
 		} else {
@@ -698,18 +699,27 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 				
 						var ObjectIdPerEsborrar = docs[0]._id ;
 						var UsuariPerEsborrar   = docs[0].rnom ;
-						console.log( 'Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
-						MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
-							if ( err ) {
-								console.log( '--- Could not remove reservation from MongoDB. Error (%s) is (%s).', err.errno, err.message ) ;
-								res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
-							} else {
-								console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
-								szResultat = "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ;
-								res.status( 200 ).send( szResultat ) ; // else, indicate OK.
-							} ; // if Error
 
-						} ) ; // remove
+						if ( ( Esborra_Reserva_NomSoci != UsuariPerEsborrar ) && ( Usuari_es_Administrador( req.session ) == false ) ) {
+							szResultat = "--- Tu {" + Esborra_Reserva_NomSoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
+							res.status( 200 ).send( szResultat ) ; // OK
+						} else {
+
+							console.log( '>>> Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
+							MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
+								if ( err ) {
+									console.log( '--- Could not remove reservation from MongoDB. Error (%s) is (%s).', err.errno, err.message ) ;
+									res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
+								} else {
+									console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
+									szResultat = "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ;
+									res.status( 200 ).send( szResultat ) ; // else, indicate OK.
+								} ; // if Error
+
+							} ) ; // remove
+
+						} ; // owner of the cell
+						
 					} ;  // if did exist
 				} ; // if error
 
