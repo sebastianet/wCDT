@@ -131,7 +131,7 @@ function index_ready() {              // DOM ready for index.htm
 			}) ; // get (reserva)
 			
 		} else {
-			$( "#content" ).html( "--- do Logon() before reserving." ) ;
+			$( "#content" ).html( "--- do Logon() before creating reserva - no window.session.user.nom" ) ;
 		} ; //
 	}) ; // fer reserva
 
@@ -155,7 +155,7 @@ function index_ready() {              // DOM ready for index.htm
 			}) ; // get(esborrar)
 			
 		} else {
-			$( "#content" ).html( "--- do Logon() before deleting a reserva." ) ;
+			$( "#content" ).html( "--- do Logon() before deleting reserva - no window.session.user.nom" ) ;
 		} ;
 	}) ; // esborrar reserva
 

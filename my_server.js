@@ -1,14 +1,14 @@
 
 //
 // Pere & Sebas, 2014 i 2015
-// Projecte "WCDT" - servidor web per reservar les pistes del CDT
+// Projecte "WCDT" - servidor web per reservar pistes al CDT
 //
 // Repositori : github : https://github.com/sebastianet/wCDT
 //
 // Sequencia d'engegada :
 //    1) engegar el MongoDB
 //    2) "node my_server.js" (veure "package.json")
-//    3) finalment, cal obrir el client a la URL https://localhost:/ {compte - hem de fer servir HTTPS des la versio 5.0}
+//    3) finalment, cal obrir el client a la URL https://ip/ {compte - hem de fer servir HTTPS des la versio 5.0}
 //
 // Configuracio :
 //
@@ -17,7 +17,7 @@
 // Emulacio Bluemix :
 //    *) configurar process.env.VCAP_SERVICES
 //        szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;  
-//        var host = ( process.env.VCAP_APP_HOST || 'localhost' ) ;
+//        var host = ( process.env.VCAP_APP_HOST || process.env.WCDTHOST || 'localhost' ) ;
 //        var port  = ( process.env.VCAP_APP_PORT || 80 ) ;
 //        var portS = ( process.env.VCAP_APP_PORT || process.env.WCDTPORT || 443 ) ;
 //
@@ -379,9 +379,9 @@ function Fecha_En_El_Passat( Param_Dia ) {
 //	return true ;
 } ; // Fecha_En_El_Passat()
 
-function Usuari_es_Administrador() {
+function Usuari_es_Administrador( ParamSessio ) {
 	var bEsAdmin = false ;
-	if ( req.session.wcdt_tipussoci == "Administrator" ) {
+	if ( ParamSessio.wcdt_tipussoci == "Administrator" ) {
 		bEsAdmin = true ;
 	} ;
 	return bEsAdmin ;
@@ -661,7 +661,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	if ( hiHaSociEnSessio( req.session ) )
 	{
 
-		if ( ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) && ( Usuari_es_Administrador() == false ) ) { // funciones.Usuari_Administrador() == false 
+		if ( ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) && ( Usuari_es_Administrador( req.session ) == false ) ) { // funciones.Usuari_Administrador() == false 
 			
 			szResultat = "La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
 			res.status( 200 ).send( szResultat ) ; // OK
