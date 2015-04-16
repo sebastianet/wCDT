@@ -187,7 +187,7 @@ function index_ready() {              // DOM ready for index.htm
 			
 			},
 			statusCode: {
-				401: function() { $( "#content" ).html( '<p>Admin() not authorized</p>' ) },
+				401: function() { $( "#content" ).html( '<p>rc 401 - Admin() not authorized</p>' ) },
 			} 
 		} ) ; // get(admin)
 		

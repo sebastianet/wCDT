@@ -129,17 +129,21 @@
 // 5.2.g - 20150326 - alta de usuario desde /admin
 // 5.2.h - 20150327 - trace logged user - bluemix loses it
 // 5.2.i - 20150408 - esborrar usuari del titol when logoff()
-// 5.2.j - 20150409 - get HOST (ip) and PORT from Envir
+// 5.2.j - 20150409 - get HOST (ip) and PORT from Envir - "localhost" does now receive remote requests
 // 5.2.k - 20150409 - link to our APP in BlueMix at LINKS
+// 5.2.l - 20150416 - admin user can delete old reservas
 //
 
 // Bluemix :
-// (1) url = https://console.eu-gb.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ;
-// (1) cf api https://api.eu-gb.bluemix.net
-// (2) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
-// (3) cf logs bCDT
-// (4) cf push bCDT
-// (5) http://bcdt.eu-gb.mybluemix.net/
+// (1) url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.
+// (2) cf api https://api.ng.bluemix.net ( US South cloud )
+// (3) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
+// (4) cf logs usCDT
+// (5) cf push usCDT
+// (6) https://uscdt.mybluemix.net/
+// (7) cf logout
+//
+// mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 //
 
 // Server own variables :
@@ -221,7 +225,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.2.j" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.2.l" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
@@ -241,7 +245,7 @@
 
 	var app = express() ;                           // instantiate Express and assign our app variable to it
 	var config = require ( './config.js' ) ;        // read configuration file
-
+	
 	var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
@@ -348,6 +352,7 @@ var forcehttps = function () {
 
 
 // Let write some subroutines
+//	var funciones = require('./misfunciones.js');
 
 // nova funció yyyyymmdd de Date() - at server
 Date.prototype.yyyymmdd = function ( ) {                            
@@ -372,7 +377,15 @@ function Fecha_En_El_Passat( Param_Dia ) {
 	console.log( ">>> Mirem (%s) si el dia demanat {%s} es en el futur respecte de avui {%s}.", ComEs, Param_Dia, Avui ) ;
 	return ( ComEs ) ;
 //	return true ;
-} ; // Fecha_En_El_Passat
+} ; // Fecha_En_El_Passat()
+
+function Usuari_es_Administrador() {
+	var bEsAdmin = false ;
+	if ( req.session.wcdt_tipussoci == "Administrator" ) {
+		bEsAdmin = true ;
+	} ;
+	return bEsAdmin ;
+} ; // Usuari_es_Administrador()
 
 
 // Mira quantes reserves te un soci, de avui en endevant i en retorna un texte i un integer
@@ -636,6 +649,8 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 //    *) som el seu propietari (o som el Administrador)
 //    *) la data es "futura", es a dir, que no s'ha jugat
 
+
+
 app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function ( req, res ) {
 	
 	var Esborra_Reserva_NomSoci = req.params.res_nom_soci ;
@@ -646,7 +661,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	if ( hiHaSociEnSessio( req.session ) )
 	{
 
-		if ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) {
+		if ( ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) && ( Usuari_es_Administrador() == false ) ) { // funciones.Usuari_Administrador() == false 
 			
 			szResultat = "La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
 			res.status( 200 ).send( szResultat ) ; // OK

@@ -257,3 +257,13 @@ client.js:552 (anonymous function)
 	.\public> copy c:\sebas\Rexx\cal\calmes.htm
 	modify and rename as mes_actual.htm
 .
+=== 
+
+// Bluemix :
+// (1) url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.
+// (2) cf api https://api.ng.bluemix.net ( US South cloud )
+// (3) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
+// (4) cf logs usCDT
+// (5) cf push usCDT
+// (6) https://uscdt.mybluemix.net/
+// (7) cf logout
