@@ -133,6 +133,8 @@
 // 5.2.k - 20150409 - link to our APP in BlueMix at LINKS
 // 5.2.l - 20150416 - admin user can delete old reservas
 // 5.3.a - 20150416 - can delete reserva if not the owner (except administrators)
+// 5.4.a - 20150417 - trace all cookies
+// 5.4.b - 20150417 - send signed and secured cookie
 //
 
 // Bluemix :
@@ -141,8 +143,9 @@
 // (3) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
 // (4) cf logs usCDT
 // (5) cf push usCDT
-// (6) https://uscdt.mybluemix.net/
-// (7) cf logout
+// (6) BlueMix console : https://console.ng.bluemix.net/home
+// (7) APP : https://uscdt.mybluemix.net/
+// (8) cf logout
 //
 // mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 //
@@ -226,12 +229,12 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.3.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.4.b" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
-	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session
+	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
 	var cookieParser = require( 'cookie-parser' ) ;      // data cookies
- 	var bodyParser   = require( 'body-parser' ) ;     // parser
+ 	var bodyParser   = require( 'body-parser' ) ;        // parser
 
 	var http         = require( 'http' ) ;
 	var https        = require( 'https' ) ;
@@ -295,13 +298,26 @@
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
 
-	app.use( logger( "dev" ) ) ;                  // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
+	app.use( logger( "dev" ) ) ;                     // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
 
-	app.use( cookieParser('secretSebas') ) ;                                                 // pwd to encrypt all cookies 
-	app.use( session( { secret:'secretsebas', resave:false, saveUninitialized:false } ) ) ;  // encrypt session contents, allow "req.session.*" header
+	app.use( cookieParser( 'secretSebas' ) ) ;       // pwd to encrypt all cookies 
+	
+	var iCnt = 0 ;
+	app.use( function( req, res, next ) { // own middleware, catching all messages
 
-// parse application/json and application/x-www-form-urlencoded
-   app.use( bodyParser.json() ) ;
+		res.cookie( 'kuk-H0',        ++iCnt, { httpOnly: false } ) ;                // https://github.com/expressjs/session
+		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                 // chrome : HTTP "check"
+		res.cookie( 'kuk-SIG1',      ++iCnt, { signed: true } ) ;                   // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
+		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;  // 
+		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;     // chrome : SECURE "check"
+
+		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
+// My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
+		next() ;
+	}) ; // trace own cookie
+
+	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
+	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
 
 // serve static files and css
 //   app.get( '/*', express.static( __dirname + '/public' ) ) ; // serve whatever is in the "public" folder at the URL "/:filename"
