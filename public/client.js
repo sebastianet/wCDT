@@ -671,7 +671,7 @@ function admin_ready() {
 			lng = dades.length ;
 			console.log( ">>> Alta User - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
 			
-			$('#content').html( dades );  // or "text"
+			$( '#content' ).html( dades );  // or "text"
 
 		}); // get(/alta) 
 					
@@ -681,18 +681,18 @@ function admin_ready() {
 
 
 	$( "#myFormReqBaixaUser" ).submit( function( event ) {
-	// will produce a msg as "GET /fer_una_baixa_usuari/BaixaUserNom=joan"
+	// will produce a msg as "GET /fer_baixa_usuari/BaixaUserNom=joan"
 
 		console.log( '[+] boto BAIXA USER polsat - esborrar usuari.' ) ;
 		
 		var myDades = $( this ).serialize() ;  // save user entry
 		
-		$.post( "/fer_una_baixa_usuari/" + myDades, function( dades ) {
+		$.get( "/fer_baixa_usuari/" + myDades, function( dades ) {
 			var lng = 0 ;
 			lng = dades.length ;
 			console.log( ">>> Baixa user - server response (%s) : {%s}.", lng, dades ); // show whole JSON object
 			
-			$('#content').html( dades );  // or "text"
+			$( '#content' ).html( dades );  // or "text"
 
 		}); // get(/baixa) 
 					

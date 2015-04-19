@@ -135,6 +135,7 @@
 // 5.3.a - 20150416 - can delete reserva if not the owner (except administrators)
 // 5.4.a - 20150417 - trace all cookies
 // 5.4.b - 20150417 - send signed and secured cookie
+// 5.5.a - 20150419 - esborrar usuari de la bbdd
 //
 
 // Bluemix :
@@ -229,7 +230,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.4.b" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.5.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -640,6 +641,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 							QuiEs = docs[0].rnom ;
 						} ;
 						szResultat = "--- Error Reserva - ("+i+") slot Pista("+ Reserva_Pista +") Dia("+ Reserva_Dia +") Hora("+ Reserva_Hora +") ocupat per en (" + QuiEs + ")." ;
+						console.log( szResultat ) ;
 						res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
 				
 					} ;  // if did exist
@@ -648,12 +650,14 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 		} else {  // error en algun parametre
 			szResultat = "--- Parametre incorrecte : (" + szErrorString + ")." ;
+			console.log( szResultat ) ;
 			res.status( 200 ).send( szResultat ) ; // else, indicate no OK.
 		} ; // iTotOK
 		
 	} else {
-		console.log( "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
-		res.status( 200 ).send( "--- Error Reserva - cant do reserva if not logged." ) ; // 404 does not display attached text
+		szResultat = "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in." ;
+		console.log( szResultat ) ;
+		res.status( 200 ).send( szResultat ) ; // 404 does not display attached text
 	} ; // not logged in - cant do new reserva
 
 } ) ; // get '/fer_una_reserva/<parametres>'
@@ -674,6 +678,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 	var Esborra_Reserva_Pista   = req.params.res_pista ;
 	var Esborra_Reserva_Dia     = req.params.res_dia ;
 	var Esborra_Reserva_Hora    = req.params.res_hora ;
+	var szResultat = "" ;
 	
 	if ( hiHaSociEnSessio( req.session ) )
 	{
@@ -681,6 +686,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		if ( ( Fecha_En_El_Passat( Esborra_Reserva_Dia ) ) && ( Usuari_es_Administrador( req.session ) == false ) ) { // funciones.Usuari_Administrador() == false 
 			
 			szResultat = "--- La data requerida {" + Esborra_Reserva_Dia + "} es en el passat. No es poden esborrar reserves del passat." ;
+			console.log( szResultat ) ;
 			res.status( 200 ).send( szResultat ) ; // OK
 
 		} else {
@@ -699,8 +705,9 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 			MyCollection.find ( { rdata: Esborra_Reserva_Dia, rhora: Esborra_Reserva_Hora, rpista: Esborra_Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
 
 				if ( err ) { 
-					console.log( "--- Esborrar Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-					res.status( 500 ).send( {'error': 'fer reserva DDBB error.'} ) ; // internal error
+					szResultat = "--- Esborrar Reserva. Error ("+err.errno+") accessing COLLECTION ("+CollectionName+"). Error is ("+err.message+")." ;
+					console.log( szResultat ) ;
+					res.status( 500 ).send( { 'error': szResultat } ) ; // internal error
 				} else {
 			
 					var  i = docs.length ;
@@ -709,6 +716,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 					if ( i < 1 ) { // si no esta ocupat, es un error
 				
 							szResultat = '--- Error esborrant reserva - ('+ i +') slot lliure o no es teu. Nom ('+ Esborra_Reserva_NomSoci +'), pista ('+ Esborra_Reserva_Pista +'), dia ('+ Esborra_Reserva_Dia +'), hora ('+ Esborra_Reserva_Hora +').' ;
+							console.log( szResultat ) ;
 							res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
 
 					} else { // else, the slot is not free so we can remove it
@@ -718,17 +726,19 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 						if ( ( Esborra_Reserva_NomSoci != UsuariPerEsborrar ) && ( Usuari_es_Administrador( req.session ) == false ) ) {
 							szResultat = "--- Tu {" + Esborra_Reserva_NomSoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
+							console.log( szResultat ) ;
 							res.status( 200 ).send( szResultat ) ; // OK
 						} else {
 
 							console.log( '>>> Esborrem la reserva de ID [' + ObjectIdPerEsborrar + '].' ) ;
 							MyCollection.remove ( {"_id": ObjectIdPerEsborrar }, { safe:true }, function ( err, result ) {
 								if ( err ) {
-									console.log( '--- Could not remove reservation from MongoDB. Error (%s) is (%s).', err.errno, err.message ) ;
-									res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
+									szResultat =  '--- Could not remove reservation from MongoDB. Error ('+err.errno+') is ('+err.message+').' ;
+									console.log( szResultat ) ;
+									res.status( 500 ).send( { 'error': szResultat } ) ; // internal error
 								} else {
-									console.log( '+++ Esborrar Reserva Success: remove went ok.' ) ;
 									szResultat = "+++ esborrar reserva OK. User("+ UsuariPerEsborrar +"), pista("+ Esborra_Reserva_Pista +"), dia("+ Esborra_Reserva_Dia +"), hora("+ Esborra_Reserva_Hora +")." ;
+									console.log( szResultat ) ;
 									res.status( 200 ).send( szResultat ) ; // else, indicate OK.
 								} ; // if Error
 
@@ -737,7 +747,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 						} ; // owner of the cell
 						
 					} ;  // if did exist
-				} ; // if error
+				} ; // if error in find()
 
 			}) ; // find()
 		
@@ -1048,9 +1058,10 @@ app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&
 	var Alta_UserPwd   = req.params.NewUserPwd ;
 	var Alta_UserEmail = req.params.NewUserEmail ;
 	var Alta_UserType  = req.params.NewUserType ;
-
+	
+	var szResultat = "" ;
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST una ALTA() de usuari. Data (%s). Nom (%s), pwd (%s), email(%s), type(%s).", Avui, Alta_UserName, Alta_UserPwd, Alta_UserEmail, Alta_UserType ) ;
+	console.log( ">>> GET una ALTA() de usuari. Data (%s). Nom (%s), pwd (%s), email(%s), type(%s).", Avui, Alta_UserName, Alta_UserPwd, Alta_UserEmail, Alta_UserType ) ;
 
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
@@ -1059,8 +1070,9 @@ app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&
 	MyUsersCollection.find( { uAlias: Alta_UserName }, { limit: 20 }, function ( err, docs ) { 
 
 		if ( err ) {
-			console.log( '--- AltaUser MongoDB error. Error (%s) is (%s)', err.errno, err.message ) ;
-			res.status( 500 ).send( {'error':'mongodb error has occurred'} ) ; // internal error
+			szResultat = '--- AltaUser MongoDB error. Error ('+err.errno+') is ('+err.message+')' ;
+			console.log( szResultat ) ;
+			res.status( 500 ).send( { 'error': szResultat } ) ; // internal error
 		} else { // no ERR
 
 			var  i = docs.length ;
@@ -1069,8 +1081,9 @@ app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&
 			if ( docs ) {
 				
 				if ( i > 0 ) {
-					console.log( '--- USER ('+ Alta_UserName +') FOUND.' ) ;
-					res.status( 200 ).send( '--- user ('+ Alta_UserName + ') already exists.' ) ;
+					szResultat = '--- user ('+ Alta_UserName + ') already exists.' ;
+					console.log( szResultat ) ;
+					res.status( 200 ).send( szResultat ) ;
 				} else { // user does not exist so we can create it
 
 					var My_User_To_Add = 
@@ -1110,13 +1123,91 @@ app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&
 				} ; // if user does not exist
 
 			} else {
-				console.log( '--- no DOCS returned.' ) ;
-				res.status( 404 ).send( "--- no DOCS." ) ; 
+				szResultat = '--- Alta user error - no DOCS returned.' ;
+				console.log( szResultat ) ;
+				res.status( 404 ).send( szResultat ) ; 
 			} ; // if Docs
 		} ; // if Error
 	}) ; // find()
 
 } ) ; // get /fer_alta_usuari
+
+
+// (15) GET /fer_baixa_usuari/nom_Baixa=anton
+app.get( '/fer_baixa_usuari/nom_Baixa=:OldUserName', function ( req, res ) {
+
+	var Baixa_UserName  = req.params.OldUserName ;
+	var Avui = (new Date).yyyymmdd() ;
+	console.log( ">>> GET una BAIXA() de usuari. Data (%s). Nom (%s).", Avui, Baixa_UserName ) ;
+	var szResultat = "" ;
+	
+	if ( hiHaSociEnSessio( req.session ) )
+	{
+		if ( Usuari_es_Administrador( req.session ) == true ) { 
+		
+			var CollectionName = app.get( 'userscolname' ) ;     // get collection name
+			var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
+			console.log( ">>> Using USERS table/collection (" + MyUsersCollection.name + ")." ) ;
+			
+			MyUsersCollection.find( { uAlias: Baixa_UserName }, { limit: 20 }, function ( err, docs ) { 
+				if ( err ) { 
+					szResultat = "--- Esborrar baixa usuari. Error ("+err.errno+") accessing COLLECTION ("+CollectionName+"). Error is ("+err.message+")." ;
+					console.log( szResultat ) ;
+					res.status( 500 ).send( { 'error': szResultat } ) ; // internal error
+				} else {
+					
+					var  i = docs.length ;
+					console.log( "+++ BaixaUser, the collection (%s) for the user (%s) has (%s) elements.", CollectionName, Baixa_UserName, i ) ;
+					if ( docs ) {
+						
+						if ( i > 0 ) {
+
+							var ObjectIdPerEsborrarUsuari = docs[0]._id ;
+							console.log( '>>> Esborrem el usuari de ID [' + ObjectIdPerEsborrarUsuari + '].' ) ;
+
+							MyUsersCollection.remove ( {"_id": ObjectIdPerEsborrarUsuari }, { safe:true }, function ( err, result ) {
+
+								if ( err ) {
+									szResultat =  '--- Could not remove user from MongoDB. Error ('+err.errno+') is ('+err.message+').' ;
+									console.log( szResultat ) ;
+									res.status( 500 ).send( { 'error': szResultat } ) ; // internal error
+								} else {
+									szResultat = "+++ esborrar usuari OK. User("+ Baixa_UserName +")." ;
+									console.log( szResultat ) ;
+									res.status( 200 ).send( szResultat ) ; // else, indicate OK.
+								} ; // if Error
+
+							} ) ; // remove
+
+						} else { // user does not exist 
+							szResultat = '--- Error esborrant usuari - ('+ i +') slot not found. Nom ('+ Baixa_UserName +').' ;
+							console.log( szResultat ) ;
+							res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
+						} ; // if user does not exist
+
+					} else {
+						szResultat = '--- Error baixa usuari - no DOCS returned.' ;
+						console.log( szResultat ) ;
+						res.status( 404 ).send( szResultat ) ; 
+					} ; // if Docs
+				} ; // if error in find()
+			} ) ; // find()
+		
+		} else {
+
+			szResultat = "--- Usuari {" + req.session.wcdt_nomsoci + "} no es administrador. No pots esborrar usuaris." ;
+			console.log( szResultat ) ;
+			res.status( 200 ).send( szResultat ) ; // OK
+		
+		} ; // user is not an administrator
+		
+	} else { // no hauria de passar mai ...
+		szResultat = "--- CANT delete User - soci ["+ req.session.wcdt_nomsoci +"] not logged in." ;
+		console.log( szResultat ) ;
+		res.status( 200 ).send( szResultat ) ; 
+	} ; // not logged in - cant delete old reserva
+
+} ) ; // get /fer_baixa_usuari
 
 
 // *** finally, create our http server and launch it
