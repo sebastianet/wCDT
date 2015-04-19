@@ -61,6 +61,10 @@ b) per dies
 > git remote remove origin
 > git remote add    origin    https://sebastianet:Sag.2014@github.com/sebastianet/wCDT.git
 .
+c:\Sebas\JavaScript\wCDT>git push
+Username for 'https://github.com': SebastiaNet
+Password for 'https://SebastiaNet@github.com': *** Sag.2014 ***
+
  ===================================================================================================================
 .
  per veure el contingut de les 2 BBDD, fer :   	mongo < wCDT_veure_BBDDs.mongo
