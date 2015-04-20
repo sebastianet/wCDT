@@ -136,6 +136,7 @@
 // 5.4.a - 20150417 - trace all cookies
 // 5.4.b - 20150417 - send signed and secured cookie
 // 5.5.a - 20150419 - esborrar usuari de la bbdd
+// 5.6.a - 20150420 - move middleware code to file "mimdwr.js"
 //
 
 // Bluemix :
@@ -163,10 +164,10 @@
 // Package install :
 //   npm install body-parser      -g --save  + npm link body-parser
 //   npm install cookie-parser    -g --save  + npm link cookie-parser
-//   npm install express          -g --save  + npm link
-//   npm install express-session  -g --save  + npm link
-//   npm install mongodb          -g --save  + npm link
-//   npm install monk             -g --save  + npm link
+//   npm install express          -g --save  + npm link express
+//   npm install express-session  -g --save  + npm link express-session
+//   npm install mongodb          -g --save  + npm link mongodb
+//   npm install monk             -g --save  + npm link monk
 //   npm install morgan           -g --save  + npm link morgan
 
 // Want to be a SPA = http://en.wikipedia.org/wiki/Single-page_application, http://singlepageappbook.com/
@@ -182,7 +183,12 @@
 //     (links.htm)
 //
 // All of them have a "DOM ready" event coded in a common "client.js" file, loaded in index.htm so the code is available to debugger.
-//     
+
+// To debug "server" code, we use node-inspector :
+//   (1) start "dbg" node-inspector             = engegar debugger 
+//   (2) start "app" node --debug my_server.js  = start application
+//   (3) http://127.0.0.1:8080/debug?port=5858  = open debug browser 
+//   (4) https://9.137.165.71/index.htm         = open application browser 
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
@@ -195,14 +201,13 @@
 //         No 'Access-Control-Allow-Origin' header is present on the requested resource. 
 //         Origin 'http://bcdt.eu-gb.mybluemix.net' is therefore not allowed access. The response had HTTP status code 401.
 
-
 // Pending :
 // (*) ESP - puc fer una reserva per 20154010 o 32 de Juny
 // (*) ESP - a les 11h puc fer una reserva per les 09h
 // (*) limitar el nombre de reserves pendents
 // (*) en fer logon, comprovar que el usuari no estigui ja logonejat de un altre lloc
 // (*) access the application from a mobile client
-// (*) estat del usuari = "iniciat-se" si li hem enviat el email pero no ha clikat al link d'activacio
+// (*) estat del usuari = "iniciant-se" si li hem enviat el email pero no ha clikat al link d'activacio
 // (*) transaction log = empty database + re-evaluate(transaction log) => actual database
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
@@ -212,12 +217,10 @@
 // (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
-// (*) RoboMongo - no ensenya les dades
-// (*) node-inspector session
 // (*) package.json : com sap com engegar : "start": "node my_server.js" - de quan hem fet "npm init" i hem contestat preguntes
 // (*) enviar texte del server amb en nom del usuari
 // (*) tenir la PWD al mongo "hashed"
-// (*) canvi de proporcions en canviar de pantalla (W500 surt malament)
+// (*) canvi de proporcions en canviar de pantalla (al W500 surt malament)
 
 
 // Dubtes :
@@ -230,7 +233,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.5.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -251,7 +254,7 @@
 	var app = express() ;                           // instantiate Express and assign our app variable to it
 	var config = require ( './config.js' ) ;        // read configuration file
 	
-	var szDB = 'localhost:27017/cdt' ;              // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+	var uszDB = 'localhost:27017/cdt' ;             // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
@@ -261,7 +264,7 @@
 		catch ( err ) {
 		} ;
 	} else { // (bmx-1)
-		szDB = 'mongodb://' + szDB ; // bluemix credentials already have the prefix
+		szDB = 'mongodb://' + uszDB ; // bluemix credentials already have the "mongodb://" prefix
 	} ;
 
 
@@ -278,6 +281,12 @@
 	var szMongoDB = szDB ;                          // used at connect() - compte a Bluemix !
 	var MongoClient = require( 'mongodb' ).MongoClient, format = require( 'util' ).format ;
 
+// Connect to the db
+	MongoClient.connect( szMongoDB, function( err, db ) {
+		if( ! err ) {
+			console.log( "+++ We are connected to mongo." ) ;
+		} ;
+	} ) ; // connect to the db
 
 // +++ app.configure( function () {
 
@@ -294,7 +303,7 @@
 	app.set( 'rcolname', config.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
 	app.set( 'userscolname', config.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
 
-	Create_Users_Collection () ;                     // create users collection if not existent
+	Create_Users_Collection () ;                     // create users collection/table if not existent, so we can always logon
 
 
 // https://github.com/senchalabs/connect#middleware : list of officially supported middleware
@@ -448,27 +457,9 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 // Lets set some routes for express() :
 // =====================================
 
+	var miMDW = require( './mimdwr.js' ) ;
 
-// (1) if customers asks for a "ping", we send actual date and a link back to main page :
-
-app.get( '/ping', function ( req, res ) {
-
-	var currentdate = new Date();
-	var datetime = "Last Sync: " + currentdate.getDate() + "/"
-				+ (currentdate.getMonth()+1)  + "/"
-				+ currentdate.getFullYear() + " @ "
-				+ currentdate.getHours() + ":"
-				+ currentdate.getMinutes() + ":"
-				+ currentdate.getSeconds() ;
-
-	var texte = "Hello from Koltrane, " + myVersioLong ;
-	texte += "<p>(" + datetime + ")<p><hr>" ;
-
-	res.writeHead( 200, { 'Content-Type': 'text/html' } ) ; // write HTTP headers 
-	res.write( texte ) ;
-	res.end( ) ;
-
-} ) ; // get '/ping'
+miMDW.handlePing( app ) ;  // app.get( '/ping', function ( req, res ) {
 
  
 // (2) populate col (called from HELP page)
@@ -482,10 +473,10 @@ app.get( '/populate', function ( req, res ) {
 //    MyCollection.drop( function(e) {              // drop old database and wait completion
 
 		var My_Initial_Reserves = [ // see wines.js
-			{ rdata: "2014/11/09", rhora: "09", rpista: "3", rnom: "sebas" },
-			{ rdata: "2014/11/10", rhora: "11", rpista: "4", rnom: "pere" },
-			{ rdata: "2014/11/10", rhora: "13", rpista: "4", rnom: "enric" },
-			{ rdata: "2014/11/10", rhora: "13", rpista: "5", rnom: "anton" }
+			{ rdata: "2015/05/09", rhora: "09", rpista: "3", rnom: "sebas" },
+			{ rdata: "2015/05/10", rhora: "11", rpista: "4", rnom: "pere" },
+			{ rdata: "2015/05/10", rhora: "13", rpista: "4", rnom: "enric" },
+			{ rdata: "2015/05/10", rhora: "13", rpista: "5", rnom: "anton" }
 		] ;
 
 		var Avui = (new Date).yyyymmdd() ;
@@ -851,7 +842,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 app.post( '/logoff_user', function ( req, res ) {
 	
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGOFF(). Data (%s). Nom (%s).", Avui, req.session.wcdt_nomsoci ) ;
+	console.log( ">>> POST un LOGOFF(). Data (%s), user (%s).", Avui, req.session.wcdt_nomsoci ) ;
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
 	Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
@@ -890,8 +881,8 @@ app.get( '/dump_all_users', function ( req, res ) {
 	MongoClient.connect( szMongoDB, function( err, db ) {
 
 		if ( err ) { 
-            console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-        } else {
+			console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
+		} else {
 
 			db.collection( CollectionName, { strict:true }, function( err, collection ) { // Notice the {strict:true} option. This option will make the driver check if the collection exists and issue an error if it does not.
 			
@@ -951,16 +942,16 @@ app.get( '/delete_col_users', function ( req, res ) {
 	console.log( ">>> admin menu, delete taula usuaris." ) ;
 
 	var CollectionName = app.get( 'userscolname' ) ; // get "users" collection name
-    var MyCollection = db.get( CollectionName ) ;    // get the collection
+	var MyCollection = db.get( CollectionName ) ;    // get the collection
 	console.log( ">>> {"+ req.session.wcdt_nomsoci +"} wants to DELETE collection (" + MyCollection.name + ")." ) ;
 
-    MyCollection.drop( function( err ) {             // drop old collection and wait completion
+	MyCollection.drop( function( err ) {             // drop old collection and wait completion
 	
 		if ( err ) {
-			console.log( "--- Delete col users. Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
+			console.log( "--- Delete users table/collection. Error accessing COLLECTION (%s). Error (%s) is (%s).", CollectionName, err.errno, err.message ) ;
 			res.status( 500 ).send( {'error':'delete users collection error ['+ err.message +']'} ) ;
 		} else {
-			console.log( '+++ Esborrar users taula/collection went ok.' ) ;
+			console.log( '+++ Delete users table/collection went ok.' ) ;
 			res.status( 200 ).send( "+++ delete users collection went OK." ) ; 
 		} ; // if error
 	} ) ; // drop()
@@ -971,28 +962,41 @@ app.get( '/delete_col_users', function ( req, res ) {
 // (12) /list_collections - called from INDEX.HTM
 app.get( '/list_collections', function ( req, res ) {
 
-	console.log( '+++ llistar les taules conegudes.' ) ;
-	console.log( '+++ (a) connect DB (%s).', szMongoDB ) ; // mongodb://user:pass@host:port/dbname
+	console.log( '>>> Llistar les taules conegudes.' ) ;
+	console.log( '>>> >>> (a) connect to DB (%s).', szMongoDB ) ; // mongodb://user:pass@host:port/dbname
 	
 	MongoClient.connect( szMongoDB, function( err, db ) {
 
 		if ( err ) { 
-            console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-        } else {
+			console.log( "--- Dump all users. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
+		} else {
 
-			db.collectionNames( function( err, collections ) {
-				
+			console.log( '+++ (a) connected to (%s).', szMongoDB ) ;
+
+			var adminDB = db.admin() ;
+			var szLst = '' ;
+
+			adminDB.listDatabases( function( err, dbs ) {
+	
 				if ( err ) {
-					console.log( "--- List collections DDBB error - num (%s) is (%s).", err.errno, err.message ) ;
+					console.log( "--- List DDBB error - num (%s) meaning (%s).", err.errno, err.message ) ;
 				} else {
-					var  i = collections.length ;
-					console.log( "+++ (b) List collections. DDBB has (%s) tables/collections.", i ) ;
-					console.log( collections ) ;
-					res.json( collections ) ; // send JSON object
+					var  i = dbs.databases.length ;
+					console.log( ">>> >>> (b) List databases. Mongo has (%s) databases.", i ) ;
+					
+					var j = 0 ;
+					while ( j < i ) {
+						szLst += "<p>["+ j +"] - ddbb ["+ dbs.databases[j].name +"], size ["+ dbs.databases[j].sizeOnDisk +"]. " ;
+						j ++ ;
+					} ;
+					console.log( szLst ) ;
+					res.status( 200 ).send( szLst ) ; 
 				} ; // error
-			} ) ; // names
+				db.close() ;
+			} ) ; // listDatabases
 		
 		} ; // connect() error
+
 	} ) ; // connect
 
 } ) ; // get '/list_collections'
@@ -1006,8 +1010,8 @@ function Create_Users_Collection () {
 	var CollectionName = app.get( 'userscolname' ) ;  // get "users" collection name	
 	var MyCollection = db.get( CollectionName ) ;     // get the collection
 
-	console.log( '+++ crear coleccio usuaris.' ) ;
-	console.log( '+++ (a) connect DB (%s).', szMongoDB ) ;
+	console.log( '+++ crear coleccio/taula de usuaris.' ) ;
+	console.log( '+++ (a) connect to DB (%s).', szMongoDB ) ;
 
 	MongoClient.connect( szMongoDB, function( err, db ) {
 

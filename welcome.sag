@@ -271,6 +271,14 @@ Cookies
      ### My Cookies are (12) - [{"unsigned":{"sagcuki":"1","perecuki":"2"},"signed":{"connect.sid":false,"abccuki":"3","xyzcuki":"4"}}].
 
 ===
+Bluemix (sometimes)
+
+2015-04-20T15:33:48.18+0200 [RTR/1]      OUT uscdt.mybluemix.net - [20/04/2015:13:33:48 +0000] "GET /help.htm HTTP/1.1" 200 1394 "https://uscdt.mybluemix.net/" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) hrome/41.0.2272.118 Safari/537.36" 75.126.70.42:13523 x_forwarded_for:"-" vcap_request_id:b2f59903-709e-425b-47d0-eb865f76ac8c response_time:0.006173972 app_id:52d20066-3aa3-43b8-9a30-0854e1a13a70
+2015-04-20T15:33:49.73+0200 [App/0]      OUT ### My Cookies are (150) - [{"unsigned":{"kuk-H0":"141","kuk-H1":"142"},"signed":{"connect.sid":"awOFV5Tf579_Tk3u8BcyfGRhahhS8ZIY","kuk-SIG1":"143","kuk-SIG1-H1":"144","kuk-SIG1-SEC1":"145"}}].
+2015-04-20T15:33:49.73+0200 [App/0]      OUT ←[0mGET /logon.htm ←[36m304 ←[0m2.433 ms - -←[0m
+2015-04-20T15:33:49.74+0200 [RTR/0]      OUT uscdt.mybluemix.net - [20/04/2015:13:33:49 +0000] "GET /logon.htm HTTP/1.1" 304 0 "https://uscdt.mybluemix.net/" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) hrome/41.0.2272.118 Safari/537.36" 75.126.70.42:44794 x_forwarded_for:"-" vcap_request_id:205875cb-3bc4-4cd0-6b54-96fd69d348a4 response_time:0.004850810 app_id:52d20066-3aa3-43b8-9a30-0854e1a13a70
+2015-04-20T15:33:49.91+0200 [App/0]      OUT ### My Cookies are (155) - [{"unsigned":{"kuk-H0":"141","kuk-H1":"142"},"signed":{"connect.sid":"awOFV5Tf579_Tk3u8BcyfGRhahhS8ZIY","kuk-SIG1":"143","kuk-SIG1-H1":"144","kuk-SIG1-SEC1":"145"}}].
+===
 
 // Bluemix :
 // (1) url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.

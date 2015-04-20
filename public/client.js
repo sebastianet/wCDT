@@ -1,4 +1,4 @@
-﻿
+
 // nova funció yyyyymmdd de Date() - at client
 Date.prototype.yyyymmdd = function () {                            
 	var yyyy = this.getFullYear().toString();                                    
@@ -513,17 +513,9 @@ function help_ready() {
 		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
 
 		$.get( '/list_collections', function( page ) {
-			
-			var lng = page.length ;
-			console.log( '*** index - rebem del server la llista de collections. Length (%s).', lng ) ;
-			var szTxt = '<p>Collections we have right now in database :</p>' ;
-			var i = 0 ;
-			while ( i < lng ) {
-				szTxt += '('+i+') ' ;
-				szTxt += '['+ page[i].name +'] <p>' ;
-				i++ ;
-			} ;
-			$( "#content" ).html( szTxt ) ; // show calculated HTML at specific <div>
+			console.log( '*** index - rebem del server la llista de collections.' ) ;
+			var szTxt = '<p>Databases we have right now in mongo:</p>' ;
+			$( "#content" ).html( szTxt+page ) ; // show calculated HTML at specific <div>
 		} ) ; // get(list collections)
 	}) ; // list collections
 
