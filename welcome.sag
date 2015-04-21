@@ -267,6 +267,29 @@ Cookies
   firefox - botó dret, page info, security, view cookies
 ===
 
+// http://www.quirksmode.org/js/cookies.html
+function llegirCookie( name ) {
+	var nameEQ = name + "=" ;
+	var ca = document.cookie.split(';') ;
+	for( var i=0 ; i < ca.length; i++ ) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	} ; 
+	return null;
+} ; // llegirCookie()
+
+
+// server sets 'kuk-TIT'
+// HELP.HTM has <div id="listcki">
+	var x = llegirCookie( 'kuk-TIT') ;
+	if x {
+		var szOut = '>' + x + '<' ;
+		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
+	}
+
+===
+
  OUT ### My Cookies are (36) - [{"unsigned":{"sagcuki":"25","perecuki":"26"},"signed":{"abccuki":"27","xyzcuki":"28"}}].
      ### My Cookies are (12) - [{"unsigned":{"sagcuki":"1","perecuki":"2"},"signed":{"connect.sid":false,"abccuki":"3","xyzcuki":"4"}}].
 

@@ -503,61 +503,33 @@ function logon_ready() {
 } ; // logon_ready()
 
 
+
 function help_ready() {
+
 
 	console.log( '*** help DOM ready.' ) ;
 
+function llegirCookie( name ) {
+	var nameEQ = name + "=" ;
+	var ca = document.cookie.split( ';' ) ;
+		for( var i=0 ; i < ca.length; i++ ) {
+		var c = ca[i] ;
+		while ( c.charAt(0)==' ' ) c = c.substring( 1, c.length ) ;
+		if ( c.indexOf(nameEQ) == 0 ) return c.substring( nameEQ.length, c.length ) ;
+	} ; 
+	return null ;
+} ; // llegirCookie()
 
-	$( "#clkListCollections" ).click( function() {
-		
-		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
 
-		$.get( '/list_collections', function( page ) {
-			console.log( '*** index - rebem del server la llista de collections.' ) ;
-			var szTxt = '<p>Databases we have right now in mongo:</p>' ;
-			$( "#content" ).html( szTxt+page ) ; // show calculated HTML at specific <div>
-		} ) ; // get(list collections)
-	}) ; // list collections
+// server sets 'kuk-TIT'
+// HELP.HTM has <div id="listcki">
+	var x = llegirCookie( 'kuk-TIT') ;
+	if ( x ) {
+		var szOut = '# server set cookie >' + x + '<' ;
+		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
+	}
 
 	
-    $( "#clkConsultaAllReserves" ).click( function () {
-
-		$.get( '/dump_all_reserves', function ( page ) {
-			
-            console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}.", page ) ;
-            var lng = 0 ;
-            lng = page.length ;
-            console.log( '+++ Llargada (%s).', lng ) ;
-			
-            var texte = '<p class="pkon">';
-            if ( lng > 0 ) {
-                texte += "Dump all data in <i>reserves</i> DDBB. Hi ha (" + lng + ") reserves. <br>";
-                var i = 0;
-                while ( i < lng ) {
-                    texte += "("+i+") " ;
-					texte += "en (" + page[i].rnom + ") " ;
-					texte += "te reservada la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores" ;
-//					texte += " - ID [" + page[i]._id + "]" ;
-					texte += " <br>" ;
-                    i++ ;
-                } // while
-            } else {  // lng = 0
-				texte += "Dump all data in <i>reserves</i> DDBB. No hi ha reserves. <br>";
-			} ;
-			texte += "</p>"
-            $('#content').html(texte);  // or "text"
-        }); // get(dump all reserves)
-    }); // consulta all reserves
-
-
-	$( "#clkPopulate" ).click( function() {
-		$.get( '/populate', function( page ) {
-			console.log( '**** HELP.HTM - Demanem al server omplir la BBDD.' ) ;
-			$( "#content" ).html( page ) ; // show received HTML at specific <div>
-		}) ; // get(populate)
-	}) ; // populate
-
-
 	$( "#clkPing" ).click( function() {
 		$.get( '/ping', function( page ) {
 			console.log( '**** HELP.HTM - Demanem al server un PING.' ) ;
@@ -691,6 +663,56 @@ function admin_ready() {
 		return false ; // stop processing !!!
 		
 	}); // click "myFormReqBaixaUser" submit
+
+
+	$( "#clkListCollections" ).click( function() {
+		
+		console.log( '*** index - clicked on LIST COLLECTION link - demanem al server la llista de collections.' ) ;
+
+		$.get( '/list_collections', function( page ) {
+			console.log( '*** index - rebem del server la llista de collections.' ) ;
+			var szTxt = '<p>Databases we have right now in mongo:</p>' ;
+			$( "#content" ).html( szTxt+page ) ; // show calculated HTML at specific <div>
+		} ) ; // get(list collections)
+	}) ; // list collections
+
+
+	$( "#clkPopulate" ).click( function() {
+		$.get( '/populate', function( page ) {
+			console.log( '**** HELP.HTM - Demanem al server omplir la BBDD.' ) ;
+			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+		}) ; // get(populate)
+	}) ; // populate
+
+
+    $( "#clkConsultaAllReserves" ).click( function () {
+
+		$.get( '/dump_all_reserves', function ( page ) {
+			
+            console.log( "*** HELP.HTM - Demanem la llista de totes les reserves. Server response {%s}.", page ) ;
+            var lng = 0 ;
+            lng = page.length ;
+            console.log( '+++ Llargada (%s).', lng ) ;
+			
+            var texte = '<p class="pkon">';
+            if ( lng > 0 ) {
+                texte += "Dump all data in <i>reserves</i> DDBB. Hi ha (" + lng + ") reserves. <br>";
+                var i = 0;
+                while ( i < lng ) {
+                    texte += "("+i+") " ;
+					texte += "en (" + page[i].rnom + ") " ;
+					texte += "te reservada la pista ("+page[i].rpista+") el dia ["+page[i].rdata+"] a les ["+page[i].rhora+"] hores" ;
+//					texte += " - ID [" + page[i]._id + "]" ;
+					texte += " <br>" ;
+                    i++ ;
+                } // while
+            } else {  // lng = 0
+				texte += "Dump all data in <i>reserves</i> DDBB. No hi ha reserves. <br>";
+			} ;
+			texte += "</p>"
+            $('#content').html(texte);  // or "text"
+        }); // get(dump all reserves)
+    }); // consulta all reserves
 
 	
 } ; // admin_ready()

@@ -138,6 +138,8 @@
 // 5.5.a - 20150419 - esborrar usuari de la bbdd
 // 5.6.a - 20150420 - move middleware code to file "mimdwr.js"
 // 5.6.b - 20150421 - trace remove reserva params (ESP)
+// 5.6.c - 20150421 - send TITLE cookie
+// 5.6.d - 20150421 - no admin commands in help page
 //
 
 // Bluemix :
@@ -234,7 +236,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.6.b" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.d" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -316,11 +318,12 @@
 	var iCnt = 0 ;
 	app.use( function( req, res, next ) { // own middleware, catching all messages
 
-		res.cookie( 'kuk-H0',        ++iCnt, { httpOnly: false } ) ;                // https://github.com/expressjs/session
-		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                 // chrome : HTTP "check"
-		res.cookie( 'kuk-SIG1',      ++iCnt, { signed: true } ) ;                   // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
-		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;  // 
-		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;     // chrome : SECURE "check"
+//		res.cookie( 'kuk-H0',        ++iCnt, { httpOnly: false } ) ;                 // https://github.com/expressjs/session
+//		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
+//		res.cookie( 'kuk-SIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
+//		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
+//		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
+		res.cookie( 'kuk-TIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
