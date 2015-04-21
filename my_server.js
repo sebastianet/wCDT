@@ -137,6 +137,7 @@
 // 5.4.b - 20150417 - send signed and secured cookie
 // 5.5.a - 20150419 - esborrar usuari de la bbdd
 // 5.6.a - 20150420 - move middleware code to file "mimdwr.js"
+// 5.6.b - 20150421 - trace remove reserva params (ESP)
 //
 
 // Bluemix :
@@ -233,7 +234,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.6.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.b" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -661,8 +662,6 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 //    *) som el seu propietari (o som el Administrador)
 //    *) la data es "futura", es a dir, que no s'ha jugat (o som el Administrador)
 
-
-
 app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function ( req, res ) {
 	
 	var Esborra_Reserva_NomSoci = req.params.res_nom_soci ;
@@ -710,13 +709,13 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 							console.log( szResultat ) ;
 							res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
 
-					} else { // else, the slot is not free so we can remove it
+					} else { // else, the slot is not free so we can (try to) remove it
 				
 						var ObjectIdPerEsborrar = docs[0]._id ;
 						var UsuariPerEsborrar   = docs[0].rnom ;
 
 						if ( ( Esborra_Reserva_NomSoci != UsuariPerEsborrar ) && ( Usuari_es_Administrador( req.session ) == false ) ) {
-							szResultat = "--- Tu {" + Esborra_Reserva_NomSoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
+							szResultat = "--- Tu {" + Esborra_Reserva_NomSoci + '/' + req.session.wcdt_nomsoci + '/' + req.session.wcdt_tipussoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
 							console.log( szResultat ) ;
 							res.status( 200 ).send( szResultat ) ; // OK
 						} else {
