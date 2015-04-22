@@ -527,7 +527,7 @@ function llegirCookie( name ) {
 	if ( x ) {
 		var szOut = '# server set cookie >' + x + '<' ;
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
-	}
+	} ;
 
 	
 	$( "#clkPing" ).click( function() {

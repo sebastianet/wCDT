@@ -140,6 +140,7 @@
 // 5.6.b - 20150421 - trace remove reserva params (ESP)
 // 5.6.c - 20150421 - send TITLE cookie
 // 5.6.d - 20150421 - no admin commands in help page
+// 5.6.e - 20150422 - send browser cookie
 //
 
 // Bluemix :
@@ -212,6 +213,7 @@
 // (*) access the application from a mobile client
 // (*) estat del usuari = "iniciant-se" si li hem enviat el email pero no ha clikat al link d'activacio
 // (*) transaction log = empty database + re-evaluate(transaction log) => actual database
+// (*) bitacora : <id> <time> <who> <what> <params> <status>
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
@@ -236,7 +238,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.6.d" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.e" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -319,11 +321,12 @@
 	app.use( function( req, res, next ) { // own middleware, catching all messages
 
 //		res.cookie( 'kuk-H0',        ++iCnt, { httpOnly: false } ) ;                 // https://github.com/expressjs/session
-//		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
+		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
 //		res.cookie( 'kuk-SIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
 //		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
 //		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
 		res.cookie( 'kuk-TIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
+		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false, maxAge: null } ) ;   // try to emulate connect.sid
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
