@@ -326,7 +326,7 @@
 //		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
 //		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
 		res.cookie( 'kuk-TIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
-		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false, maxAge: null } ) ;   // try to emulate connect.sid
+		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ? , maxAge: null ?
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
