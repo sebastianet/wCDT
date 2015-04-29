@@ -141,6 +141,7 @@
 // 5.6.c - 20150421 - send TITLE cookie
 // 5.6.d - 20150421 - no admin commands in help page
 // 5.6.e - 20150422 - send browser cookie
+// 5.6.f - 20150429 - display max number of pending reservations at GetOcupacio
 //
 
 // Bluemix :
@@ -238,7 +239,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.6.e" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.f" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -308,6 +309,8 @@
 	app.set( 'rcolname', config.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
 	app.set( 'userscolname', config.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
 
+	app.set( 'iMaxReservesUsuari', config.iMaxReserves ) ; // we shall limit the number of pending reservations a user can have
+
 	Create_Users_Collection () ;                     // create users collection/table if not existent, so we can always logon
 
 
@@ -326,12 +329,12 @@
 //		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
 //		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
 		res.cookie( 'kuk-TIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
-		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ? , maxAge: null ?
+		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
 		next() ;
-	}) ; // trace own cookie
+	} ) ; // trace own cookie
 
 	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
 	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
@@ -339,8 +342,8 @@
 // serve static files and css
 //   app.get( '/*', express.static( __dirname + '/public' ) ) ; // serve whatever is in the "public" folder at the URL "/:filename"
 
-   var staticPath    =  __dirname + '/public';
-   var staticOptions = { index: 'index.htm' };  // provide "index.htm" instead of the default "index.html"
+   var staticPath    =  __dirname + '/public' ;
+   var staticOptions = { index: 'index.htm' } ;  // provide "index.htm" instead of the default "index.html"
 
    app.get( '/*', express.static( staticPath, staticOptions ) ) ;  // configure express options
 
@@ -443,7 +446,9 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 			var  i = docs.length ;
 			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
 
-			szTxt = "<p>Tens ["+ i +"] reserves vigents : " ;			
+			var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
+
+			szTxt = "<p>Tens ["+ i +"] reserves vigents. El maxim es ("+ iMaxReservesPendentsPerUsuari +"). Son : " ;			
 			var idx = 0 ;
 			while ( idx < i ) {
 				var OcupacioPista = docs[idx].rpista ;
@@ -464,9 +469,10 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 // Lets set some routes for express() :
 // =====================================
 
-	var miMDW = require( './mimdwr.js' ) ;
+	var miMDW = require( './mimdwr.js' ) ; // own file with middleware
 
-miMDW.handlePing( app ) ;  // app.get( '/ping', function ( req, res ) {
+// (1) if customers asks for a "ping", we send actual date and the version of the code
+miMDW.handlePing( app ) ;  // app.get( '/ping', function ( req, res ) { 
 
  
 // (2) populate col (called from HELP page)
