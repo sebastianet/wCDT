@@ -146,6 +146,7 @@
 // 5.6.e - 20150422 - send browser cookie - client displays it in HELP page
 // 5.6.f - 20150429 - display max number of pending reservations at GetOcupacio
 // 5.6.g - 20150429 - display hostname : client's hn at server console, server's hn at client screen
+// 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
 //
 
 // Bluemix :
@@ -245,7 +246,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.6.g" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.7.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -264,9 +265,23 @@
 	var credentials = { key: privateKey, cert: certificate } ;
 
 	var app = express() ;                           // instantiate Express and assign our app variable to it
-	var config = require ( './config.js' ) ;        // read configuration file
-	
-	var uszDB = 'localhost:27017/cdt' ;             // BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+
+//	var config = require ( './config.js' ) ;        // read configuration file
+	var configapp = require( './config/app' ) ;
+	var configdb = require( './config/db' ) ;
+	var configup = require( './config/usrpw' ) ;
+
+// Get some values from configuration file
+
+	app.set( 'Title', configapp.name ) ;
+	app.set( 'iMaxReservesUsuari', configapp.iMaxReserves ) ; // we shall limit the number of pending reservations a user can have
+
+                                                       // This is only place we specify the collection name(s) : 
+	app.set( 'rcolname', configdb.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
+	app.set( 'userscolname', configdb.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
+	var uszDB = configdb.url ;                         // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+
+// establish MONGO environment
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
@@ -309,15 +324,6 @@
 	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;                           // port used by HTTP
 	var portS = ( process.env.VCAP_APP_PORT || process.env.WCDTPORT || 443 ) ;  // port used by HTTPS (bmx-2)
 
-
-// Get some values from configuration file
-
-	app.set( 'Title', config.titol ) ;
-                                                     // This is only place we specify the collection name(s) : 
-	app.set( 'rcolname', config.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
-	app.set( 'userscolname', config.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
-
-	app.set( 'iMaxReservesUsuari', config.iMaxReserves ) ; // we shall limit the number of pending reservations a user can have
 
 // Create "users" table/collection if not existent
 	Create_Users_Collection () ;                     // create users collection/table if not existent, so we can always logon
