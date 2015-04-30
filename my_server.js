@@ -281,12 +281,13 @@
 	app.set( 'rcolname', configdb.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
 	app.set( 'userscolname', configdb.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
 	var uszDB = configdb.url ;                          // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+	var szDB = "" ;
 
 // establish MONGO environment
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
-			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-ku'][0].credentials.url ;  // mind URI if MONGOLAB @ UK + usuari intern
+			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ;  // mind URI if MONGOLAB @ UK + usuari intern
 //			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB @ US
 //			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ; // mind URL if MONGODB-2.4 @ UK
 		}
