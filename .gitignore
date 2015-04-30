@@ -30,4 +30,5 @@ node_modules
 data
 
 # old code, cmds, etc
-oldies, bCDT
+oldies
+bCDT

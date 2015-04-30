@@ -1,11 +1,11 @@
 ---
 applications:
-- name: usCDT
+- name: ukCDT
   disk_quota: 1024M
-  host: uscdt
+  host: ukcdt
   path: .
-  domain: mybluemix.net
+  domain: eu-gb.mybluemix.net
   instances: 1
   memory: 256M
   services:
-  - MongoLab-jt
+  - mongodb-ku

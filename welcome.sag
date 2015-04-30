@@ -302,6 +302,26 @@ Bluemix (sometimes)
 2015-04-20T15:33:49.74+0200 [RTR/0]      OUT uscdt.mybluemix.net - [20/04/2015:13:33:49 +0000] "GET /logon.htm HTTP/1.1" 304 0 "https://uscdt.mybluemix.net/" "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) hrome/41.0.2272.118 Safari/537.36" 75.126.70.42:44794 x_forwarded_for:"-" vcap_request_id:205875cb-3bc4-4cd0-6b54-96fd69d348a4 response_time:0.004850810 app_id:52d20066-3aa3-43b8-9a30-0854e1a13a70
 2015-04-20T15:33:49.91+0200 [App/0]      OUT ### My Cookies are (155) - [{"unsigned":{"kuk-H0":"141","kuk-H1":"142"},"signed":{"connect.sid":"awOFV5Tf579_Tk3u8BcyfGRhahhS8ZIY","kuk-SIG1":"143","kuk-SIG1-H1":"144","kuk-SIG1-SEC1":"145"}}].
 ===
+{
+  "mongodb-2.4": [
+    {
+      "name": "mongodb-ku",
+      "label": "mongodb-2.4",
+      "plan": "100",
+      "credentials": {
+        "hostname": "159.8.128.64",
+        "host": "159.8.128.64",
+        "port": 10377,
+        "username": "8c4bf103-1e98-4cdd-95a2-c260690a4178",
+        "password": "5178e92b-2af9-431b-987b-8e9a940ce0e2",
+        "name": "5639f749-7377-4876-9144-688ea62788a0",
+        "db": "db",
+        "url": "mongodb://8c4bf103-1e98-4cdd-95a2-c260690a4178:5178e92b-2af9-431b-987b-8e9a940ce0e2@159.8.128.64:10377/db"
+      }
+    }
+  ]
+}
+===
 
 // Bluemix :
 // (1) url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.
@@ -312,3 +332,11 @@ Bluemix (sometimes)
 // (6) BlueMix console : https://console.ng.bluemix.net/home
 // (7) APP : https://uscdt.mybluemix.net/
 // (8) cf logout
+
+// (1) https://console.eu-gb.bluemix.net/ ( usr = altemir@es.ibm.com )
+// (2) cf api https://api.eu-gb.bluemix.net (United Kingdom)
+// (3) cf login -u altemir@es.ibm.com -o altemir@es.ibm.com -s dev
+// (4) cf logs ukCDT
+// (5) cf push ukCDT
+// (6) browser http://ukcdt.eu-gb.mybluemix.net
+

@@ -147,6 +147,7 @@
 // 5.6.f - 20150429 - display max number of pending reservations at GetOcupacio
 // 5.6.g - 20150429 - display hostname : client's hn at server console, server's hn at client screen
 // 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
+// 5.8.a - 20150430 - ukCDT amb usuari intern
 //
 
 // Bluemix :
@@ -246,7 +247,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.7.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.8.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -279,13 +280,14 @@
                                                        // This is only place we specify the collection name(s) : 
 	app.set( 'rcolname', configdb.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
 	app.set( 'userscolname', configdb.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
-	var uszDB = configdb.url ;                         // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+	var uszDB = configdb.url ;                          // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
 
 // establish MONGO environment
 
 	if ( process.env.VCAP_SERVICES ) {				// si estem a Bluemix
 		try {
-			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB @ US
+			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-ku'][0].credentials.url ;  // mind URI if MONGOLAB @ UK + usuari intern
+//			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongolab'][0].credentials.uri ;    // mind URI if MONGOLAB @ US
 //			szDB = JSON.parse( process.env.VCAP_SERVICES )['mongodb-2.4'][0].credentials.url ; // mind URL if MONGODB-2.4 @ UK
 		}
 		catch ( err ) {
@@ -463,15 +465,19 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 
 			var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
 
-			szTxt = "<p>Tens ["+ i +"] reserves vigents. El maxim es ("+ iMaxReservesPendentsPerUsuari +"). Son : " ;			
-			var idx = 0 ;
-			while ( idx < i ) {
-				var OcupacioPista = docs[idx].rpista ;
-				var OcupacioData  = docs[idx].rdata ;
-				var OcupacioHora  = docs[idx].rhora ;
-				szTxt += "<p>["+ idx +"] - pista ["+ OcupacioPista +"], dia ["+ OcupacioData +"], hora ["+ OcupacioHora+"]. " ;
-				idx ++ ;
-			} ;
+			szTxt = "<p>Tens ["+ i +"] reserves vigents. El maxim es ("+ iMaxReservesPendentsPerUsuari +"). " ;
+			if ( i > 0 ) {
+
+				szTxt += "Son : " ;
+				var idx = 0 ;
+				while ( idx < i ) {
+					var OcupacioPista = docs[idx].rpista ;
+					var OcupacioData  = docs[idx].rdata ;
+					var OcupacioHora  = docs[idx].rhora ;
+					szTxt += "<p>["+ idx +"] - pista ["+ OcupacioPista +"], dia ["+ OcupacioData +"], hora ["+ OcupacioHora+"]. " ;
+					idx ++ ;
+				} ; // while
+			} ; // if i > 0
 		} ; // if Error
 
 		CB ( err, i, szTxt ) ; // dintre de la funcio del find() !
