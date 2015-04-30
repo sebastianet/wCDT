@@ -7,8 +7,9 @@
 //
 // Sequencia d'engegada :
 //    1) engegar el MongoDB
-//    2) "node my_server.js" (veure "package.json")
-//    3) finalment, cal obrir el client a la URL https://ip/ {compte - hem de fer servir HTTPS des la versio 5.0}
+//    2) "node my_server.js" (veure "package.json" - npm run)
+//    3) finalment, cal obrir el client a la URL https://ip/ 
+//           compte - hem de fer servir HTTPS des la versio 5.0
 //
 // Configuracio :
 //
@@ -26,7 +27,9 @@
 //
 // <actual directory>
 //     |
-//    my_server.js
+//    my_server.js             this is server's code
+//    config.js                configuration values
+//    mimdwr.js                middleware code
 //    <public>
 //    .  |
 //    .  consulta.htm
@@ -140,8 +143,9 @@
 // 5.6.b - 20150421 - trace remove reserva params (ESP)
 // 5.6.c - 20150421 - send TITLE cookie
 // 5.6.d - 20150421 - no admin commands in help page
-// 5.6.e - 20150422 - send browser cookie
+// 5.6.e - 20150422 - send browser cookie - client displays it in HELP page
 // 5.6.f - 20150429 - display max number of pending reservations at GetOcupacio
+// 5.6.g - 20150429 - display hostname : client's hn at server console, server's hn at client screen
 //
 
 // Bluemix :
@@ -157,11 +161,12 @@
 // mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 //
 
-// Server own variables :
-//    req.session.wcdt_nomsoci
-//    req.session.wcdt_tipussoci
-//    req.session.wcdt_instant_inicial
-//    req.session.wcdt_lastlogon
+// Server own variables                - filled up at what moment ?
+//    req.session.wcdt_nomsoci         - logon()
+//    req.session.wcdt_tipussoci       - logon()
+//    req.session.wcdt_instant_inicial - logon()
+//    req.session.wcdt_lastlogon       - logon()
+//    req.session.wcdt_hostname        - logon()
 //
 //  Client own variables :
 //    window.session.user.nom
@@ -220,26 +225,27 @@
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
 // (*) format de la data : ara es "own format"
 // (*) compte que des teclat es pot entrar una hora de valor "9" mentre que internament fem servir sempre "09"
-// (*) passport : user/pwd
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
 // (*) tancar la conexio amb el mongo - quan es fa ?
 // (*) package.json : com sap com engegar : "start": "node my_server.js" - de quan hem fet "npm init" i hem contestat preguntes
-// (*) enviar texte del server amb en nom del usuari
+// (*) passport : user/pwd
 // (*) tenir la PWD al mongo "hashed"
 // (*) canvi de proporcions en canviar de pantalla (al W500 surt malament)
-
-
-// Dubtes :
 //
 
+// Dubtes :
+//    on vaig veure que deia "cookie-parser not required since version ...
+//"
+
 // Missatges numerats :
-// "+++ WCDT0001 - logon and PWD OK."
-// "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}. "
+//    "+++ WCDT0001 - logon and PWD OK."
+//    "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}. "
+//
 
 
 // Let's go :
 
-	var myVersio     = "v 5.6.f" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.6.g" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -289,7 +295,7 @@
 
 // Connect to the db
 	MongoClient.connect( szMongoDB, function( err, db ) {
-		if( ! err ) {
+		if ( ! err ) {
 			console.log( "+++ We are connected to mongo." ) ;
 		} ;
 	} ) ; // connect to the db
@@ -303,7 +309,9 @@
 	var port  = ( process.env.VCAP_APP_PORT || 80 ) ;                           // port used by HTTP
 	var portS = ( process.env.VCAP_APP_PORT || process.env.WCDTPORT || 443 ) ;  // port used by HTTPS (bmx-2)
 
-	
+
+// Get some values from configuration file
+
 	app.set( 'Title', config.titol ) ;
                                                      // This is only place we specify the collection name(s) : 
 	app.set( 'rcolname', config.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
@@ -311,6 +319,7 @@
 
 	app.set( 'iMaxReservesUsuari', config.iMaxReserves ) ; // we shall limit the number of pending reservations a user can have
 
+// Create "users" table/collection if not existent
 	Create_Users_Collection () ;                     // create users collection/table if not existent, so we can always logon
 
 
@@ -318,26 +327,26 @@
 
 	app.use( logger( "dev" ) ) ;                     // https://github.com/expressjs/morgan - tiny (minimal), dev (developer), common (apache)
 
-	app.use( cookieParser( 'secretSebas' ) ) ;       // pwd to encrypt all cookies 
+	app.use( cookieParser( 'secretSebas' ) ) ;                                                  // pwd to encrypt all cookies - not required since vesion 1.5.0 : > https://www.npmjs.com/package/express-session
+	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
+	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
 	
 	var iCnt = 0 ;
 	app.use( function( req, res, next ) { // own middleware, catching all messages
 
-//		res.cookie( 'kuk-H0',        ++iCnt, { httpOnly: false } ) ;                 // https://github.com/expressjs/session
-		res.cookie( 'kuk-H1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
-//		res.cookie( 'kuk-SIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
-//		res.cookie( 'kuk-SIG1-H1',   ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
-//		res.cookie( 'kuk-SIG1-SEC1', ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
-		res.cookie( 'kuk-TIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
-		res.cookie( 'kuk-CON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
+//		res.cookie( 'kukH0',        ++iCnt, { httpOnly: false } ) ;                 // https://github.com/expressjs/session
+		res.cookie( 'kukH1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
+//		res.cookie( 'kukSIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
+//		res.cookie( 'kukSIG1H1',    ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
+//		res.cookie( 'kukSIG1SEC1',  ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
+		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
+		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
 		next() ;
 	} ) ; // trace own cookie
 
-	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
-	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
 
 // serve static files and css
 //   app.get( '/*', express.static( __dirname + '/public' ) ) ; // serve whatever is in the "public" folder at the URL "/:filename"
@@ -772,7 +781,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 	var Logon_PwdUser = req.params.log_pwd ;
 
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGON(). Data (%s). Nom (%s), pwd (%s).", Avui, Logon_NomSoci, Logon_PwdUser ) ;
+	console.log( ">>> POST un LOGON(). Data (%s). Nom (%s), pwd (%s). HN client (%s).", Avui, Logon_NomSoci, Logon_PwdUser, req.headers.host ) ;
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
@@ -797,13 +806,16 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 					
 					if ( Logon_PwdUser == Logon_Pwd_From_bbdd ) {
 						
-						req.session.wcdt_nomsoci   = Logon_NomSoci ; 	 // guardar nom soci en la sessio      [sess]
-						req.session.wcdt_tipussoci = docs[0].uRole ;     // guardar tipus de soci en la sessio [sess]
-						var mSg = new Date() ;                           // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
-						req.session.wcdt_lastlogon = mSg.toISOString() ; // 
-						req.session.wcdt_instant_inicial = Date.now() ;  // 
+						req.session.wcdt_nomsoci   = Logon_NomSoci ; 	        // guardar nom soci en la sessio      [sess]
+						req.session.wcdt_tipussoci = docs[0].uRole ;            // guardar tipus de soci en la sessio [sess]
+						var mSg = new Date() ;                                  // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
+						req.session.wcdt_lastlogon = mSg.toISOString() ;        // 
+						req.session.wcdt_instant_inicial = Date.now() ;         //
+						var szHostName = require('os').hostname() ;  
+						req.session.wcdt_hostname = szHostName ;
+						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
 						
-						console.log( '*** cridem GETOCUPACIO logon.' ) ;
+						console.log( '*** cridem GETOCUPACIO logon. HN server (%s).', req.session.wcdt_hostname ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 							console.log( '*** acaba GETOCUPACIO logon (%s).', iOcupacio ) ;
 							if ( err ) {

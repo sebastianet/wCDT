@@ -1,4 +1,17 @@
 
+// funcio "llegirCookie" - es crida en fer LOGON() i en fer HELP()
+function llegirCookie( name ) {
+	var nameEQ = name + "=" ;
+	var ca = document.cookie.split( ';' ) ;
+		for( var i=0 ; i < ca.length; i++ ) {
+		var c = ca[i] ;
+		while ( c.charAt(0)==' ' ) c = c.substring( 1, c.length ) ;
+		if ( c.indexOf(nameEQ) == 0 ) return c.substring( nameEQ.length, c.length ) ;
+	} ; 
+	return null ;
+} ; // llegirCookie()
+
+
 // nova funció yyyyymmdd de Date() - at client
 Date.prototype.yyyymmdd = function () {                            
 	var yyyy = this.getFullYear().toString();                                    
@@ -22,7 +35,7 @@ Date.prototype.hhmmss = function () {
 // Quan es pica el link de "INICI", demanem al servidor una pagina i la posem on indica "#content".
 // Es crida desde 2 llocs :
 //  a) index_ready()
-//  b) initial_ready() - per assignar el codi a u nlink que hi ha dins INITIAL.HTM
+//  b) initial_ready() - per assignar el codi a un link que hi ha dins INITIAL.HTM
 function fClickLogon() { 
 	console.log( '+++ establir codi a executar en picar Logon().' ) ;
  	$( ".clkLogon" ).click( function() {
@@ -30,6 +43,15 @@ function fClickLogon() {
 		$.get( '/logon.htm', function( page ) {
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
+
+			var x = llegirCookie( 'kukHN') ;
+			if ( x ) {
+				var szOut = '<center>server hn {' + x + '}</center>' ;
+				$( "#my_hostname" ).html( szOut ) ; 
+			} else {
+				console.log( '--- no HOSTNAME cookie found.' ) ;
+			} ;
+
 		}) ; // get(logon)
 	}) ; // clkLogon
 
@@ -86,7 +108,7 @@ function index_ready() {              // DOM ready for index.htm
 	delete window.session.user.nom ;      // same at logoff() time !
 
 // amagar link "admin" - will be visible after logon(admin) and hidden at logoff
-		$( '#clkAdmin' ).hide() ;         // http://api.jquery.com/hide/
+	$( '#clkAdmin' ).hide() ;         // http://api.jquery.com/hide/
 
 // Com manegar el nom d'usuari:
 //	window.session.user.nom = 'pau' ;
@@ -98,15 +120,23 @@ function index_ready() {              // DOM ready for index.htm
 		$( "#my_month" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(actual month html code)
 
+
 // posar la data actual a baix a l'esquerra - aixi diferenciem re-loads
 	var szAra = '<center>Now is [' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
 	$( "#my_date" ).html( szAra ) ; // show actual date
+
+
+// posar el hostname actual a baix a l'esquerra - aixi diferenciem servidors
+	var szHostname = '<center>Hn [ HN ]</center>' ;
+	$( "#my_hostname" ).html( szHostname ) ; // show actual server
+
 
 // posem al CONTENT (we are a SPA) la sub-pagina INITAL.HTML
 	$.get( '/initial.htm', function( page ) {
 		console.log( '*** Demanem al server INITIAL.HTM, initial SPA text.' ) ;
 		$( "#content" ).html( page ) ; // show received HTML at specific <div>
 	}) ; // get(initial.htm)
+
 
 // Quan es pica el link de "INICI", demanem al servidor una pagina i la posem on indica "#content".
 	$( ".clkInici" ).click( function() {
@@ -117,7 +147,7 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // clkInici
 
 
-	fClickLogon() ; 
+	fClickLogon() ; // index_ready()
 
 	
 	$( ".clkFerReserva" ).click( function() {
@@ -509,23 +539,11 @@ function help_ready() {
 
 	console.log( '*** help DOM ready.' ) ;
 
-function llegirCookie( name ) {
-	var nameEQ = name + "=" ;
-	var ca = document.cookie.split( ';' ) ;
-		for( var i=0 ; i < ca.length; i++ ) {
-		var c = ca[i] ;
-		while ( c.charAt(0)==' ' ) c = c.substring( 1, c.length ) ;
-		if ( c.indexOf(nameEQ) == 0 ) return c.substring( nameEQ.length, c.length ) ;
-	} ; 
-	return null ;
-} ; // llegirCookie()
-
-
-// server sets 'kuk-TIT'
+// server sets 'kukTIT'
 // HELP.HTM has <div id="listcki">
-	var x = llegirCookie( 'kuk-TIT') ;
+	var x = llegirCookie( 'kukTIT') ;
 	if ( x ) {
-		var szOut = '# server set cookie >' + x + '<' ;
+		var szOut = '# server has set a cookie >' + x + '<' ;
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
 	} ;
 
@@ -557,7 +575,7 @@ function initial_ready() {
 		}) ; // get(logon)
 	}) ; // clkLogon
 */
-	 fClickLogon() ;
+	 fClickLogon() ; // initial_ready()
 	 
 } ; // initial_ready()
 
