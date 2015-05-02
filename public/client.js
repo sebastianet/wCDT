@@ -37,10 +37,13 @@ Date.prototype.hhmmss = function () {
 //  a) index_ready()
 //  b) initial_ready() - per assignar el codi a un link que hi ha dins INITIAL.HTM
 function fClickLogon() { 
+
 	console.log( '+++ establir codi a executar en picar Logon().' ) ;
  	$( ".clkLogon" ).click( function() {
-		console.log( '*** you did click on LOGON() link in INITIAL.HTM.' ) ;
+
+		console.log( '*** you did click on LOGON() link.' ) ;
 		$.get( '/logon.htm', function( page ) {
+
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 
@@ -205,7 +208,7 @@ function index_ready() {              // DOM ready for index.htm
 //			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 //		}) ; // get(admin)
 
-		event.preventDefault(); // what is it for ?
+		event.preventDefault() ; // what is it for ? If this method is called, the default action of the event will not be triggered. http://api.jquery.com/event.preventdefault/
  		$.ajax( {
 			url: '/admin',
 			success : function( page ) { 
@@ -471,7 +474,7 @@ function logon_ready() {
 //			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 //		}) ; // get(logon)
 
-		event.preventDefault(); // what is it for ?
+		event.preventDefault() ; // what is it for ? If this method is called, the default action of the event will not be triggered. http://api.jquery.com/event.preventdefault/
  		$.ajax( {
 			url: '/logonuser/' + myLogon,
 			
@@ -492,9 +495,14 @@ function logon_ready() {
 				} ;
 				
 				window.session.user.nom = logonUser ;
-				document.title = "Web CDT, user (" + logonUser + ")" ;
+//				document.title = "Web CDT, user (" + logonUser + ")" ;
+//				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 				
-				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
+				$.get( "/get_usr_and_host", function( dades_user_i_host ) {
+					document.title = "Web CDT (" + dades_user_i_host + ")" ;
+					$( "#watermark" ).html( '<p>Ara soc en {' + dades_user_i_host + '}.' ) ;
+//					$( "#my_hostname" ).html( dades_user_i_host ) ; 
+				} ) ; // get_usr_and_host()
 			},
 			statusCode: {
 				401: function() { $( "#content" ).html( '<p>Logon() not authorized</p>' ) },
@@ -535,7 +543,6 @@ function logon_ready() {
 
 
 function help_ready() {
-
 
 	console.log( '*** help DOM ready.' ) ;
 

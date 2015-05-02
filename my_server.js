@@ -84,8 +84,8 @@
 // 2.2.e - 20141223 - verify the reservation space is free before reserving it
 // 2.2.f - 20141224 - verify all paramaters are ok
 // 2.2.g - 20150112 - 2 botons fan la mateixa feina si en lloc de ID posem CLASS
-// 3.0.a - 20150113 - use Font Awesome
-// 4.0.a - 20150114 - use Passport()
+// 3.0.a - 20150113 - use Font Awesome - http://fortawesome.github.io/Font-Awesome/
+// 4.0.a - 20150114 - use Passport() - http://passportjs.org/ jQueryUI - http://jqueryui.com/themeroller/
 // 4.0.b - 20150128 - fix "monk" in package.json, serve "index.htm"
 // 4.0.c - 20150206 - catch ddbb.find() error
 // 4.0.d - 20150209 - dump mongo ID's (start delete). February month
@@ -99,7 +99,7 @@
 // 4.2.b - 20150221 - cath logon failure
 // 4.2.c - 20150222 - display user data at logon 
 // 4.2.d - 20150223 - populate() does not drop() so we keep old data
-// 5.0.a - 20150223 - use HTTPS
+// 5.0.a - 20150223 - use HTTPS - https://nodejs.org/api/https.html#https_https
 // 5.0.b - 20150224 - show user's ddbb contents from help
 // 5.0.c - 20150224 - allow "fer reserva" only in logged in
 // 5.0.d - 20150224 - create logoff() button
@@ -148,6 +148,7 @@
 // 5.6.g - 20150429 - display hostname : client's hn at server console, server's hn at client screen
 // 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
 // 5.8.a - 20150430 - ukCDT amb usuari intern
+// 5.9.a - 20150502 - at logon(), ask server for user and host
 //
 
 // Bluemix :
@@ -247,7 +248,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.8.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v 5.9.a" ;                       // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -498,7 +499,6 @@ miMDW.handlePing( app ) ;  // app.get( '/ping', function ( req, res ) {
 
  
 // (2) populate col (called from HELP page)
-
 app.get( '/populate', function ( req, res ) {
     
 	var CollectionName = app.get( 'rcolname' ) ;     // get "reservas" collection name
@@ -535,7 +535,6 @@ app.get( '/populate', function ( req, res ) {
 
 
 // (3) dump all reserves (called from HELP page)
-
 app.get( '/dump_all_reserves', function ( req, res ) {
 	
 	console.log( ">>> GET ALL reserves : veure fins a 20 reserves de tots els dies." ) ;
@@ -560,7 +559,6 @@ app.get( '/dump_all_reserves', function ( req, res ) {
 // (4) mostrar les reserves que hi ha per un dia donat
 // start with a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06"
 // "data_Reserva" surt del "name" del input field en el "form"
-
 app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 	
     var DiaConsultat = req.params.dia_consultat ; // if BLANK then 404 ;
@@ -585,8 +583,7 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
 
 
 // (5) fer una reserva nova
-// start with a msg as "GET /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
-
+// start with a msg as "POST /fer_una_reserva/Nom_Soci=nil&Pista_Reserva=0&Dia_Reserva=2000%2F01%2F01&Hora_Reserva=00"
 app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_Reserva=:res_dia&Hora_Reserva=:res_hora', function ( req, res ) {
 
 	var Reserva_NomSoci = req.params.res_nom_soci ;
@@ -690,12 +687,10 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 
 
 // (6) esborrar una reserva 
-// start with a msg as "GET /esborrar_una_reserva/Nom_Soci_Esborrar=Ivan&Pista_Reserva_Esborrar=3&Dia_Reserva_Esborrar=2015%2F02%2F19&Hora_Reserva_Esborrar=10"
-
+// start with a msg as "POST /esborrar_una_reserva/Nom_Soci_Esborrar=Ivan&Pista_Reserva_Esborrar=3&Dia_Reserva_Esborrar=2015%2F02%2F19&Hora_Reserva_Esborrar=10"
 // Podem esborrar una reserva si :
 //    *) som el seu propietari (o som el Administrador)
 //    *) la data es "futura", es a dir, que no s'ha jugat (o som el Administrador)
-
 app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_Esborrar=:res_pista&Dia_Reserva_Esborrar=:res_dia&Hora_Reserva_Esborrar=:res_hora', function ( req, res ) {
 	
 	var Esborra_Reserva_NomSoci = req.params.res_nom_soci ;
@@ -787,14 +782,13 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 
 // (7) fer logon() de un usuari
 // rebem GET /logonuser/nom_Logon=Ivan&pwd_Logon=Grozniy
-
 app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req, res ) {
 
 	var Logon_NomSoci = req.params.log_nom_soci ; // instead of req.query.log_nom_soci
 	var Logon_PwdUser = req.params.log_pwd ;
 
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGON(). Data (%s). Nom (%s), pwd (%s). HN client (%s).", Avui, Logon_NomSoci, Logon_PwdUser, req.headers.host ) ;
+	console.log( ">>> GET LOGON(). Data (%s). Nom (%s), pwd (%s). HN client (%s).", Avui, Logon_NomSoci, Logon_PwdUser, req.headers.host ) ;
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
@@ -824,7 +818,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 						var mSg = new Date() ;                                  // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
 						req.session.wcdt_lastlogon = mSg.toISOString() ;        // 
 						req.session.wcdt_instant_inicial = Date.now() ;         //
-						var szHostName = require('os').hostname() ;  
+						var szHostName = require('os').hostname() ;             // server hostname. client is in req.headers.host
 						req.session.wcdt_hostname = szHostName ;
 						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
 						
@@ -839,7 +833,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 								var szMsg_Logon_OK = '+++ WCDT0001 - logon and PWD OK. ' ;
 								szMsg_Logon_OK += '<p>Welcome back, (' + Logon_NomSoci + '). ' ;
 								if ( req.session.wcdt_tipussoci == "Administrator" ) {
-									szMsg_Logon_OK += "Tens poders de'administrador. " ; // mind this text is user in CLIENT.JS to determine if user is Admin or not.
+									szMsg_Logon_OK += "Tens poders de'administrador. " ; // mind this text is used in CLIENT.JS to determine if user is of type Admin or not.
 								} ;
 
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
@@ -874,11 +868,11 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 
 
 // (8) logoff de un usuari
-
+// rebem POST /logoff_user
 app.post( '/logoff_user', function ( req, res ) {
 	
 	var Avui = (new Date).yyyymmdd() ;
-	console.log( ">>> POST un LOGOFF(). Data (%s), user (%s).", Avui, req.session.wcdt_nomsoci ) ;
+	console.log( ">>> POST LOGOFF(). Data (%s), user (%s).", Avui, req.session.wcdt_nomsoci ) ;
 
 	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
 	Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
@@ -902,11 +896,10 @@ app.post( '/logoff_user', function ( req, res ) {
 
 	} ) ; // own async function : get_ocupacio (uses mongo)
 	
-} ) ; // get '/logonuser/nom_Logon=:log_nom_soci&pwd_logon=:log_pwd'
+} ) ; // post '/logoff_user'
 
 
 // (9) dump all users (called from HELP page)
-
 app.get( '/dump_all_users', function ( req, res ) {
 	
 	var CollectionName = app.get( 'userscolname' ) ;   // get "users" collection name
@@ -952,7 +945,6 @@ app.get( '/dump_all_users', function ( req, res ) {
 
 
 // (10) users database admin - called from HELP.HTM
-
 app.get( '/admin', function ( req, res ) {
 
 	console.log( ">>> admin pages, only for admin users." ) ;
@@ -972,7 +964,6 @@ app.get( '/admin', function ( req, res ) {
 
 
 // (11) /delete_bbdd_users - called from ADMIN.HTM
-
 app.get( '/delete_col_users', function ( req, res ) {
 
 	console.log( ">>> admin menu, delete taula usuaris." ) ;
@@ -1040,7 +1031,6 @@ app.get( '/list_collections', function ( req, res ) {
 
 // (13) /create_users_col - called from INDEX.HTM
 // app.get( '/create_users_col', function ( req, res ) {
-
 function Create_Users_Collection () {
 	
 	var CollectionName = app.get( 'userscolname' ) ;  // get "users" collection name	
@@ -1087,11 +1077,10 @@ function Create_Users_Collection () {
 		} ; // connect() error
 	} ) ; // connect
 	
-} ; // '/create_users_col'
+} ; // '/create_users_collection'
 
 
-// (14) POST /fer_alta_usuari/nom_Alta=joan&pwd_Alta=perepocapor&tipus_Alta=Guest
-
+// (14) GET /fer_alta_usuari/nom_Alta=joan&pwd_Alta=perepocapor&tipus_Alta=Guest
 app.get( '/fer_alta_usuari/Alta_User_Nom=:NewUserName&Alta_User_Pwd=:NewUserPwd&Alta_User_Email=:NewUserEmail&Alta_User_Type=:NewUserType', function ( req, res ) {
 
 	var Alta_UserName  = req.params.NewUserName ;
@@ -1250,7 +1239,17 @@ app.get( '/fer_baixa_usuari/nom_Baixa=:OldUserName', function ( req, res ) {
 } ) ; // get /fer_baixa_usuari
 
 
-// *** finally, create our http server and launch it
+// (16) GET /get_usr_and_host
+app.get( '/get_usr_and_host', function ( req, res ) {
+
+	var szUserAndHost = 'u('+ req.session.wcdt_nomsoci +')/h('+ req.session.wcdt_hostname +')' ;
+	console.log( ">>> GET USRiHN[%s].", szUserAndHost ) ;
+	res.status( 200 ).send( szUserAndHost ) ; 
+	
+} ) ; // get /get_usr_and_host
+
+
+// *** finally, create our http(s) server and launch it
 
 // http.createServer( app ).listen( app.get( 'port' ), function () {
 //     console.log( 'Express server '+ myVersioLong +' listening on port ' + app.get( 'port' ) ) ;

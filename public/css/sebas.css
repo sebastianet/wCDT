@@ -174,7 +174,7 @@
 }
 /* augmentem el tamany per defecte dels butons */
 
-#myFormReqDades1Dia  input[type=submit], #myFormFerReserva  input[type=submit], #myFormEsborrarReserva input[type=submit], #myFormReqLogon input[type=submit] {
+#myFormReqDades1Dia  input[type=submit], #myFormFerReserva  input[type=submit], #myFormEsborrarReserva input[type=submit], #myFormReqLogon input[type=submit], #myFormReqLogoff  input[type=submit] {
   font-size: 18px;
   line-height: 18px;
   ffloat: left;
