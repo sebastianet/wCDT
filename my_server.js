@@ -70,6 +70,10 @@
 //              uEstat        : actiu / bloquejat / iniciantse
 //				uMisc         : "-" 
 //
+// Access using browser :
+//    http://127.0.0.1:28017/cdt/wCDT_users/?filter_uAlias=guest
+//    http://localhost:28017/
+//
 
 // Versions (more detailed than in HELP.HTM)
 //
@@ -149,6 +153,7 @@
 // 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
 // 5.8.a - 20150430 - ukCDT amb usuari intern
 // 5.9.a - 20150502 - at logon(), ask server for user and host
+// 5.A.a - 2015003 - trace user in session field at logoff : somehow it is not "deleted"
 //
 
 // Bluemix :
@@ -161,7 +166,7 @@
 // (7) APP : https://uscdt.mybluemix.net/
 // (8) cf logout
 //
-// mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
+// Mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 //
 
 // Server own variables                - filled up at what moment ?
@@ -173,6 +178,12 @@
 //
 //  Client own variables :
 //    window.session.user.nom
+
+// Cookies sent to client :
+//    kukTIT - 
+//    kukHN  - hostname
+//    kukVER - code version
+//
 
 // Package install :
 //   npm install body-parser      -g --save  + npm link body-parser
@@ -238,7 +249,7 @@
 
 // Dubtes :
 //    on vaig veure que deia "cookie-parser not required since version ...
-//"
+//
 
 // Missatges numerats :
 //    "+++ WCDT0001 - logon and PWD OK."
@@ -248,7 +259,7 @@
 
 // Let's go :
 
-	var myVersio     = "v 5.9.a" ;                       // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.A.a" ;                        // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -257,10 +268,10 @@
 
 	var http         = require( 'http' ) ;
 	var https        = require( 'https' ) ;
-	var logger       = require( 'morgan' ) ;          // logging middleware
-	var fs           = require( 'fs' ) ;              // r/w files
-	var monk         = require( 'monk' ) ;            // access to mongodb
-	var mongo        = require( 'mongodb' ) ;         // connect to mongodb
+	var logger       = require( 'morgan' ) ;             // logging middleware
+	var fs           = require( 'fs' ) ;                 // r/w files
+	var monk         = require( 'monk' ) ;               // access to mongodb
+	var mongo        = require( 'mongodb' ) ;            // connect to mongodb
 
 	var privateKey  = fs.readFileSync( 'sslcert/server.key', 'utf8' ) ; // openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout privateKey.key -out certificate.crt
 	var certificate = fs.readFileSync( 'sslcert/server.crt', 'utf8' ) ;
@@ -268,7 +279,7 @@
 
 	var app = express() ;                           // instantiate Express and assign our app variable to it
 
-//	var config = require ( './config.js' ) ;        // read configuration file
+//	var config = require ( './config.js' ) ;        // read configuration file - not 1 but 3 !
 	var configapp = require( './config/app' ) ;
 	var configdb = require( './config/db' ) ;
 	var configup = require( './config/usrpw' ) ;
@@ -281,7 +292,7 @@
                                                        // This is only place we specify the collection name(s) : 
 	app.set( 'rcolname', configdb.col_reserves ) ;     // reservation collection name := "reserves_pistes" ;
 	app.set( 'userscolname', configdb.col_usuaris ) ;  // users collection name       := "wCDT_users" ;
-	var uszDB = configdb.url ;                          // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
+	var uszDB = configdb.url ;                         // ex 'localhost:27017/cdt' ; BBDD := "cdt" - *** unic lloc on s'escriu el nom de la base de dades ***
 	var szDB = "" ;
 
 // establish MONGO environment
@@ -345,11 +356,12 @@
 	app.use( function( req, res, next ) { // own middleware, catching all messages
 
 //		res.cookie( 'kukH0',        ++iCnt, { httpOnly: false } ) ;                 // https://github.com/expressjs/session
-		res.cookie( 'kukH1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
+//		res.cookie( 'kukH1',        ++iCnt, { httpOnly: true } ) ;                  // chrome : HTTP "check"
 //		res.cookie( 'kukSIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
 //		res.cookie( 'kukSIG1H1',    ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
 //		res.cookie( 'kukSIG1SEC1',  ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
-		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // try to send it to client
+		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // send some data to client(s)
+		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;
 		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
@@ -874,27 +886,37 @@ app.post( '/logoff_user', function ( req, res ) {
 	var Avui = (new Date).yyyymmdd() ;
 	console.log( ">>> POST LOGOFF(). Data (%s), user (%s).", Avui, req.session.wcdt_nomsoci ) ;
 
-	console.log( '*** cridem GETOCUPACIO logoff.' ) ;
-	Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
-
-		console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
-		if ( err ) {
-			console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
-			res.status( 500 ).send( '--- internal error at get_ocupacio logoff.' ) ;
-		} else {
-			var iPeriode = Date.now() ;
-			console.log( 'logof.now is ('+ iPeriode +')' ) ;
-			console.log( 'logof.old is ('+ req.session.wcdt_instant_inicial +')' ) ;
-			iPeriode = iPeriode - req.session.wcdt_instant_inicial ;
-			var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
-			szMsg_Logoff_OK += szOcupacio ;								
-			res.status( 200 ).send( szMsg_Logoff_OK ) ;
-		} ; // error dins get ocupacio
+	if ( req.session.wcdt_nomsoci ) {
 		
-		delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
-		delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
+		console.log( '*** cridem GETOCUPACIO logoff.' ) ;
+		Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 
-	} ) ; // own async function : get_ocupacio (uses mongo)
+			console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
+			if ( err ) {
+				console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
+				res.status( 500 ).send( '--- internal error at get_ocupacio logoff.' ) ;
+			} else {
+				
+				var iPeriode = Date.now() ;
+				console.log( 'logoff.now is ('+ iPeriode +')' ) ;
+				console.log( 'logoff.old is ('+ req.session.wcdt_instant_inicial +')' ) ;
+				iPeriode = iPeriode - req.session.wcdt_instant_inicial ;
+				var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
+				szMsg_Logoff_OK += szOcupacio ;								
+				res.status( 200 ).send( szMsg_Logoff_OK ) ;
+			} ; // error dins get ocupacio
+			
+			console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), before' ) ;
+			req.session.wcdt_nomsoci = '' ;
+			delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
+			delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
+			console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), after' ) ;
+
+		} ) ; // own async function : get_ocupacio (uses mongo)
+
+	} else {
+		res.status( 200 ).send( "You have to do Logon() before Logoff() !" ) ;
+	} ;
 	
 } ) ; // post '/logoff_user'
 
@@ -1239,10 +1261,10 @@ app.get( '/fer_baixa_usuari/nom_Baixa=:OldUserName', function ( req, res ) {
 } ) ; // get /fer_baixa_usuari
 
 
-// (16) GET /get_usr_and_host
+// (16) GET /get_usr_and_host - called from Logon() click
 app.get( '/get_usr_and_host', function ( req, res ) {
 
-	var szUserAndHost = 'u('+ req.session.wcdt_nomsoci +')/h('+ req.session.wcdt_hostname +')' ;
+	var szUserAndHost = '('+ req.session.wcdt_nomsoci +')@('+ req.session.wcdt_hostname +')' ;
 	console.log( ">>> GET USRiHN[%s].", szUserAndHost ) ;
 	res.status( 200 ).send( szUserAndHost ) ; 
 	

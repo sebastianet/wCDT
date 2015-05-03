@@ -48,11 +48,12 @@ function fClickLogon() {
 			$( "#content" ).html( page ) ; // show received HTML at specific <div>
 
 			var x = llegirCookie( 'kukHN') ;
-			if ( x ) {
-				var szOut = '<center>server hn {' + x + '}</center>' ;
+			var y = llegirCookie( 'kukVER') ;
+			if ( ( x ) && ( y ) ) {
+				var szOut = '<center>hn{' + x + '} ' + y + '</center>' ;
 				$( "#my_hostname" ).html( szOut ) ; 
 			} else {
-				console.log( '--- no HOSTNAME cookie found.' ) ;
+				console.log( '--- no HOSTNAME cookie found or no VERSION.' ) ;
 			} ;
 
 		}) ; // get(logon)
@@ -124,8 +125,8 @@ function index_ready() {              // DOM ready for index.htm
 	}) ; // get(actual month html code)
 
 
-// posar la data actual a baix a l'esquerra - aixi diferenciem re-loads
-	var szAra = '<center>Now is [' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
+// posar la data actual a baix a l'esquerra - aixi diferenciem re-loads - "Now is"
+	var szAra = '<center>[' + (new Date).yyyymmdd() +','+ (new Date).hhmmss() + ']</center>' ;
 	$( "#my_date" ).html( szAra ) ; // show actual date
 
 
@@ -552,6 +553,12 @@ function help_ready() {
 	if ( x ) {
 		var szOut = '# server has set a cookie >' + x + '<' ;
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
+
+		$.get( "/get_usr_and_host", function( dades_user_i_host ) {
+			document.title = "Web CDT (" + dades_user_i_host + ")" ;
+			$( "#listuih" ).html( 'U/H {' + dades_user_i_host + '}.' ) ;
+		} ) ; // get_usr_and_host()
+
 	} ;
 
 	
