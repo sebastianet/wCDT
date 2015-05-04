@@ -153,7 +153,8 @@
 // 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
 // 5.8.a - 20150430 - ukCDT amb usuari intern
 // 5.9.a - 20150502 - at logon(), ask server for user and host
-// 5.A.a - 2015003 - trace user in session field at logoff : somehow it is not "deleted"
+// 5.A.a - 20150503 - trace user in session field at logoff : somehow it is not "deleted"
+// 5.B.a - 20150504 - fixed esborrar usuari en logoff
 //
 
 // Bluemix :
@@ -180,9 +181,10 @@
 //    window.session.user.nom
 
 // Cookies sent to client :
-//    kukTIT - 
-//    kukHN  - hostname
-//    kukVER - code version
+//    kukTIT   - title
+//    kukHN    - hostname (server)
+//    kukHNCLI - hostname (client)
+//    kukVER   - code version
 //
 
 // Package install :
@@ -259,7 +261,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.A.a" ;                        // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.B.a" ;                        // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -801,6 +803,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 
 	var Avui = (new Date).yyyymmdd() ;
 	console.log( ">>> GET LOGON(). Data (%s). Nom (%s), pwd (%s). HN client (%s).", Avui, Logon_NomSoci, Logon_PwdUser, req.headers.host ) ;
+	res.cookie( 'kukHNCLI', req.headers.host, { httpOnly: false, secure: true } ) ;
 	
 	var CollectionName = app.get( 'userscolname' ) ;     // get collection name
 	var MyUsersCollection = db.get( CollectionName ) ;   // get the collection
@@ -827,9 +830,11 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 						
 						req.session.wcdt_nomsoci   = Logon_NomSoci ; 	        // guardar nom soci en la sessio      [sess]
 						req.session.wcdt_tipussoci = docs[0].uRole ;            // guardar tipus de soci en la sessio [sess]
+
 						var mSg = new Date() ;                                  // as "Fri Mar 13 2015 21:30:27 GMT+0100 (Romance Standard Time)"
 						req.session.wcdt_lastlogon = mSg.toISOString() ;        // 
 						req.session.wcdt_instant_inicial = Date.now() ;         //
+
 						var szHostName = require('os').hostname() ;             // server hostname. client is in req.headers.host
 						req.session.wcdt_hostname = szHostName ;
 						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
@@ -854,7 +859,7 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 									szMsg_Logon_OK += '<p>*** Compte : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors. ' ;
 								} ;
 								szMsg_Logon_OK += szOcupacio ; // mostrar reserves anteriors
-								
+								szMsg_Logon_OK += '<hr><p> &nbsp;<div class="txtblanc"><center><h3>Que fem ara ?</h3><p>Ara podries consultar la ocupacio de les pistes.</center></div><p> &nbsp;<hr>' ;
 								res.status( 200 ).send( szMsg_Logon_OK ) ; // deprecated code : res.send( 200, szMsg_Logon_OK ) ;
 							} ; // error dins get ocupacio
 						} ) ; // own async function : get_ocupacio (uses mongo)
@@ -896,6 +901,16 @@ app.post( '/logoff_user', function ( req, res ) {
 				console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
 				res.status( 500 ).send( '--- internal error at get_ocupacio logoff.' ) ;
 			} else {
+
+// compte : 
+//   primer modifiquem REQ.SESSION
+//   despres enviem RES.STATUS
+
+				console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), before' ) ;
+				req.session.wcdt_nomsoci = '' ;
+				delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
+				delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
+				console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), after' ) ;
 				
 				var iPeriode = Date.now() ;
 				console.log( 'logoff.now is ('+ iPeriode +')' ) ;
@@ -906,11 +921,6 @@ app.post( '/logoff_user', function ( req, res ) {
 				res.status( 200 ).send( szMsg_Logoff_OK ) ;
 			} ; // error dins get ocupacio
 			
-			console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), before' ) ;
-			req.session.wcdt_nomsoci = '' ;
-			delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
-			delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
-			console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), after' ) ;
 
 		} ) ; // own async function : get_ocupacio (uses mongo)
 
@@ -1264,7 +1274,7 @@ app.get( '/fer_baixa_usuari/nom_Baixa=:OldUserName', function ( req, res ) {
 // (16) GET /get_usr_and_host - called from Logon() click
 app.get( '/get_usr_and_host', function ( req, res ) {
 
-	var szUserAndHost = '('+ req.session.wcdt_nomsoci +')@('+ req.session.wcdt_hostname +')' ;
+	var szUserAndHost = req.session.wcdt_nomsoci +'@'+ req.headers.host ;
 	console.log( ">>> GET USRiHN[%s].", szUserAndHost ) ;
 	res.status( 200 ).send( szUserAndHost ) ; 
 	

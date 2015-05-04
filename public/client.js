@@ -500,9 +500,8 @@ function logon_ready() {
 //				$( "#watermark" ).html( '<p>Ara soc en {' + logonUser + '}.' ) ;
 				
 				$.get( "/get_usr_and_host", function( dades_user_i_host ) {
-					document.title = "Web CDT (" + dades_user_i_host + ")" ;
+//					document.title = "Web CDT (" + dades_user_i_host + ")" ;
 					$( "#watermark" ).html( '<p>Ara soc en {' + dades_user_i_host + '}.' ) ;
-//					$( "#my_hostname" ).html( dades_user_i_host ) ; 
 				} ) ; // get_usr_and_host()
 			},
 			statusCode: {
@@ -527,7 +526,7 @@ function logon_ready() {
 //			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;
 			
 			delete window.session.user.nom ;
-			document.title = "Web CDT, no user" ;
+//			document.title = "Web CDT, no user" ;
 			$( '#clkAdmin' ).hide() ;
 			
 			$( "#watermark" ).html( '<p>Logged off.' ) ;
@@ -555,7 +554,7 @@ function help_ready() {
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
 
 		$.get( "/get_usr_and_host", function( dades_user_i_host ) {
-			document.title = "Web CDT (" + dades_user_i_host + ")" ;
+//			document.title = "Web CDT (" + dades_user_i_host + ")" ;
 			$( "#listuih" ).html( 'U/H {' + dades_user_i_host + '}.' ) ;
 		} ) ; // get_usr_and_host()
 
