@@ -131,7 +131,7 @@ function index_ready() {              // DOM ready for index.htm
 
 
 // posar el hostname actual a baix a l'esquerra - aixi diferenciem servidors
-	var szHostname = '<center>Hn [ HN ]</center>' ;
+	var szHostname = '<center>HN [ <do logon> ]</center>' ;
 	$( "#my_hostname" ).html( szHostname ) ; // show actual server
 
 

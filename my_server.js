@@ -156,6 +156,7 @@
 // 5.A.a - 20150503 - trace user in session field at logoff : somehow it is not "deleted"
 // 5.B.a - 20150504 - fixed esborrar usuari en logoff
 // 5.B.b - 20150504 - server hostname is in req.headers.host and also in req.session.wcdt_hostname (from 'os')
+// 5.B.c - 20150504 - try to display client ip using req.ip
 //
 
 // Bluemix :
@@ -262,7 +263,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.b" ;                        // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.B.c" ;                        // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -1275,7 +1276,7 @@ app.get( '/fer_baixa_usuari/nom_Baixa=:OldUserName', function ( req, res ) {
 // (16) GET /get_usr_and_host - called from Logon() click
 app.get( '/get_usr_and_host', function ( req, res ) {
 
-	var szUserAndHost = req.session.wcdt_nomsoci +'@'+ req.connection.remoteAddress ; // server host is req.headers.host ;
+	var szUserAndHost = req.session.wcdt_nomsoci +'@'+ req.ip ; // connection.remoteAddress ; // server host is req.headers.host ;
 	console.log( ">>> GET USRiHN[%s].", szUserAndHost ) ;
 	res.status( 200 ).send( szUserAndHost ) ; 
 	
