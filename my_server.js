@@ -14,6 +14,11 @@
 // Configuracio :
 //
 //    *) s'ha de posar la IP en el lloc de "localhost" en la variable "host" 
+//    *) al subdirectori "config" hi ha 4 fitxers :
+//           app.js    - valors relatius a l'aplicacio, as iMaxReserves:
+//           codi.js   - codi base per accedir als 3 fiters de configuracio
+//           db.js     - acces a la base de dades
+//           usrpw.js  - usuaris i passwords
 //
 // Emulacio Bluemix :
 //    *) configurar process.env.VCAP_SERVICES
@@ -158,6 +163,7 @@
 // 5.B.b - 20150504 - server hostname is in req.headers.host and also in req.session.wcdt_hostname (from 'os')
 // 5.B.c - 20150504 - try to display client ip using req.ip
 // 5.B.d - 20150504 - try to display client ip using req.ip
+// 5.B.e - 20150512 - manage MaxNumReserves
 //
 
 // Bluemix :
@@ -242,6 +248,7 @@
 // (*) enviar e-mail quan s'accepti un nou usuari i es posi a la bbdd - ha de contenir link de "activacio" ? bbdd usuaris te un "estat" intermig ?
 // (*) fer click al mes del calendari i posar-ho a la variable global i despres al boto de consultes
 // (*) catch "listen EADDRINUSE" - when Apache is running on port 80
+// (*) detect "already running" monitorig own port maybe
 // (*) format de la data : ara es "own format"
 // (*) compte que des teclat es pot entrar una hora de valor "9" mentre que internament fem servir sempre "09"
 // (*) veure codi a reserves@pere : posar "monday..sunday" a sobre (if we display whole week)
@@ -264,7 +271,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.d" ;                        // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.B.e" ;                        // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
