@@ -164,6 +164,7 @@
 // 5.B.c - 20150504 - try to display client ip using req.ip
 // 5.B.d - 20150504 - try to display client ip using req.ip
 // 5.B.e - 20150512 - manage MaxNumReserves
+// 5.B.f - 20150512 - verify free slots prior doing reserva()
 //
 
 // Bluemix :
@@ -237,6 +238,8 @@
 //         Origin 'http://bcdt.eu-gb.mybluemix.net' is therefore not allowed access. The response had HTTP status code 401.
 
 // Pending :
+// (*) Jordi Morillo - treure codi de formateig (links d'administracio) del client
+//        No servir pagines de administradors si no ve la cookie adient : que passa si el client demana URL = https://9.137.165.71/admin.htm ?
 // (*) ESP - puc fer una reserva per 20154010 o 32 de Juny
 // (*) ESP - a les 11h puc fer una reserva per les 09h
 // (*) limitar el nombre de reserves pendents
@@ -271,7 +274,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.e" ;                        // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.B.f" ;                        // mind 2 places in /public/INDEX.HTM
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -487,9 +490,8 @@ function Get_Ocupacio ( Param_NomSoci, Param_Avui, CB ) {
 		} else {
 			
 			var  i = docs.length ;
-			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
-
 			var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
+			console.log( "+++ Get ocupacio in collection (%s) for the date (%s) and user (%s) has (%s) elements.", CollectionName, Param_Avui, Param_NomSoci, i ) ;
 
 			szTxt = "<p>Tens ["+ i +"] reserves vigents. El maxim es ("+ iMaxReservesPendentsPerUsuari +"). " ;
 			if ( i > 0 ) {
@@ -630,77 +632,101 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		MyReserva.rdata  = Reserva_Dia ;
 		MyReserva.rhora  = Reserva_Hora ;
 
-	// mirem que tots els parametres siguin correctes :
+		var Avui = (new Date).yyyymmdd() ;
 
-		var iTotOK = 1 ;  // de moment, tot OK
-		var szErrorString = "" ;
-		var szResultat = "" ;
-		
-		if ( ( Reserva_Pista < 3 ) || ( Reserva_Pista > 5 ) ) {
-			szErrorString = "Numero de pista erroni (" + Reserva_Pista + ")" ;
-			iTotOK = 0 ;  // indicate error in parameters
-		} ;
-		if ( ( Reserva_Dia < 1 ) || ( Reserva_Dia > 31 ) ) {
-			szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
-			iTotOK = 0 ;  // indicate error in parameters
-		} ;
-		if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
-			szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
-			iTotOK = 0 ;  // indicate error in parameters
-		} ;
-		if ( Fecha_En_El_Passat( Reserva_Dia ) ) {
-			szErrorString = "La data requerida {" + Reserva_Dia + "} es en el passat. No es poden fer reserves en el passat." ;
-			iTotOK = 0 ;  // indicate error in parameters
-		} ;
-		
-		if ( iTotOK == 1 ) {  // parameters ok
-		
-	// mirem si aquesta pista ja esta ocupada aquest dia i hora :
+		// mirem que el usuari pugui fer reserves, es a dir, que no n'hagi arribat al maxim - podem dir que te tokens/slots lliures
 
-			MyCollection.find ( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
+		console.log( '*** cridem GETOCUPACIO reserva(). HN server (%s).', req.session.wcdt_hostname ) ;
+		Get_Ocupacio ( MyReserva.rnom, Avui, function ( err, iOcupacio, szOcupacio ) {
 
-				if ( err ) { 
-					console.log( "--- Fer Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
-					res.status( 500 ).send( {'error': 'fer reserva DDBB error.'} ) ; // internal error
-				} else {
-			
-					var  i = docs.length ;
-					console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
+			var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
+			console.log( '*** acaba GETOCUPACIO reserva() - reserves pend/max (%s/%s).', iOcupacio, iMaxReservesPendentsPerUsuari ) ;
 
-					if ( i < 1 ) { // si no esta ocupat, la reservem
-			
-						console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+			if ( err ) {
+				console.log( '--- get_ocupacio reserva() trouble. Error (%s) means (%s).', err.errno, err.message  ) ;
+				res.status( 500 ).send( '--- internal error at get_ocupacio reserva().' ) ;
+			} else {
+
+				if ( iOcupacio >= iMaxReservesPendentsPerUsuari ) {
+					var szMsg_reserva = '--- Error : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors i el maxim es ('+iMaxReservesPendentsPerUsuari+'). ' ;
+					res.status( 200 ).send( szMsg_reserva ) ; // deprecated code : res.send( 200, szMsg_Logon_OK ) ;
+				} else { // we can proceed : user has spare tokens
+
+					// mirem que tots els parametres siguin correctes :
+
+					var iTotOK = 1 ;  // de moment, tot OK
+					var szErrorString = "" ;
+					var szResultat = "" ;
 					
-						MyCollection.insert ( MyReserva, { safe:true }, function ( err, result ) {
-							if ( err ) {
-								console.log( '---- Could not insert reservation into MongoDB. Error (%s) meaning (%s).', err.errno, err.message ) ;
-								res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
+					if ( ( Reserva_Pista < 3 ) || ( Reserva_Pista > 5 ) ) {
+						szErrorString = "Numero de pista erroni (" + Reserva_Pista + ")" ;
+						iTotOK = 0 ;  // indicate error in parameters
+					} ;
+					if ( ( Reserva_Dia < 1 ) || ( Reserva_Dia > 31 ) ) {
+						szErrorString = "Dia erroni (" + Reserva_Dia + ")" ;
+						iTotOK = 0 ;  // indicate error in parameters
+					} ;
+					if ( ( Reserva_Hora < 9 ) || ( Reserva_Hora > 20 ) ) {
+						szErrorString = "Hora erronia (" + Reserva_Hora + ")" ;
+						iTotOK = 0 ;  // indicate error in parameters
+					} ;
+					if ( Fecha_En_El_Passat( Reserva_Dia ) ) {
+						szErrorString = "La data requerida {" + Reserva_Dia + "} es en el passat. No es poden fer reserves en el passat." ;
+						iTotOK = 0 ;  // indicate error in parameters
+					} ;
+					
+					if ( iTotOK == 1 ) {  // parameters ok
+					
+						// mirem si aquesta pista ja esta ocupada aquest dia i hora :
+
+						MyCollection.find ( { rdata: Reserva_Dia, rhora: Reserva_Hora, rpista: Reserva_Pista }, { limit: 20 }, function ( err, docs ) { 
+
+							if ( err ) { 
+								console.log( "--- Fer Reserva. Error (%s) accessing COLLECTION (%s). Error is (%s).", err.errno, CollectionName, err.message ) ;
+								res.status( 500 ).send( {'error': 'fer reserva DDBB error.'} ) ; // internal error
 							} else {
-								console.log( '++++ Success: insert went ok.' ) ;
-								res.status( 200 ).send( "+++ fer reserva OK. User("+ Reserva_NomSoci +"), pista("+ Reserva_Pista +"), dia("+ Reserva_Dia +"), hora("+ Reserva_Hora +")." ) ; // else, indicate OK.
-							} ; // if Error
-						} ) ; // insert
-				
-					} else { // else, tell customer the slot is not free
+						
+								var  i = docs.length ;
+								console.log( "+++ the slot for that moment has (%s) elements.", i ) ;
 
-						var QuiEs = '' ;
-						if ( i == 1 ) {
-							QuiEs = docs[0].rnom ;
-						} ;
-						szResultat = "--- Error Reserva - ("+i+") slot Pista("+ Reserva_Pista +") Dia("+ Reserva_Dia +") Hora("+ Reserva_Hora +") ocupat per en (" + QuiEs + ")." ;
+								if ( i < 1 ) { // si no esta ocupat, la reservem
+						
+									console.log( 'Afegim una reserva : ' + JSON.stringify( MyReserva ) ) ;
+								
+									MyCollection.insert ( MyReserva, { safe:true }, function ( err, result ) {
+										if ( err ) {
+											console.log( '---- Could not insert reservation into MongoDB. Error (%s) meaning (%s).', err.errno, err.message ) ;
+											res.status( 500 ).send( {'error':'An error has occurred'} ) ; // internal error
+										} else {
+											console.log( '++++ Success: insert went ok.' ) ;
+											res.status( 200 ).send( "+++ fer reserva OK. User("+ Reserva_NomSoci +"), pista("+ Reserva_Pista +"), dia("+ Reserva_Dia +"), hora("+ Reserva_Hora +")." ) ; // else, indicate OK.
+										} ; // if Error
+									} ) ; // insert
+							
+								} else { // else, tell customer the slot is not free
+
+									var QuiEs = '' ;
+									if ( i == 1 ) {
+										QuiEs = docs[0].rnom ;
+									} ;
+									szResultat = "--- Error Reserva - ("+i+") slot Pista("+ Reserva_Pista +") Dia("+ Reserva_Dia +") Hora("+ Reserva_Hora +") ocupat per en (" + QuiEs + ")." ;
+									console.log( szResultat ) ;
+									res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
+							
+								} ;  // if did exist
+							} ; // error in find()
+						}) ; // find()
+
+					} else {  // error en algun parametre
+						szResultat = "--- Parametre incorrecte : (" + szErrorString + ")." ;
 						console.log( szResultat ) ;
-						res.status( 200 ).send( szResultat ) ; // else, indicate no OK - OK as HTTP rc, but
-				
-					} ;  // if did exist
-				} ; // error in find()
-			}) ; // find()
+						res.status( 200 ).send( szResultat ) ; // else, indicate no OK.
+					} ; // iTotOK
 
-		} else {  // error en algun parametre
-			szResultat = "--- Parametre incorrecte : (" + szErrorString + ")." ;
-			console.log( szResultat ) ;
-			res.status( 200 ).send( szResultat ) ; // else, indicate no OK.
-		} ; // iTotOK
-		
+				} ; // user has free tokens
+			} ; // error dins get ocupacio reserva()
+		} ) ; // own async function : get_ocupacio (uses mongo)
+
 	} else {
 		szResultat = "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in." ;
 		console.log( szResultat ) ;
@@ -848,30 +874,34 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 						var szHostName = require('os').hostname() ;             // server hostname. client is in req.headers.host
 						req.session.wcdt_hostname = szHostName ;
 						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
-						
-						console.log( '*** cridem GETOCUPACIO logon. HN server (%s).', req.session.wcdt_hostname ) ;
+
+						console.log( '*** cridem GETOCUPACIO logon(). HN server (%s).', req.session.wcdt_hostname ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
-							console.log( '*** acaba GETOCUPACIO logon (%s).', iOcupacio ) ;
+
+							var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
+							console.log( '*** acaba GETOCUPACIO logon() - reserves pend/max (%s/%s).', iOcupacio, iMaxReservesPendentsPerUsuari ) ;
+
 							if ( err ) {
-								console.log( '--- logon get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message  ) ;
-								res.status( 500 ).send( '--- internal error at get_ocupacio logon.' ) ;
+								console.log( '--- get_ocupacio logon() trouble. Error (%s) means (%s).', err.errno, err.message  ) ;
+								res.status( 500 ).send( '--- internal error at get_ocupacio logon().' ) ;
 							} else {
 
 								var szMsg_Logon_OK = '+++ WCDT0001 - logon and PWD OK. ' ;
 								szMsg_Logon_OK += '<p>Welcome back, (' + Logon_NomSoci + '). ' ;
 								if ( req.session.wcdt_tipussoci == "Administrator" ) {
-									szMsg_Logon_OK += "Tens poders de'administrador. " ; // mind this text is used in CLIENT.JS to determine if user is of type Admin or not.
+									szMsg_Logon_OK += "Tens poders de'administrador. " ;	// mind this text is used in CLIENT.JS to determine if user is of type Admin or not.
+																							// shall we set a cookie ?
 								} ;
 
 								szMsg_Logon_OK += '<p>El teu correu electronic es {' + docs[0].uEmail + '}. ' ;
 
-								if ( iOcupacio > 0 ) {
-									szMsg_Logon_OK += '<p>*** Compte : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors. ' ;
+								if ( iOcupacio >= iMaxReservesPendentsPerUsuari ) {
+									szMsg_Logon_OK += '<p>*** Compte : no pots fer noves reserves, car tens per disfrutar [' + iOcupacio + '] reserves anteriors i el maxim es ('+iMaxReservesPendentsPerUsuari+'). ' ;
 								} ;
 								szMsg_Logon_OK += szOcupacio ; // mostrar reserves anteriors
 								szMsg_Logon_OK += '<hr><p> &nbsp;<div class="txtblanc"><center><h3>Que fem ara ?</h3><p>Ara podries consultar la ocupacio de les pistes.</center></div><p> &nbsp;<hr>' ;
 								res.status( 200 ).send( szMsg_Logon_OK ) ; // deprecated code : res.send( 200, szMsg_Logon_OK ) ;
-							} ; // error dins get ocupacio
+							} ; // error dins get ocupacio logon()
 						} ) ; // own async function : get_ocupacio (uses mongo)
 						
 					} else {
@@ -903,18 +933,21 @@ app.post( '/logoff_user', function ( req, res ) {
 
 	if ( req.session.wcdt_nomsoci ) {
 		
-		console.log( '*** cridem GETOCUPACIO logoff.' ) ;
+		console.log( '*** cridem GETOCUPACIO logoff().' ) ;
 		Get_Ocupacio ( req.session.wcdt_nomsoci, Avui, function ( err, iOcupacio, szOcupacio ) {
 
-			console.log( '*** acaba GETOCUPACIO logoff (%s).', iOcupacio ) ;
+			var iMaxReservesPendentsPerUsuari = app.get( 'iMaxReservesUsuari' ) ;  // get global constant
+			console.log( '*** acaba GETOCUPACIO logoff() - reserves pend/max (%s/%s).', iOcupacio, iMaxReservesPendentsPerUsuari ) ;
+
 			if ( err ) {
-				console.log( '--- logoff get_ocupacio trouble. Error (%s) means (%s).', err.errno, err.message ) ;
-				res.status( 500 ).send( '--- internal error at get_ocupacio logoff.' ) ;
+				console.log( '--- get_ocupacio logoff() trouble. Error (%s) means (%s).', err.errno, err.message ) ;
+				res.status( 500 ).send( '--- internal error at get_ocupacio logoff().' ) ;
 			} else {
 
 // compte : 
 //   primer modifiquem REQ.SESSION
 //   despres enviem RES.STATUS
+// no pas al inreves !!!
 
 				console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), before' ) ;
 				req.session.wcdt_nomsoci = '' ;
@@ -929,9 +962,7 @@ app.post( '/logoff_user', function ( req, res ) {
 				var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 				szMsg_Logoff_OK += szOcupacio ;								
 				res.status( 200 ).send( szMsg_Logoff_OK ) ;
-			} ; // error dins get ocupacio
-			
-
+			} ; // error dins get ocupacio logoff()
 		} ) ; // own async function : get_ocupacio (uses mongo)
 
 	} else {
