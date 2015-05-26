@@ -144,7 +144,7 @@
 // 5.2.j - 20150409 - get HOST (ip) and PORT from Envir - "localhost" does now receive remote requests
 // 5.2.k - 20150409 - link to our APP in BlueMix at LINKS
 // 5.2.l - 20150416 - admin user can delete old reservas
-// 5.3.a - 20150416 - can delete reserva if not the owner (except administrators)
+// 5.3.a - 20150416 - cant delete reserva if not the owner (except administrators)
 // 5.4.a - 20150417 - trace all cookies
 // 5.4.b - 20150417 - send signed and secured cookie
 // 5.5.a - 20150419 - esborrar usuari de la bbdd
@@ -158,13 +158,14 @@
 // 5.7.a - 20150430 - diversos fitxers de configuracio en el directori CONFIG
 // 5.8.a - 20150430 - ukCDT amb usuari intern
 // 5.9.a - 20150502 - at logon(), ask server for user and host
-// 5.A.a - 20150503 - trace user in session field at logoff : somehow it is not "deleted"
+// 5.A.a - 20150503 - trace user in session field at logoff : somehow it is not "deleted" - fixed {***}
 // 5.B.a - 20150504 - fixed esborrar usuari en logoff
 // 5.B.b - 20150504 - server hostname is in req.headers.host and also in req.session.wcdt_hostname (from 'os')
 // 5.B.c - 20150504 - try to display client ip using req.ip
 // 5.B.d - 20150504 - try to display client ip using req.ip
 // 5.B.e - 20150512 - manage MaxNumReserves
 // 5.B.f - 20150512 - verify free slots prior doing reserva()
+// 5.B.g - 20150526 - modificacions simplificacio funcionament
 //
 
 // Bluemix :
@@ -238,11 +239,15 @@
 //         Origin 'http://bcdt.eu-gb.mybluemix.net' is therefore not allowed access. The response had HTTP status code 401.
 
 // Pending :
+// (*) site map
+// (*) "about wCDT project"
+// (*) health report
+// (*) check for updates
+// (*) donate (PayPal)
 // (*) Jordi Morillo - treure codi de formateig (links d'administracio) del client
 //        No servir pagines de administradors si no ve la cookie adient : que passa si el client demana URL = https://9.137.165.71/admin.htm ?
 // (*) ESP - puc fer una reserva per 20154010 o 32 de Juny
 // (*) ESP - a les 11h puc fer una reserva per les 09h
-// (*) limitar el nombre de reserves pendents
 // (*) en fer logon, comprovar que el usuari no estigui ja logonejat de un altre lloc
 // (*) access the application from a mobile client
 // (*) estat del usuari = "iniciant-se" si li hem enviat el email pero no ha clikat al link d'activacio
@@ -260,6 +265,8 @@
 // (*) passport : user/pwd
 // (*) tenir la PWD al mongo "hashed"
 // (*) canvi de proporcions en canviar de pantalla (al W500 surt malament)
+// (*) posar un rellotge JS en alguna part fixe, que mostri moviment continuament
+// (*) posar un calendari del mes i omplir "data request ocupacio" amb un click
 //
 
 // Dubtes :
@@ -269,12 +276,14 @@
 // Missatges numerats :
 //    "+++ WCDT0001 - logon and PWD OK."
 //    "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}. "
+//    "--- WCDT0003 - Error Reserva - cant delete old reserva if not logged"
+//    "--- WCDT0004 - CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."
+//    "--- WCDT0005 - tu {" + Esborra_Reserva_NomSoci + '/' + req.session.wcdt_nomsoci + '/' + req.session.wcdt_tipussoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
 //
-
 
 // Let's go :
 
-	var myVersio     = "v5.B.f" ;                        // mind 2 places in /public/INDEX.HTM
+	var myVersio     = "v5.B.g" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -728,7 +737,7 @@ app.post( '/fer_una_reserva/Nom_Soci=:res_nom_soci&Pista_Reserva=:res_pista&Dia_
 		} ) ; // own async function : get_ocupacio (uses mongo)
 
 	} else {
-		szResultat = "--- CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in." ;
+		szResultat = "--- WCDT0004 - CANT do a new reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in." ;
 		console.log( szResultat ) ;
 		res.status( 200 ).send( szResultat ) ; // 404 does not display attached text
 	} ; // not logged in - cant do new reserva
@@ -794,7 +803,7 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 						var UsuariPerEsborrar   = docs[0].rnom ;
 
 						if ( ( Esborra_Reserva_NomSoci != UsuariPerEsborrar ) && ( Usuari_es_Administrador( req.session ) == false ) ) {
-							szResultat = "--- Tu {" + Esborra_Reserva_NomSoci + '/' + req.session.wcdt_nomsoci + '/' + req.session.wcdt_tipussoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
+							szResultat = "--- WCDT0005 - tu {" + Esborra_Reserva_NomSoci + '/' + req.session.wcdt_nomsoci + '/' + req.session.wcdt_tipussoci + "} no pots esborrar una reserva d'en (" + UsuariPerEsborrar + ")." ;
 							console.log( szResultat ) ;
 							res.status( 200 ).send( szResultat ) ; // OK
 						} else {
@@ -823,8 +832,9 @@ app.post( '/esborrar_una_reserva/Nom_Soci_Esborrar=:res_nom_soci&Pista_Reserva_E
 		} ; // la data requerida no es en el passat
 		
 	} else {
-		console.log( "--- CANT delete an old reserva - soci ["+ req.session.wcdt_nomsoci +"] not logged in."  ) ;
-		res.status( 200 ).send( "--- Error Reserva - cant delete old reserva if not logged." ) ; // 404 does not display attached text
+		szResultat = '--- WCDT0003 - Error Reserva - cant delete old reserva if not logged - soci ['+ req.session.wcdt_nomsoci +'] not logged in.' ;
+		console.log( szResultat ) ;
+		res.status( 200 ).send( szResultat ) ; // 404 does not display attached text
 	} ; // not logged in - cant delete old reserva
 
 } ) ; // get '/esborrar_una_reserva/<parametres>'
