@@ -166,6 +166,8 @@
 // 5.B.e - 20150512 - manage MaxNumReserves
 // 5.B.f - 20150512 - verify free slots prior doing reserva()
 // 5.B.g - 20150526 - modificacions simplificacio funcionament
+// 5.B.h - 20150527 - mes millores i simplificacio funcionament i missatges
+// 5.B.i - 20150529 - si logon() falla, posar timestamp, user (and host)
 //
 
 // Bluemix :
@@ -181,6 +183,13 @@
 // Mind manifest.yml - see http://docs.cloudfoundry.org/devguide/deploy-apps/manifest.html
 //
 
+// APP own variables
+//    Title
+//    iMaxReservesUsuari
+//    rcolnbame
+//    userscolname 
+//    appHostname
+//
 // Server own variables                - filled up at what moment ?
 //    req.session.wcdt_nomsoci         - logon()
 //    req.session.wcdt_tipussoci       - logon()
@@ -226,6 +235,9 @@
 //   (2) start "app" node --debug my_server.js  = start application
 //   (3) http://127.0.0.1:8080/debug?port=5858  = open debug browser 
 //   (4) https://9.137.165.71/index.htm         = open application browser 
+//
+// To debug "client" code, use Chrome + F12 + "Console" tab
+//   It usually shows up a line like "Uncaught Syntax Error : Unexpected token ), file client.js, line 508"
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
@@ -239,6 +251,9 @@
 //         Origin 'http://bcdt.eu-gb.mybluemix.net' is therefore not allowed access. The response had HTTP status code 401.
 
 // Pending :
+// (*) alta soci = fill the fields (nom, tf, email) and click button, not actual email.
+// (*) oblit contrasenya - enter email and click button, not actual email.
+// (*) canvi contrasenya - fill the fields (nom, old, new) and click button, not actual email.
 // (*) site map
 // (*) "about wCDT project"
 // (*) health report
@@ -283,7 +298,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.g" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.i" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -342,6 +357,22 @@
 	if ( typeof( foo ) !== 'undefined' ) {      // FOO environment variables exists -> doSomethingWith(foo);
 		myVersioLong += ' - env {'+ foo +'}' ;
 	} ; // 
+
+// Some subroutines
+
+// nova funció yyyyymmdd de Date() - at server
+Date.prototype.yyyymmdd = function ( ) {                            
+        var yyyy = this.getFullYear().toString();                                    
+        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
+        var dd   = this.getDate().toString();
+        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
+}; // yyyymmdd()
+
+
+// Write an initial message into console.
+	app.set( 'appHostname', require('os').hostname() ) ;
+	console.log( "+++ +++ +++ +++ +++ +++ +++ +++ APP wCDT starts. HN[%s], TS[%s].", app.get('appHostname'), (new Date).yyyymmdd() ) ;
+
 
 	var db  = monk( szDB ) ;                        // 
 	var szMongoDB = szDB ;                          // used at connect() - compte a Bluemix !
@@ -445,14 +476,6 @@ var forcehttps = function () {
 
 // Let write some subroutines
 //	var funciones = require('./misfunciones.js');
-
-// nova funció yyyyymmdd de Date() - at server
-Date.prototype.yyyymmdd = function ( ) {                            
-        var yyyy = this.getFullYear().toString();                                    
-        var mm   = (this.getMonth()+1).toString(); // getMonth() is zero-based         
-        var dd   = this.getDate().toString();
-        return yyyy + '/' + (mm[1]?mm:"0"+mm[0]) + '/' + (dd[1]?dd:"0"+dd[0]);
-}; // yyyymmdd()
 
 // funcio per determinar si hi ha un soci logonejat
 function hiHaSociEnSessio( ParamSessio ) {

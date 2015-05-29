@@ -324,19 +324,18 @@ Bluemix (sometimes)
 ===
 
 // Bluemix :
-// (1) url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.
+// (1) console url = https://console.ng.bluemix.net/home ; SignIn ( usr = mrblacula@gmail.com ) ; .eu-gb. or .ng.
 // (2) cf api https://api.ng.bluemix.net ( US South cloud )
 // (3) cf login -u mrblacula@gmail.com -o mrblacula@gmail.com -s dev
 // (4) cf logs usCDT
 // (5) cf push usCDT
-// (6) BlueMix console : https://console.ng.bluemix.net/home
-// (7) APP : https://uscdt.mybluemix.net/
-// (8) cf logout
+// (6) APP : https://uscdt.mybluemix.net/
+// (7) cf logout
 
-// (1) https://console.eu-gb.bluemix.net/ ( usr = altemir@es.ibm.com )
+// (1) bluemix console : https://console.eu-gb.bluemix.net/ ( usr = altemir@es.ibm.com )
 // (2) cf api https://api.eu-gb.bluemix.net (United Kingdom)
 // (3) cf login -u altemir@es.ibm.com -o altemir@es.ibm.com -s dev
 // (4) cf logs ukCDT
 // (5) cf push ukCDT
-// (6) browser http://ukcdt.eu-gb.mybluemix.net
+// (6) APP : http://ukcdt.eu-gb.mybluemix.net
 

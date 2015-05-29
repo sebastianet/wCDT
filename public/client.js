@@ -505,7 +505,7 @@ function logon_ready() {
 				} ) ; // get_usr_and_host()
 			},
 			statusCode: {
-				401: function() { $( "#content" ).html( '<p>Logon() not authorized</p>' ) },
+				401: function() { $( "#content" ).html( '<p>'+ (new Date).yyyymmdd() +' Logon() user('+ logonUser +') not authorized</p>' ) },
 				404: function() { $( "#content" ).html( '<p>Logon() unavailable   </p>' ) },
 				500: function() { $( "#content" ).html( '<p>Logon() server error  </p>' ) }
 			} 
