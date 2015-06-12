@@ -247,7 +247,12 @@ function consulta_ready() {
 	console.log( '*** consulta DOM ready.' ) ;
 	
 	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( { dateFormat: "yy/mm/dd" } ) ;
-	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() ) ;
+//
+// dons set this field everytime the page is loaded
+// instead, set an initial value, and the keep on with the date selected by user via "datepicker"
+// the user has not to be able to edit this field manually
+//	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() ) ;
+	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( '2011/11/10' ) ;
 
 	$( "#myFormReqDades1Dia" ).submit( function( event ) {
 	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server

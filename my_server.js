@@ -168,6 +168,7 @@
 // 5.B.g - 20150526 - modificacions simplificacio funcionament
 // 5.B.h - 20150527 - mes millores i simplificacio funcionament i missatges
 // 5.B.i - 20150529 - si logon() falla, posar timestamp, user (and host)
+// 5.B.j - 2'150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
 //
 
 // Bluemix :
@@ -298,7 +299,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.i" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.j" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
