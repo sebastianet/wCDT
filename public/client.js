@@ -51,9 +51,10 @@ function fClickLogon() {
 			var y = llegirCookie( 'kukVER') ;
 			if ( ( x ) && ( y ) ) {
 				var szOut = '<center>hn{' + x + '} ' + y + '</center>' ;
-				$( "#my_hostname" ).html( szOut ) ; 
+				$( "#my_hostname" ).html( szOut ) ;
+				console.log( '+++ set HOSTNAME[%s] and VERSION[%s].', x, y ) ;
 			} else {
-				console.log( '--- no HOSTNAME cookie found or no VERSION.' ) ;
+				console.log( '--- couldnt find cookie for HOSTNAME[%s] or VERSION[%s].', x, y ) ;
 			} ;
 
 		}) ; // get(logon)
@@ -297,7 +298,7 @@ function consulta_ready() {
 					var szPista = dades[i].rpista ;
 					var szData  = dades[i].rdata ;
 					var szHora  = dades[i].rhora ;
-					var sz1User = "En {" + szNom + "} te la pista [" + szPista + "] el dia {" + szData + "} a les {" + szHora + "} " ;
+					var sz1User = "En {" + szNom + "} te la pista [" + szPista + "] el dia {" + szData + "} a les {" + szHora + "}" ;
 					console.log( ">>> consulta - ocupant [%i] : (%s).", i, sz1User ); // 
 					
 					var szCella = "#tdh"+szHora+"p"+szPista ;  // calculem a quina cella va el texte - veure els noms a sebas.css !
@@ -533,7 +534,7 @@ function logon_ready() {
 
 		$.post( "/logoff_user", function( dades ) {
 		
-			console.log( ">>> Request logoff - server response (%s) : {%s}.", dades ); // show whole JSON object
+			console.log( ">>> Request logoff - server response (%s).", dades ); // show whole JSON object
 			
 			$( "#content" ).html( dades );  // or "text" - set server data onto actual page
 //			$( "#content" ).html( '<p>+++ Logged off successfully.</p>' ) ;

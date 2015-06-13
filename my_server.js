@@ -171,6 +171,7 @@
 // 5.B.j - 20150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
 // 5.B.k - 20150613 - save Data Darrera Consulta in session and send as cookie
 // 5.B.l - 20150613 - display server version cookie in "help" screen, server version in initial msg at server.
+// 5.B.m - 20150613 - fix display user at logoff
 //
 
 // Bluemix :
@@ -302,7 +303,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.k" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.m" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -992,6 +993,7 @@ app.post( '/logoff_user', function ( req, res ) {
 // no pas al inreves !!!
 
 				console.log( '??? Try to remove user in logoff ('+ req.session.wcdt_nomsoci +'), before' ) ;
+				var szSociLogoff = req.session.wcdt_nomsoci ;
 				req.session.wcdt_nomsoci = '' ;
 				delete req.session.wcdt_nomsoci ;   // remove session field when async function ends - see [sess]
 				delete req.session.wcdt_tipussoci ; // remove session field when async function ends - see [sess]
@@ -1001,7 +1003,7 @@ app.post( '/logoff_user', function ( req, res ) {
 				console.log( 'logoff.now is ('+ iPeriode +')' ) ;
 				console.log( 'logoff.old is ('+ req.session.wcdt_instant_inicial +')' ) ;
 				iPeriode = iPeriode - req.session.wcdt_instant_inicial ;
-				var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ req.session.wcdt_nomsoci + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
+				var szMsg_Logoff_OK = "+++ WCDT0002 - logoff user {"+ szSociLogoff + "}, logged on at {"+ req.session.wcdt_lastlogon +"}, duracio ["+ iPeriode +"] msg. "
 				szMsg_Logoff_OK += szOcupacio ;								
 				res.status( 200 ).send( szMsg_Logoff_OK ) ;
 			} ; // error dins get ocupacio logoff()
