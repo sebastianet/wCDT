@@ -170,7 +170,7 @@
 // 5.B.i - 20150529 - si logon() falla, posar timestamp, user (and host)
 // 5.B.j - 20150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
 // 5.B.k - 20150613 - save Data Darrera Consulta in session and send as cookie
-//                    display server version cookie in "help" screen
+// 5.B.l - 20150613 - display server version cookie in "help" screen, server version in initial msg at server.
 //
 
 // Bluemix :
@@ -375,7 +375,7 @@ Date.prototype.yyyymmdd = function ( ) {
 
 // Write an initial message into console.
 	app.set( 'appHostname', require('os').hostname() ) ;
-	console.log( "+++ +++ +++ +++ +++ +++ +++ +++ APP wCDT starts. HN[%s], TS[%s].", app.get('appHostname'), (new Date).yyyymmdd() ) ;
+	console.log( "+++ +++ +++ +++ +++ +++ +++ +++ APP wCDT starts. Versio[%s], HN[%s], TimeStamp[%s].", myVersio, app.get('appHostname'), (new Date).yyyymmdd() ) ;
 
 
 	var db  = monk( szDB ) ;                        // 
