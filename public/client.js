@@ -561,9 +561,9 @@ function help_ready() {
 
 // server sets 'kukTIT'
 // HELP.HTM has <div id="listcki">
-	var x = llegirCookie( 'kukTIT') ;
+	var x = llegirCookie( 'kukVER') ; // get server version string
 	if ( x ) {
-		var szOut = '# server has set a cookie >' + x + '<' ;
+		var szOut = '# server version is >' + x + '<' ;
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
 
 		$.get( "/get_usr_and_host", function( dades_user_i_host ) {

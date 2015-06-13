@@ -170,6 +170,7 @@
 // 5.B.i - 20150529 - si logon() falla, posar timestamp, user (and host)
 // 5.B.j - 20150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
 // 5.B.k - 20150613 - save Data Darrera Consulta in session and send as cookie
+//                    display server version cookie in "help" screen
 //
 
 // Bluemix :
