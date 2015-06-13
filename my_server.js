@@ -200,7 +200,7 @@
 //    req.session.wcdt_tipussoci       - logon()
 //    req.session.wcdt_instant_inicial - logon()
 //    req.session.wcdt_lastlogon       - logon()
-//    req.session.wcdt_hostname        - logon()
+//    req.session.wcdt_hostname        - logon() - moved to own middleware
 //    req.session.wcdt_diaconsultat    - consulta()
 //
 //  Client own variables :
@@ -248,6 +248,7 @@
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
 //  *) HOURS must always be 2-digit - ok des consulta, pero reserva pot entrar "9" en lloc de "09".
+//		"disable" manual entry of date field for consulta
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
@@ -412,7 +413,9 @@ Date.prototype.yyyymmdd = function ( ) {
 	app.use( cookieParser( 'secretSebas' ) ) ;                                                  // pwd to encrypt all cookies - not required since vesion 1.5.0 : > https://www.npmjs.com/package/express-session
 	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
 	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
-	
+
+// mind "RES" does not exist until a session has been established !
+
 	var iCnt = 0 ;
 	app.use( function( req, res, next ) { // own middleware, catching all messages
 
@@ -425,7 +428,7 @@ Date.prototype.yyyymmdd = function ( ) {
 		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;
 		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
-		res.cookie( 'kukHN', app.get('appHostname'), { httpOnly: false, secure: true } ) ; 
+		res.cookie( 'kukHN',        app.get('appHostname'), { httpOnly: false, secure: true } ) ; 
 
 		res.cookie( 'kukDDC',       req.session.wcdt_diaconsultat, { httpOnly: false, signed: false } ) ; // send some data to client(s) - Data Darrera Consulta
 		
