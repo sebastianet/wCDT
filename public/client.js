@@ -249,10 +249,18 @@ function consulta_ready() {
 	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).datepicker( { dateFormat: "yy/mm/dd" } ) ;
 //
 // dons set this field everytime the page is loaded
-// instead, set an initial value, and the keep on with the date selected by user via "datepicker"
-// the user has not to be able to edit this field manually
+// instead, set an initial value if we dont have a cookie that indicates a previous "consulta", and the keep on with the date selected by user via "datepicker"
+// compte : the user has not to be able to edit this field manually
 //	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() ) ;
-	$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( '2011/11/10' ) ;
+
+	var x = llegirCookie( 'kukDDC') ; // Data Darrera Consulta, as 2015/06/13
+	if ( x == "undefined" ) {
+		$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( (new Date).yyyymmdd() ) ;
+	} else { // hi ha hagut consulta anterior
+		var y = decodeURIComponent ( x ) ;  // change "/" into "%2F"
+		$( "#myFormReqDades1Dia input[name='data_Reserva']" ).val( y ) ;
+		console.log( '**** CONSULTA.HTM - set date to (%s).', y ) ;		
+	} ;
 
 	$( "#myFormReqDades1Dia" ).submit( function( event ) {
 	// will produce a msg as "GET /qui_te_reserves/data_Reserva=2014/12/06" to be sent to the server

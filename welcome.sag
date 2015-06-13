@@ -1,3 +1,9 @@
+.
+ 	<input type="text" autofocus value="2015/06/10" name="data_Reserva" /> 
+.
+if MONGODB error in 
+c:\mongodb\bin\mongod.exe  --rest  --config c:\Sebas\JavaScript\wCDT\mongod_t430.cfg
+.
 start with
 
  node  my_server.js

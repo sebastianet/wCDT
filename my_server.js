@@ -168,7 +168,8 @@
 // 5.B.g - 20150526 - modificacions simplificacio funcionament
 // 5.B.h - 20150527 - mes millores i simplificacio funcionament i missatges
 // 5.B.i - 20150529 - si logon() falla, posar timestamp, user (and host)
-// 5.B.j - 2'150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
+// 5.B.j - 20150612 - dont set consulta date everytime page is loaded - keep the "datepicker" value
+// 5.B.k - 20150613 - save Data Darrera Consulta in session and send as cookie
 //
 
 // Bluemix :
@@ -197,6 +198,7 @@
 //    req.session.wcdt_instant_inicial - logon()
 //    req.session.wcdt_lastlogon       - logon()
 //    req.session.wcdt_hostname        - logon()
+//    req.session.wcdt_diaconsultat    - consulta()
 //
 //  Client own variables :
 //    window.session.user.nom
@@ -227,7 +229,7 @@
 //     help.htm
 //     initial.htm
 //     admin.htm
-//     (links.htm)
+//     links.htm
 //
 // All of them have a "DOM ready" event coded in a common "client.js" file, loaded in index.htm so the code is available to debugger.
 
@@ -299,7 +301,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.j" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.k" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -420,6 +422,8 @@ Date.prototype.yyyymmdd = function ( ) {
 		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;
 		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
+		res.cookie( 'kukDDC',       req.session.wcdt_diaconsultat, { httpOnly: false, signed: false } ) ; // send some data to client(s) - Data Darrera Consulta
+		
 		console.log( '### My Cookies are (%s) - [%s].', iCnt, JSON.stringify( { unsigned: req.cookies, signed: req.signedCookies } ) ) ;
 // My Cookies are (50) - [{"unsigned":{"kuk-H0":"41","kuk-H1":"42"},"signed":{"kuk-SIG1":"43","kuk-SIG1-H1":"44","kuk-SIG1-SEC1":"45","connect.sid":"GC_O6S_X4X19o-f6sbTAQkSqdI0glcuQ"}}].
 		next() ;
@@ -623,6 +627,9 @@ app.get( '/qui_te_reserves/data_Reserva=:dia_consultat', function ( req, res ) {
     var DiaConsultat = req.params.dia_consultat ; // if BLANK then 404 ;
 	var CollectionName = app.get( 'rcolname' ) ;  // get collection name
    	var MyCollection = db.get( CollectionName ) ; // get the collection
+	
+	req.session.wcdt_diaconsultat = DiaConsultat ;  // save "data darrera consulta" in session [sess]
+	
 	console.log( ">>> (%s) GET veure reserves 1 dia - collection (%s) - veure fins a 20 reserves del dia (%s) ", req.session.wcdt_nomsoci, CollectionName, DiaConsultat ) ;
 	
 	MyCollection.find ( { rdata: DiaConsultat }, { limit: 20 }, function ( err, docs ) { 
