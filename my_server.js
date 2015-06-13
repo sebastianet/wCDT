@@ -173,6 +173,7 @@
 // 5.B.l - 20150613 - display server version cookie in "help" screen, server version in initial msg at server.
 // 5.B.m - 20150613 - fix display user at logoff
 // 5.B.n - 20150613 - set server hostname cookie after initial message
+// 5.B.o - 20150614 - set readonly="true" al camp d'entrada de la data a consultar - el datapicker funciona !
 //
 
 // Bluemix :
@@ -305,7 +306,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.n" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.o" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
