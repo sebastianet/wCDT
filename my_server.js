@@ -172,6 +172,7 @@
 // 5.B.k - 20150613 - save Data Darrera Consulta in session and send as cookie
 // 5.B.l - 20150613 - display server version cookie in "help" screen, server version in initial msg at server.
 // 5.B.m - 20150613 - fix display user at logoff
+// 5.B.n - 20150613 - set server hostname cookie after initial message
 //
 
 // Bluemix :
@@ -303,7 +304,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.m" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.n" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -423,6 +424,8 @@ Date.prototype.yyyymmdd = function ( ) {
 		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // send some data to client(s)
 		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;
 		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
+
+		res.cookie( 'kukHN', app.get('appHostname'), { httpOnly: false, secure: true } ) ; 
 
 		res.cookie( 'kukDDC',       req.session.wcdt_diaconsultat, { httpOnly: false, signed: false } ) ; // send some data to client(s) - Data Darrera Consulta
 		
@@ -914,9 +917,9 @@ app.get( '/logonuser/nom_Logon=:log_nom_soci&pwd_Logon=:log_pwd', function ( req
 						req.session.wcdt_lastlogon = mSg.toISOString() ;        // 
 						req.session.wcdt_instant_inicial = Date.now() ;         //
 
-						var szHostName = require('os').hostname() ;             // server hostname. client is in req.headers.host
-						req.session.wcdt_hostname = szHostName ;
-						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
+//						var szHostName = require('os').hostname() ;             // server hostname. client is in req.headers.host
+//						req.session.wcdt_hostname = szHostName ;
+//						res.cookie( 'kukHN', szHostName, { httpOnly: false, secure: true } ) ; // "httpOnly: false" -> can be seen by browser code ; "secure: true" is a recommended option
 
 						console.log( '*** cridem GETOCUPACIO logon(). HN server (%s).', req.session.wcdt_hostname ) ;
 						Get_Ocupacio ( Logon_NomSoci, Avui, function ( err, iOcupacio, szOcupacio ) {
