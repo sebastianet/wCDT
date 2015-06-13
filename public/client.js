@@ -38,10 +38,10 @@ Date.prototype.hhmmss = function () {
 //  b) initial_ready() - per assignar el codi a un link que hi ha dins INITIAL.HTM
 function fClickLogon() { 
 
-	console.log( '+++ establir codi a executar en picar Logon().' ) ;
+	console.log( '+++ fClickLogon() - establir codi a executar en picar Logon().' ) ;
  	$( ".clkLogon" ).click( function() {
 
-		console.log( '*** you did click on LOGON() link.' ) ;
+		console.log( '*** fClickLogon() - you did click on LOGON() link.' ) ;
 		$.get( '/logon.htm', function( page ) {
 
 			console.log( '*** index - demanem al server la sub-pagina LOGON.' ) ;
@@ -52,9 +52,9 @@ function fClickLogon() {
 			if ( ( x ) && ( y ) ) {
 				var szOut = '<center>hn{' + x + '} ' + y + '</center>' ;
 				$( "#my_hostname" ).html( szOut ) ;
-				console.log( '+++ set HOSTNAME[%s] and VERSION[%s].', x, y ) ;
+				console.log( '+++ fClickLogon() - set HOSTNAME[%s] and VERSION[%s].', x, y ) ;
 			} else {
-				console.log( '--- couldnt find cookie for HOSTNAME[%s] or VERSION[%s].', x, y ) ;
+				console.log( '--- fClickLogon() - couldnt find cookie for HOSTNAME[%s] or VERSION[%s].', x, y ) ;
 			} ;
 
 		}) ; // get(logon)
@@ -564,7 +564,12 @@ function help_ready() {
 // HELP.HTM has <div id="listcki">
 	var x = llegirCookie( 'kukVER') ; // get server version string
 	if ( x ) {
-		var szOut = '# server version is >' + x + '<' ;
+		var szOut = '#cookies# server version is >' + x + '< ' ;
+		x = llegirCookie( 'kukHN') ; // get server hostname
+		if ( x ) {
+			szOut += '#cookies# hostname is >' + x + '< ' ;
+		} ; // have hostname cookie
+		
 		$( "#listcki" ).html( szOut ) ; // show received HTML at specific <div>
 
 		$.get( "/get_usr_and_host", function( dades_user_i_host ) {
@@ -572,7 +577,7 @@ function help_ready() {
 			$( "#listuih" ).html( 'U/H {' + dades_user_i_host + '}.' ) ;
 		} ) ; // get_usr_and_host()
 
-	} ;
+	} ; // have version cookie
 
 	
 	$( "#clkPing" ).click( function() {
