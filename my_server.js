@@ -174,6 +174,7 @@
 // 5.B.m - 20150613 - fix display user at logoff
 // 5.B.n - 20150613 - set server hostname cookie after initial message
 // 5.B.o - 20150614 - set readonly="true" al camp d'entrada de la data a consultar - el datapicker funciona !
+// 5.B.p - 20150627 - install and run under nodemon
 //
 
 // Bluemix :
@@ -248,8 +249,6 @@
 
 // Problemes :
 //  *) si fem click en un TD lliure pero no sobre el FLAG, dona error (es veu si tenim Chrome + F12)
-//  *) HOURS must always be 2-digit - ok des consulta, pero reserva pot entrar "9" en lloc de "09".
-//		"disable" manual entry of date field for consulta
 //  *) *** index - demanem al server la sub-pagina CONSULTA.
 //         Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/.
 //  *) com evitar " GET https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css net::ERR_CONNECTION_REFUSED "
@@ -265,7 +264,7 @@
 // (*) site map
 // (*) "about wCDT project"
 // (*) health report
-// (*) check for updates
+// (*) check for updates - get a new JS using cron(git pull) and then use "https://github.com/petruisfan/node-supervisor"
 // (*) donate (PayPal)
 // (*) Jordi Morillo - treure codi de formateig (links d'administracio) del client
 //        No servir pagines de administradors si no ve la cookie adient : que passa si el client demana URL = https://9.137.165.71/admin.htm ?
@@ -290,6 +289,12 @@
 // (*) canvi de proporcions en canviar de pantalla (al W500 surt malament)
 // (*) posar un rellotge JS en alguna part fixe, que mostri moviment continuament
 // (*) posar un calendari del mes i omplir "data request ocupacio" amb un click
+// (*) executar el codi sota un supervisor que faci reload, as
+//		http://nodemon.io/ (desenvolupament)
+//		https://github.com/petruisfan/node-supervisor
+//		https://github.com/foreverjs/forever (produccio)
+//     i posar un cron que faci un "git pull" i "npm update"
+// (*)
 //
 
 // Dubtes :
@@ -306,7 +311,7 @@
 
 // Let's go :
 
-	var myVersio     = "v5.B.o" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
+	var myVersio     = "v5.B.p" ;                        // (oldie - mind 2 places in /public/INDEX.HTM)
 
 	var express      = require( 'express' ) ;            // http://expressjs.com/api.html#app.configure
 	var session      = require( 'express-session' ) ;    // express session - https://github.com/expressjs/session ; https://www.npmjs.com/package/express-session
@@ -415,7 +420,8 @@ Date.prototype.yyyymmdd = function ( ) {
 	app.use( session( { secret: 'secretSebas', resave: false, saveUninitialized: false } ) ) ;  // encrypt session contents, allow "req.session.*" header
 	app.use( bodyParser.json() ) ;                                                              // parse application/json - do we need "application/x-www-form-urlencoded" ?
 
-// mind "RES" does not exist until a session has been established !
+
+// use response object provided by express - http://expressjs.com/api.html#res.cookie
 
 	var iCnt = 0 ;
 	app.use( function( req, res, next ) { // own middleware, catching all messages
@@ -425,11 +431,13 @@ Date.prototype.yyyymmdd = function ( ) {
 //		res.cookie( 'kukSIG1',      ++iCnt, { signed: true } ) ;                    // http://stackoverflow.com/questions/11897965/what-are-signed-cookies-in-connect-expressjs
 //		res.cookie( 'kukSIG1H1',    ++iCnt, { signed: true, httpOnly: true  } ) ;   // 
 //		res.cookie( 'kukSIG1SEC1',  ++iCnt, { signed: true, secure: true } ) ;      // chrome : SECURE "check"
-		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ; // send some data to client(s)
-		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;
-		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;   // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
 
-		res.cookie( 'kukHN',        app.get('appHostname'), { httpOnly: false, secure: true } ) ; 
+		res.cookie( 'kukTIT',       'MYTIT', { httpOnly: false, signed: false } ) ;                       // send some data to client(s), as page "title"
+		res.cookie( 'kukVER',        myVersio, { httpOnly: false, signed: false } ) ;                     // send to client the server's version
+		
+		res.cookie( 'kukCON.SID',   'MYSID', { signed: true, httpOnly: true, secure: false } ) ;          // try to emulate connect.sid ?      si poso [maxAge: null] no surt ?
+
+		res.cookie( 'kukHN',        app.get('appHostname'), { httpOnly: false, secure: true } ) ;         // send to client the server hostname
 
 		res.cookie( 'kukDDC',       req.session.wcdt_diaconsultat, { httpOnly: false, signed: false } ) ; // send some data to client(s) - Data Darrera Consulta
 		
